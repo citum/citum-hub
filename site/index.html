@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Citum Hub</title>
+  <meta name="description" content="Citum Hub is the interactive product surface for browsing, editing, and creating citation styles.">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f8fafc;
+      --ink: #0f172a;
+      --muted: #475569;
+      --line: #dbeafe;
+      --panel: #ffffff;
+      --brand: #0f766e;
+      --brand-2: #14b8a6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(900px 380px at 2% -10%, #d1fae5 0%, transparent 62%),
+        radial-gradient(880px 420px at 98% -12%, #bae6fd 0%, transparent 64%),
+        var(--bg);
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+    header {
+      position: sticky;
+      top: 0;
+      backdrop-filter: blur(8px);
+      background: rgba(248, 250, 252, 0.9);
+      border-bottom: 1px solid var(--line);
+      z-index: 5;
+    }
+    .nav {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .brand {
+      text-decoration: none;
+      color: var(--ink);
+      font-weight: 800;
+      letter-spacing: 0.01em;
+    }
+    nav a {
+      text-decoration: none;
+      color: var(--muted);
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 10px;
+    }
+    nav a[aria-current="page"], nav a:hover {
+      background: #ccfbf1;
+      color: var(--ink);
+    }
+    main { padding: 56px 0 72px; }
+    h1 {
+      margin: 0 0 12px;
+      font-size: clamp(2rem, 5vw, 3.1rem);
+      line-height: 1.08;
+    }
+    .lead {
+      margin: 0;
+      color: var(--muted);
+      max-width: 72ch;
+      line-height: 1.65;
+    }
+    .notice {
+      margin-top: 24px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--brand);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: var(--ink);
+    }
+    .links {
+      margin-top: 20px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .btn {
+      text-decoration: none;
+      font-weight: 700;
+      color: #fff;
+      background: linear-gradient(120deg, var(--brand), var(--brand-2));
+      padding: 10px 14px;
+      border-radius: 10px;
+    }
+    .btn.alt {
+      background: #ffffff;
+      color: var(--ink);
+      border: 1px solid var(--line);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap nav">
+      <a class="brand" href="https://citum.org">Citum</a>
+      <nav aria-label="Global">
+        <a href="https://citum.org">Home</a>
+        <a href="https://docs.citum.org">Docs</a>
+        <a href="https://hub.citum.org" aria-current="page">Hub</a>
+        <a href="https://labs.citum.org">Labs</a>
+      </nav>
+    </div>
+  </header>
+  <main class="wrap">
+    <h1>Citum Hub</h1>
+    <p class="lead">Interactive browsing, editing, and style creation surface built on top of `citum-core`. This placeholder keeps routing stable while the full app is finalized.</p>
+    <div class="notice">Hub app deployment is deferred. Domain and navigation are live-ready so cutover can happen without changing public URLs.</div>
+    <div class="links">
+      <a class="btn" href="https://github.com/citum/citum-hub">Hub Repository</a>
+      <a class="btn alt" href="https://docs.citum.org">Read Docs</a>
+    </div>
+  </main>
+</body>
+</html>
