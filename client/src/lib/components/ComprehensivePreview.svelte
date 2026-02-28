@@ -2,7 +2,8 @@
     import LivePreview from './LivePreview.svelte';
 
     interface PreviewSet {
-        in_text: string | null;
+        in_text_parenthetical: string | null;
+        in_text_narrative: string | null;
         note: string | null;
         bibliography: string | null;
     }
@@ -26,13 +27,28 @@
     </div>
 
     {#if previewSet}
-        <!-- In-Text Citations (Show for Author-Date/Numeric) -->
-        {#if previewSet.in_text}
+        <!-- In-Text Citations (Show for Author-Date/Label) -->
+        {#if previewSet.in_text_parenthetical || previewSet.in_text_narrative}
             <section class="flex flex-col gap-4">
                 <h3 class="text-xs font-black uppercase tracking-widest text-slate-400">In-Text Citations</h3>
-                <div class="p-6 bg-slate-50 border border-slate-100 rounded-2xl font-serif text-lg leading-relaxed text-slate-800">
-                    <LivePreview html={previewSet.in_text} />
-                </div>
+                
+                {#if previewSet.in_text_parenthetical}
+                    <div class="flex flex-col gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Parenthetical</span>
+                        <div class="p-6 bg-slate-50 border border-slate-100 rounded-2xl font-serif text-lg leading-relaxed text-slate-800">
+                            <LivePreview html={previewSet.in_text_parenthetical} />
+                        </div>
+                    </div>
+                {/if}
+
+                {#if previewSet.in_text_narrative}
+                    <div class="flex flex-col gap-2">
+                        <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2">Narrative</span>
+                        <div class="p-6 bg-slate-50 border border-slate-100 rounded-2xl font-serif text-lg leading-relaxed text-slate-800">
+                            <LivePreview html={previewSet.in_text_narrative} />
+                        </div>
+                    </div>
+                {/if}
             </section>
         {/if}
 
@@ -56,7 +72,7 @@
             </section>
         {/if}
 
-        {#if !previewSet.in_text && !previewSet.note && !previewSet.bibliography}
+        {#if !previewSet.in_text_parenthetical && !previewSet.in_text_narrative && !previewSet.note && !previewSet.bibliography}
             <div class="py-20 text-center flex flex-col items-center gap-4">
                 <div class="size-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300">
                     <span class="material-symbols-outlined text-4xl">visibility_off</span>

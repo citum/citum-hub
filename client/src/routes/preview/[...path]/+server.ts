@@ -1,105 +1,30 @@
 import { env } from '$env/dynamic/private';
 import { error } from '@sveltejs/kit';
-import fs from 'fs';
-import path from 'path';
-import yaml from 'js-yaml';
+
+const BACKEND_URL = env.BACKEND_URL || 'http://localhost:3000';
 
 export async function POST({ request, params, fetch }) {
-    const citumUrl = env.CITUM_URL || 'http://127.0.0.1:9001';
-    
     try {
         const body = await request.json();
-        const { style, references } = body;
+        const endpoint = params.path === 'citation' ? '/preview/citation' : '/preview/bibliography';
         
-        if (!style || !references) {
-            throw error(400, 'Missing style or references');
-        }
-
-        const tempDir = path.join(process.cwd(), 'temp_styles');
-        if (!fs.existsSync(tempDir)) {
-            fs.mkdirSync(tempDir, { recursive: true });
-        }
-        
-        const styleYaml = yaml.dump(style);
-        const fileName = `preview-${crypto.randomUUID()}.yaml`;
-        const filePath = path.join(tempDir, fileName);
-        fs.writeFileSync(filePath, styleYaml);
-        
-        const containerStylePath = `/tmp/citum/styles/${fileName}`;
-        const rpcMethod = params.path === 'citation' ? 'render_citation' : 'render_bibliography';
-        
-        const refsMap = references.reduce((acc: any, r: any) => {
-            acc[r.id] = r;
-            return acc;
-        }, {});
-
-        const rpcParams: any = {
-            style_path: containerStylePath,
-            refs: refsMap,
-            output_format: 'html'
-        };
-        
-        if (params.path === 'citation') {
-            rpcParams.citation = {
-                items: references.map((r: any) => ({ id: r.id }))
-            };
-        }
-        
-        const rpcRequest = {
-            jsonrpc: "2.0",
-            id: Date.now(),
-            method: rpcMethod,
-            params: rpcParams
-        };
-
-        const response = await fetch(`${citumUrl}/rpc`, {
+        const res = await fetch(`${BACKEND_URL}${endpoint}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(rpcRequest)
+            body: JSON.stringify(body)
         });
         
-        const rpcResponse = await response.json();
+        if (!res.ok) {
+            const errorText = await res.text();
+            throw error(res.status as any, errorText || `Backend error: ${res.status}`);
+        }
         
-        // Cleanup the temp file
-        try { fs.unlinkSync(filePath); } catch(e) {}
-
-        if (rpcResponse.error) {
-            console.error('[Proxy] RPC Error:', rpcResponse.error);
-            return new Response(JSON.stringify({ 
-                result: `<div class="text-red-500 text-xs font-mono p-2 bg-red-50 rounded">Engine Error: ${rpcResponse.error.message || JSON.stringify(rpcResponse.error)}</div>` 
-            }), {
-                headers: { 'Content-Type': 'application/json' }
-            });
-        }
-
-        // Extremely flexible result extraction to handle any engine nesting
-        function extractContent(obj: any): string {
-            if (!obj) return '';
-            if (typeof obj === 'string') return obj;
-            
-            // Look for common content fields
-            if (obj.content && typeof obj.content === 'string') return obj.content;
-            if (obj.result) return extractContent(obj.result);
-            
-            // If it's an array (like entries), join it
-            if (Array.isArray(obj)) return obj.join('\n');
-            if (obj.entries && Array.isArray(obj.entries)) return obj.entries.join('\n');
-            
-            return JSON.stringify(obj);
-        }
-
-        let finalResult = extractContent(rpcResponse.result);
-
-        // If it's still empty, try one more fallback to the top-level result
-        if (!finalResult && rpcResponse.result?.result) {
-            finalResult = extractContent(rpcResponse.result.result);
-        }
-
-        return new Response(JSON.stringify({ result: finalResult || 'No output from engine' }), {
+        const data = await res.json();
+        return new Response(JSON.stringify(data), {
             headers: { 'Content-Type': 'application/json' }
         });
     } catch (e: any) {
-        console.error('[Proxy] Global Error:', e);
+        console.error(`[Proxy] Preview ${params.path} Error:`, e);
         throw error(500, `Preview failed: ${e.message}`);
     }
 }

@@ -1,0 +1,59 @@
+{
+  "style": {
+    "info": {
+      "title": "Test Style"
+    },
+    "options": {
+      "processing": "author-date"
+    },
+    "citation": {
+      "wrap": "parentheses",
+      "template": [
+        {
+          "contributor": "author",
+          "form": "short"
+        },
+        {
+          "date": "issued",
+          "form": "year"
+        }
+      ]
+    },
+    "bibliography": {
+      "template": [
+        {
+          "contributor": "author",
+          "form": "long"
+        },
+        {
+          "date": "issued",
+          "form": "year"
+        },
+        {
+          "title": "primary",
+          "form": "long"
+        }
+      ]
+    }
+  },
+  "references": [
+    {
+      "id": "item1",
+      "type": "book",
+      "author": [
+        {
+          "family": "Doe",
+          "given": "John"
+        }
+      ],
+      "issued": {
+        "date-parts": [
+          [
+            2024
+          ]
+        ]
+      },
+      "title": "A Book"
+    }
+  ]
+}

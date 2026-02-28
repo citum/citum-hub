@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS bookmarks (
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    style_id UUID NOT NULL REFERENCES styles(id) ON DELETE CASCADE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    PRIMARY KEY (user_id, style_id)
+);

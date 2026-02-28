@@ -9,11 +9,19 @@
     import type { DecisionPackage, Preview } from '$lib/types/bindings';
 
     let currentDecision: DecisionPackage | null = $state(null);
+    let progressBaseline = $state(0);
     let isSaving = $state(false);
     let saveMessage = $state('');
 
     function handleDecision(event: CustomEvent<DecisionPackage | null>) {
         currentDecision = event.detail;
+
+        if (!event.detail) {
+            progressBaseline = 0;
+            return;
+        }
+
+        progressBaseline = Math.max(progressBaseline, event.detail.missing_fields.length);
     }
 
     async function saveStyle() {
@@ -62,7 +70,16 @@
         }
     });
 
-    const progress = $derived(currentDecision ? Math.round(((4 - currentDecision.missing_fields.length) / 4) * 100) : 0);
+    const progress = $derived.by(() => {
+        if (!currentDecision) {
+            return 0;
+        }
+
+        const totalSteps = Math.max(progressBaseline, currentDecision.missing_fields.length, 1);
+        const completedSteps = totalSteps - currentDecision.missing_fields.length;
+
+        return Math.max(0, Math.min(100, Math.round((completedSteps / totalSteps) * 100)));
+    });
     const isComplete = $derived(currentDecision && !currentDecision.question);
 </script>
 
@@ -122,9 +139,10 @@
             <div class="w-full max-w-[800px] flex flex-col gap-12">
                 <ComprehensivePreview 
                     previewSet={currentDecision ? {
-                        in_text: currentDecision.in_text_preview,
-                        note: currentDecision.note_preview,
-                        bibliography: currentDecision.bibliography_preview
+                        in_text_parenthetical: currentDecision.in_text_parenthetical,
+                        in_text_narrative: currentDecision.in_text_narrative,
+                        note: currentDecision.note,
+                        bibliography: currentDecision.bibliography
                     } : null} 
                 />
 

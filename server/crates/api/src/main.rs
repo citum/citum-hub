@@ -1,0 +1,337 @@
+/*
+SPDX-License-Identifier: MPL-2.0
+SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
+*/
+
+use axum::{
+    extract::State,
+    routing::{get, post},
+    Router,
+    Json,
+};
+use std::net::SocketAddr;
+use std::sync::Arc;
+use std::collections::HashMap;
+use serde_json::{Value, json};
+use citum_schema::Style;
+use citum_engine::{Processor, Reference, Bibliography, Citation, CitationItem};
+use citum_engine::render::html::Html;
+use serde::{Deserialize, Serialize};
+use intent_engine::{StyleIntent, DecisionPackage};
+
+struct AppState {
+    references: HashMap<String, Reference>,
+}
+
+
+
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
+
+    // Use internal macros to build robust preview data instead of dealing with YAML parsing.
+    let references: HashMap<String, Reference> = vec![
+        // Standard Monograph
+        citum_schema::ref_book!("kuhn1962", "Kuhn", "Thomas S.", 1962, "The Structure of Scientific Revolutions"),
+        // Standard Article
+        citum_schema::ref_article_authors!("watson1953", [("Watson", "J. D."), ("Crick", "F. H. C.")], 1953, "Molecular Structure of Nucleic Acids"),
+        // Collection component (approximated as book for preview here, or just book)
+        citum_schema::ref_book!("smith2010", "Smith", "Alice", 2010, "The Future of CSLN"),
+        // Disambiguation
+        citum_schema::ref_article!("doe2020a", "Doe", "John", 2020, "First Paper by Doe"),
+        citum_schema::ref_article!("doe2020b", "Doe", "John", 2020, "Second Paper by Doe"),
+        // Et al
+        citum_schema::ref_article_authors!("genetics1999", [("Adams", "A."), ("Baker", "B."), ("Clark", "C."), ("Davis", "D."), ("Evans", "E."), ("Foster", "F."), ("Green", "G.")], 1999, "A Very Long List of Authors in Genetics"),
+        // Missing fields (no author)
+        citum_schema::ref_book!("manuscript1800", "Archive", "Unknown", 1800, "Historical Document (Missing Author)"),
+    ].into_iter().map(|r| (r.id().unwrap().to_string(), citum_engine::Reference::try_from(r).unwrap())).collect();
+
+    let state = Arc::new(AppState {
+        references: references.clone()
+    });
+    
+    println!("Loaded {} references.", references.len());
+
+    let app = Router::new()
+        .route("/", get(health_check))
+        .route("/version", get(version))
+        .route("/api/references", get(get_references))
+        .route("/preview/citation", post(preview_citation))
+        .route("/preview/bibliography", post(preview_bibliography))
+        .route("/api/v1/decide", post(decide_handler))
+        .route("/api/v1/preview", post(preview_set_handler))
+        .route("/api/v1/generate", post(generate_handler))
+        .with_state(state)
+        .layer(tower_http::cors::CorsLayer::permissive());
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
+    println!("Citum Hub API listening on {}", addr);
+    
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
+}
+
+async fn health_check() -> &'static str {
+    "OK"
+}
+
+async fn version() -> Json<Value> {
+    Json(json!({
+        "service": "citum-hub-api",
+        "citum_schema_version": "0.6.0"
+    }))
+}
+
+async fn get_references(State(state): State<Arc<AppState>>) -> Json<HashMap<String, Reference>> {
+    Json(state.references.clone())
+}
+
+#[derive(Deserialize)]
+struct PreviewRequest {
+    style: Style,
+    references: Vec<Reference>,
+}
+
+#[derive(Serialize)]
+struct PreviewResponse {
+    result: String,
+}
+
+async fn preview_citation(Json(payload): Json<PreviewRequest>) -> Json<PreviewResponse> {
+    let bib: Bibliography = payload.references
+        .into_iter()
+        .map(|r| (r.id().clone().unwrap_or_default(), r))
+        .collect();
+
+    let cite_ids: Vec<String> = bib.keys().cloned().collect();
+    let processor = Processor::new(payload.style, bib);
+
+    let citation = Citation {
+        id: Some("preview-1".to_string()),
+        items: cite_ids.into_iter().map(|id| CitationItem { id, ..Default::default() }).collect(),
+        ..Default::default()
+    };
+
+    let result = match processor.process_citation_with_format::<Html>(&citation) {
+        Ok(res) => res,
+        Err(e) => format!("Error: {}", e),
+    };
+
+    Json(PreviewResponse { result })
+}
+
+async fn preview_bibliography(Json(payload): Json<PreviewRequest>) -> Json<PreviewResponse> {
+    let bib: Bibliography = payload.references
+        .into_iter()
+        .map(|r| (r.id().clone().unwrap_or_default(), r))
+        .collect();
+
+    let processor = Processor::new(payload.style, bib);
+    let result = processor.render_bibliography_with_format::<Html>();
+
+    Json(PreviewResponse { result })
+}
+
+#[derive(Default, Serialize, Deserialize)]
+struct PreviewSet {
+    in_text_parenthetical: Option<String>,
+    in_text_narrative: Option<String>,
+    note: Option<String>,
+    bibliography: Option<String>,
+}
+
+async fn preview_set_handler(
+    State(state): State<Arc<AppState>>,
+    Json(intent): Json<StyleIntent>
+) -> Json<PreviewSet> {
+    Json(generate_preview_set(&intent, &state.references))
+}
+
+fn generate_preview_set(intent: &StyleIntent, references: &HashMap<String, Reference>) -> PreviewSet {
+    let mut set = PreviewSet::default();
+    let style = intent.to_style();
+    
+    // Choose references based on field intent
+    let standard_item_id = match intent.field.as_deref() {
+        Some("sciences") => "watson1953",
+        Some("humanities") => "manuscript1800",
+        Some("social_science") => "smith2010",
+        _ => "kuhn1962",
+    };
+
+    let mut cite_ids_1 = vec!["doe2020a".to_string(), "doe2020b".to_string()];
+    if references.contains_key(standard_item_id) {
+        cite_ids_1.push(standard_item_id.to_string());
+    } else {
+        cite_ids_1.push("kuhn1962".to_string());
+    }
+
+    let cite_ids_2 = vec!["genetics1999".to_string()];
+
+    // Make sure we have these references
+    let mut bib_refs = Vec::new();
+    for id in cite_ids_1.iter().chain(cite_ids_2.iter()) {
+        if let Some(r) = references.get(id) {
+            bib_refs.push((id.clone(), r.clone()));
+        }
+    }
+
+    if bib_refs.is_empty() {
+        return set;
+    }
+
+    let bib: Bibliography = bib_refs.into_iter().collect();
+    let processor = Processor::new(style, bib);
+    
+    // Citation 1: Disambiguation + standard
+    let items_1: Vec<CitationItem> = cite_ids_1.iter().map(|id| {
+        CitationItem { 
+            id: id.clone(), 
+            ..Default::default() 
+        }
+    }).collect();
+
+    // Citation 2: Et al + locators
+    let items_2: Vec<CitationItem> = cite_ids_2.iter().map(|id| {
+        CitationItem { 
+            id: id.clone(), 
+            locator: Some("15-18".to_string()),
+            ..Default::default() 
+        }
+    }).collect();
+
+    // --- Parenthetical Citations ---
+    let mut parenthetical_citations = vec![];
+    
+    let cite1_paren = Citation {
+        id: Some("preview-parenthetical-1".to_string()),
+        items: items_1.clone(),
+        ..Default::default()
+    };
+    if let Ok(res) = processor.process_citation_with_format::<Html>(&cite1_paren) {
+        if !res.trim().is_empty() { parenthetical_citations.push(res); }
+    }
+
+    let cite2_paren = Citation {
+        id: Some("preview-parenthetical-2".to_string()),
+        position: Some(citum_schema::citation::Position::Subsequent),
+        items: items_2.clone(),
+        ..Default::default()
+    };
+    if let Ok(res) = processor.process_citation_with_format::<Html>(&cite2_paren) {
+        if !res.trim().is_empty() { parenthetical_citations.push(res); }
+    }
+
+    // --- Narrative Citations ---
+    let mut narrative_citations = vec![];
+
+    let cite1_narrative = Citation {
+        id: Some("preview-narrative-1".to_string()),
+        mode: citum_schema::CitationMode::Integral,
+        items: items_1.clone(),
+        ..Default::default()
+    };
+    if let Ok(res) = processor.process_citation_with_format::<Html>(&cite1_narrative) {
+        if !res.trim().is_empty() { narrative_citations.push(res); }
+    }
+
+    let cite2_narrative = Citation {
+        id: Some("preview-narrative-2".to_string()),
+        mode: citum_schema::CitationMode::Integral,
+        position: Some(citum_schema::citation::Position::Subsequent),
+        items: items_2.clone(),
+        ..Default::default()
+    };
+    if let Ok(res) = processor.process_citation_with_format::<Html>(&cite2_narrative) {
+        if !res.trim().is_empty() { narrative_citations.push(res); }
+    }
+
+    // Output both narrative and parenthetical for ALL classes.
+    let parenthetical_preview = parenthetical_citations.join("; ");
+    let narrative_preview = narrative_citations.join("; ");
+    
+    if !parenthetical_preview.is_empty() {
+        set.in_text_parenthetical = Some(parenthetical_preview.clone());
+    }
+    if !narrative_preview.is_empty() {
+        set.in_text_narrative = Some(narrative_preview);
+    }
+
+    // For Note styles, explicitly provide the note body using the parenthetical generation
+    match intent.class {
+        Some(intent_engine::CitationClass::Footnote) | Some(intent_engine::CitationClass::Endnote) => {
+            if !parenthetical_preview.is_empty() {
+                set.note = Some(parenthetical_citations.join("<br>"));
+            }
+        },
+        _ => {}
+    }
+
+    // Bibliography
+    if intent.has_bibliography == Some(true) || intent.has_bibliography.is_none() {
+        let bib_res = processor.render_bibliography_with_format::<Html>();
+        let bib_str = bib_res.trim();
+        if !bib_str.is_empty() {
+            set.bibliography = Some(bib_str.to_string());
+        }
+    }
+    
+    set
+}
+
+async fn decide_handler(
+    State(state): State<Arc<AppState>>,
+    Json(intent): Json<StyleIntent>
+) -> Json<DecisionPackage> {
+    let mut package = intent.decide();
+
+    let current_previews = generate_preview_set(&intent, &state.references);
+    package.in_text_parenthetical = current_previews.in_text_parenthetical;
+    package.in_text_narrative = current_previews.in_text_narrative;
+    package.note = current_previews.note;
+    package.bibliography = current_previews.bibliography;
+
+    for preview in &mut package.previews {
+        match serde_json::to_value(&intent) {
+            Ok(mut intent_val) => {
+                if let Some(obj) = intent_val.as_object_mut() {
+                    if let Some(choice_obj) = preview.choice_value.as_object() {
+                        for (k, v) in choice_obj {
+                            obj.insert(k.clone(), v.clone());
+                        }
+                    }
+                }
+
+                if let Ok(temp_intent) = serde_json::from_value::<StyleIntent>(intent_val) {
+                    let p_set = generate_preview_set(&temp_intent, &state.references);
+                    let mut html = String::new();
+                    if let Some(it) = p_set.in_text_parenthetical { html.push_str(&format!("<div class='preview-cit-p'>{}</div>", it)); }
+                    if let Some(itn) = p_set.in_text_narrative { html.push_str(&format!("<div class='preview-cit-n mt-2'>{}</div>", itn)); }
+                    if let Some(nt) = p_set.note { html.push_str(&format!("<div class='preview-note'>{}</div>", nt)); }
+                    if let Some(bb) = p_set.bibliography { html.push_str(&format!("<div class='preview-bib'>{}</div>", bb)); }
+                    preview.html = html;
+                }
+            },
+            Err(e) => println!("Error serializing intent: {}", e),
+        }
+    }
+
+    Json(package)
+}
+
+async fn generate_handler(Json(intent): Json<StyleIntent>) -> (axum::http::HeaderMap, String) {
+    let style = intent.to_style();
+    let citum = serde_yaml::to_string(&style).unwrap_or_else(|_| "# Error generating Citum".to_string());
+    
+    let mut headers = axum::http::HeaderMap::new();
+    headers.insert(
+        axum::http::header::CONTENT_TYPE,
+        axum::http::HeaderValue::from_static("application/x-yaml"),
+    );
+    headers.insert(
+        axum::http::header::CONTENT_DISPOSITION,
+        axum::http::HeaderValue::from_static("attachment; filename=\"custom-style.yaml\""),
+    );
+
+    (headers, citum)
+}

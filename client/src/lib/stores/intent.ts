@@ -1,19 +1,23 @@
 import { writable } from 'svelte/store';
 import type { StyleIntent } from '../types/bindings';
 
-const initialState: StyleIntent = {
-    base_archetype: null,
-    field: null,
-    class: null,
-    citation_preset: null,
-    bibliography_preset: null,
-    detailed_config: null,
-    author_format: null,
-    has_bibliography: null
-};
+export function createInitialIntent(): StyleIntent {
+    return {
+        field: null,
+        class: null,
+        from_preset: null,
+        customize_target: null,
+        contributor_preset: null,
+        date_preset: null,
+        title_preset: null,
+        sort_preset: null,
+        bib_template: null,
+        has_bibliography: null
+    };
+}
 
-export const intent = writable<StyleIntent>(initialState);
+export const intent = writable<StyleIntent>(createInitialIntent());
 
 export function resetIntent() {
-    intent.set(initialState);
+    intent.set(createInitialIntent());
 }

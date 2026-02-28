@@ -1,37 +1,34 @@
-import { json, error } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
-import { requireAuth } from '$lib/server/auth';
+import { error } from '@sveltejs/kit';
+import { env } from '$env/dynamic/private';
 
-export async function POST({ request, params }) {
-    const user = await requireAuth(request);
-    if (!user) throw error(401, 'Unauthorized');
+const BACKEND_URL = env.BACKEND_URL || 'http://localhost:3000';
 
-    const client = await pool.connect();
+export async function POST({ request, params, fetch }) {
     try {
-        await client.query(
-            `INSERT INTO bookmarks (user_id, style_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
-            [user.id, params.id]
-        );
+        const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}/bookmark`, {
+            method: 'POST',
+            headers: {
+                'Authorization': request.headers.get('Authorization') || ''
+            }
+        });
+        if (!res.ok) throw error(res.status as any, 'Backend error');
         return new Response(null, { status: 201 });
-    } catch (e) {
-        throw error(500, 'Database error');
-    } finally {
-        client.release();
+    } catch (e: any) {
+        throw error(500, `Backend error: ${e.message}`);
     }
 }
 
-export async function DELETE({ request, params }) {
-    const user = await requireAuth(request);
-    if (!user) throw error(401, 'Unauthorized');
-
-    const client = await pool.connect();
+export async function DELETE({ request, params, fetch }) {
     try {
-        await client.query(
-            `DELETE FROM bookmarks WHERE user_id = $1 AND style_id = $2`,
-            [user.id, params.id]
-        );
+        const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}/bookmark`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': request.headers.get('Authorization') || ''
+            }
+        });
+        if (!res.ok) throw error(res.status as any, 'Backend error');
         return new Response(null, { status: 204 });
-    } finally {
-        client.release();
+    } catch (e: any) {
+        throw error(500, `Backend error: ${e.message}`);
     }
 }

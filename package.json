@@ -2,7 +2,8 @@
     "name": "citum-hub",
     "private": true,
     "scripts": {
-        "dev": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run dev",
+        "dev": "bash scripts/dev.sh",
+        "dev:client": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run dev",
         "build": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run build",
         "check": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run check"
     }

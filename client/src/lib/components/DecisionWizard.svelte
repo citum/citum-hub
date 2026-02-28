@@ -1,6 +1,7 @@
 <script lang="ts">
-    import { createEventDispatcher, onMount } from 'svelte';
-    import { intent, resetIntent } from '$lib/stores/intent';
+    import { createEventDispatcher } from 'svelte';
+    import { browser } from '$app/environment';
+    import { createInitialIntent, intent, resetIntent } from '$lib/stores/intent';
     import type { DecisionPackage, StyleIntent } from '$lib/types/bindings';
 
     const dispatch = createEventDispatcher();
@@ -8,8 +9,10 @@
     let loading = $state(false);
     let error = $state<string | null>(null);
     let decisionPackage = $state<DecisionPackage | null>(null);
+    let requestSequence = 0;
 
     async function fetchDecision(currentIntent: StyleIntent) {
+        const requestId = ++requestSequence;
         loading = true;
         error = null;
         try {
@@ -20,21 +23,25 @@
             });
             if (res.ok) {
                 const data = await res.json();
+                if (requestId !== requestSequence) return;
                 decisionPackage = data;
                 dispatch('decision', data);
             } else {
+                if (requestId !== requestSequence) return;
                 error = `Error: ${res.statusText}`;
             }
         } catch (e) {
+            if (requestId !== requestSequence) return;
             error = String(e);
         } finally {
+            if (requestId !== requestSequence) return;
             loading = false;
         }
     }
 
-    // Effect to refetch when intent changes
+    // Effect to refetch when intent changes — guarded to browser-only to avoid SSR fetch warning
     $effect(() => {
-        fetchDecision($intent);
+        if (browser) fetchDecision($intent);
     });
 
     function handleChoice(choice: any) {
@@ -43,7 +50,29 @@
 
     function doReset() {
         resetIntent();
-        fetchDecision($intent);
+        decisionPackage = null;
+        dispatch('decision', null);
+        fetchDecision(createInitialIntent());
+    }
+
+    function doCustomize() {
+        intent.update(prev => ({ ...prev, customize_target: 'menu' }));
+    }
+
+    function shouldShowChoicePreview() {
+        return !['field', 'customize_target'].includes(decisionPackage?.question?.id ?? '');
+    }
+
+    function canCustomizeCurrentStyle() {
+        const hasPresetBackedChoices = Boolean(
+            $intent.from_preset ||
+            $intent.contributor_preset ||
+            $intent.date_preset ||
+            $intent.title_preset ||
+            $intent.bib_template
+        );
+
+        return hasPresetBackedChoices && !['field', 'class', 'customize_target'].includes(decisionPackage?.question?.id ?? '');
     }
 
     async function downloadCitum() {
@@ -107,10 +136,11 @@
                                     arrow_forward
                                 </span>
                             </div>
-                            <!-- Small Preview of the choice -->
-                            <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[11px] font-serif text-slate-600 group-hover:bg-white transition-colors">
-                                {@html choice.html}
-                            </div>
+                            {#if shouldShowChoicePreview()}
+                                <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[11px] font-serif text-slate-600 group-hover:bg-white transition-colors">
+                                    {@html choice.html}
+                                </div>
+                            {/if}
                         </div>
                     </button>
                 {/each}
@@ -131,6 +161,10 @@
             <button onclick={downloadCitum} class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
                 Download Citum Style
             </button>
+            <button onclick={doCustomize} class="w-full py-3 text-primary text-sm font-bold hover:text-primary-dark transition-colors flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-sm">tune</span>
+                Customize Style
+            </button>
             <button onclick={doReset} class="w-full py-3 text-slate-500 text-sm font-bold hover:text-slate-900 transition-colors">
                 Start Over
             </button>
@@ -140,6 +174,11 @@
     <!-- Sticky footer reset button in wizard -->
     {#if decisionPackage.question}
         <div class="mt-8 pt-6 border-t border-slate-100">
+            {#if canCustomizeCurrentStyle()}
+                <button onclick={doCustomize} class="w-full py-2.5 text-primary text-xs font-bold uppercase tracking-widest hover:text-primary-dark transition-colors flex items-center justify-center gap-2 mb-3">
+                    <span class="material-symbols-outlined text-sm">tune</span> Customize Style
+                </button>
+            {/if}
             <button onclick={doReset} class="w-full py-2.5 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-red-500 transition-colors flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">restart_alt</span> Reset Wizard
             </button>
