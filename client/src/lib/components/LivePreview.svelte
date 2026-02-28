@@ -30,4 +30,28 @@
         font-style: italic;
         font-size: 0.9rem;
     }
+
+    /* Citum Engine Styling */
+    :global(.csln-bibliography) {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    :global(.csln-entry) {
+        margin-bottom: 0.25rem;
+    }
+
+    :global(.csln-citation) {
+        cursor: help;
+        border-bottom: 1px dotted rgba(0,0,0,0.1);
+    }
+
+    /* Style the italics/bold even if the engine returns them as tags */
+    :global(.live-preview-content i) {
+        font-style: italic;
+    }
+    :global(.live-preview-content b) {
+        font-weight: bold;
+    }
 </style>
