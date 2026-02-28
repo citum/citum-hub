@@ -1,0 +1,276 @@
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Style {
+    pub version: String,
+    pub xmlns: String,
+    pub class: String,
+    /// The default locale for this style (e.g., "en-US", "de-DE")
+    pub default_locale: Option<String>,
+    /// Style-level name formatting options (inherited by all names unless overridden)
+    pub initialize_with: Option<String>,
+    pub initialize_with_hyphen: Option<bool>,
+    pub names_delimiter: Option<String>,
+    pub name_as_sort_order: Option<String>,
+    pub sort_separator: Option<String>,
+    pub delimiter_precedes_last: Option<String>,
+    pub delimiter_precedes_et_al: Option<String>,
+    pub demote_non_dropping_particle: Option<String>,
+    pub and: Option<String>,
+    /// Page range formatting (expanded, minimal, chicago, chicago-16)
+    pub page_range_format: Option<String>,
+    pub info: Info,
+    pub locale: Vec<Locale>,
+    pub macros: Vec<Macro>,
+    pub citation: Citation,
+    pub bibliography: Option<Bibliography>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct Info {
+    pub title: String,
+    pub id: String,
+    pub updated: String,
+    // Simplification for now
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Locale {
+    pub lang: Option<String>,
+    pub terms: Vec<Term>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Term {
+    pub name: String,
+    pub form: Option<String>,
+    pub value: String,
+    pub single: Option<String>,
+    pub multiple: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Macro {
+    pub name: String,
+    pub children: Vec<CslNode>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Citation {
+    pub layout: Layout,
+    pub sort: Option<Sort>,
+    // Attributes
+    pub et_al_min: Option<usize>,
+    pub et_al_use_first: Option<usize>,
+    pub disambiguate_add_year_suffix: Option<bool>,
+    pub disambiguate_add_names: Option<bool>,
+    pub disambiguate_add_givenname: Option<bool>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Bibliography {
+    pub layout: Layout,
+    pub sort: Option<Sort>,
+    // Attributes
+    pub et_al_min: Option<usize>,
+    pub et_al_use_first: Option<usize>,
+    pub hanging_indent: Option<bool>,
+    pub subsequent_author_substitute: Option<String>,
+    pub subsequent_author_substitute_rule: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Layout {
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub delimiter: Option<String>,
+    pub children: Vec<CslNode>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Sort {
+    pub keys: Vec<SortKey>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct SortKey {
+    pub variable: Option<String>,
+    pub macro_name: Option<String>,
+    pub sort: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(tag = "type", rename_all = "kebab-case")]
+pub enum CslNode {
+    Text(Text),
+    Date(Date),
+    Label(Label),
+    Names(Names),
+    Group(Group),
+    Choose(Choose),
+    Number(Number),
+    Name(Name),
+    EtAl(EtAl),
+    Substitute(Substitute),
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Text {
+    pub value: Option<String>,
+    pub variable: Option<String>,
+    pub macro_name: Option<String>,
+    pub term: Option<String>,
+    pub form: Option<String>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub quotes: Option<bool>,
+    pub text_case: Option<String>,
+    pub strip_periods: Option<bool>,
+    pub plural: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macro_call_order: Option<usize>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Name {
+    pub and: Option<String>,
+    pub delimiter: Option<String>,
+    pub name_as_sort_order: Option<String>,
+    pub sort_separator: Option<String>,
+    pub initialize_with: Option<String>,
+    pub initialize_with_hyphen: Option<bool>,
+    pub form: Option<String>,
+    pub delimiter_precedes_last: Option<String>,
+    pub delimiter_precedes_et_al: Option<String>,
+    pub et_al_min: Option<usize>,
+    pub et_al_use_first: Option<usize>,
+    pub et_al_subsequent_min: Option<usize>,
+    pub et_al_subsequent_use_first: Option<usize>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct EtAl {
+    pub term: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Default, Clone)]
+pub struct Formatting {
+    pub font_style: Option<String>,
+    pub font_variant: Option<String>,
+    pub font_weight: Option<String>,
+    pub text_decoration: Option<String>,
+    pub vertical_align: Option<String>,
+    pub display: Option<String>, // Often specific to Group/Bibliography, but kept here for now
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Substitute {
+    pub children: Vec<CslNode>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Date {
+    pub variable: String,
+    pub form: Option<String>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub delimiter: Option<String>,
+    pub date_parts: Option<String>,
+    pub text_case: Option<String>,
+    pub parts: Vec<DatePart>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macro_call_order: Option<usize>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct DatePart {
+    pub name: String,
+    pub form: Option<String>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Label {
+    pub variable: Option<String>,
+    pub form: Option<String>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub text_case: Option<String>,
+    pub strip_periods: Option<bool>,
+    pub plural: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macro_call_order: Option<usize>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Names {
+    pub variable: String,
+    pub delimiter: Option<String>,
+    pub delimiter_precedes_et_al: Option<String>,
+    pub et_al_min: Option<usize>,
+    pub et_al_use_first: Option<usize>,
+    pub et_al_subsequent_min: Option<usize>,
+    pub et_al_subsequent_use_first: Option<usize>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub children: Vec<CslNode>, // <name>, <label>, <substitute>, <et-al>
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macro_call_order: Option<usize>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Group {
+    pub delimiter: Option<String>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub children: Vec<CslNode>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macro_call_order: Option<usize>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Choose {
+    pub if_branch: ChooseBranch,
+    pub else_if_branches: Vec<ChooseBranch>,
+    pub else_branch: Option<Vec<CslNode>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ChooseBranch {
+    pub match_mode: Option<String>, // "any", "all", "none" (default "all" usually)
+    pub type_: Option<String>,
+    pub variable: Option<String>,
+    pub is_numeric: Option<String>,
+    pub is_uncertain_date: Option<String>,
+    pub locator: Option<String>,
+    pub position: Option<String>,
+    pub children: Vec<CslNode>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Number {
+    pub variable: String,
+    pub form: Option<String>,
+    pub prefix: Option<String>,
+    pub suffix: Option<String>,
+    pub text_case: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub macro_call_order: Option<usize>,
+    #[serde(flatten)]
+    pub formatting: Formatting,
+}

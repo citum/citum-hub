@@ -1,0 +1,24 @@
+# release-plz configuration for automated releases
+# See: https://release-plz.ieni.dev/docs/config
+
+[workspace]
+# Enable automatic changelog updates from Conventional Commits
+changelog_update = false
+
+# Do not publish to crates.io (project-specific decision)
+publish = false
+
+# Allow dirty working directory (CI artifact handling)
+allow_dirty = true
+
+# Disable per-package releases - we want a single workspace release
+git_release_enable = false
+
+# Only create release for the main binary
+[[package]]
+name = "citum"
+changelog_update = true
+changelog_path = "../../CHANGELOG.md"
+git_release_enable = true
+git_tag_enable = true
+git_tag_name = "v{{ version }}"

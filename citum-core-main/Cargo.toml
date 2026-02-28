@@ -1,0 +1,25 @@
+[workspace]
+members = [
+    "crates/csl-legacy",
+    "crates/citum-schema",
+    "crates/citum-migrate",
+    "crates/citum-engine",
+    "crates/citum-analyze",
+    "crates/citum-cli",
+    "crates/citum-server",
+    "crates/citum-edtf"
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.6.0"
+edition = "2024"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+
+[profile.release]
+opt-level = 3
+lto = "thin"        # Faster than "true", almost as good
+strip = true
+panic = "abort"

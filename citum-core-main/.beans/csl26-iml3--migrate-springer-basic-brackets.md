@@ -1,0 +1,20 @@
+---
+# csl26-iml3
+title: 'Migrate: springer-basic-brackets'
+status: completed
+type: feature
+priority: normal
+created_at: 2026-02-14T14:46:41Z
+updated_at: 2026-02-26T23:53:43Z
+---
+
+Migration prep completed ✅
+
+Style: styles/springer-basic-brackets.yaml
+Next: Agent refinement (Phase 4)
+
+Auto-generated baseline:
+- Options: citum-migrate (Rust)
+- Templates: infer-template.js (output-driven)
+
+Validation: Run `node scripts/oracle-migration.js styles-legacy/springer-basic-brackets.csl`

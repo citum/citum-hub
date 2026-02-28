@@ -15,7 +15,6 @@ export async function POST({ request, params, fetch }) {
             throw error(400, 'Missing style or references');
         }
 
-        // 1. Write the style to the shared temp directory
         const tempDir = path.join(process.cwd(), 'temp_styles');
         if (!fs.existsSync(tempDir)) {
             fs.mkdirSync(tempDir, { recursive: true });
@@ -26,7 +25,6 @@ export async function POST({ request, params, fetch }) {
         const filePath = path.join(tempDir, fileName);
         fs.writeFileSync(filePath, styleYaml);
         
-        // 2. Prepare the JSON-RPC request
         const containerStylePath = `/tmp/citum/styles/${fileName}`;
         const rpcMethod = params.path === 'citation' ? 'render_citation' : 'render_bibliography';
         
@@ -38,8 +36,7 @@ export async function POST({ request, params, fetch }) {
         const rpcParams: any = {
             style_path: containerStylePath,
             refs: refsMap,
-            output_format: 'html', // Correct key from rpc.rs
-            format: 'html'        // Redundant key just in case
+            output_format: 'html'
         };
         
         if (params.path === 'citation') {
@@ -63,9 +60,6 @@ export async function POST({ request, params, fetch }) {
         
         const rpcResponse = await response.json();
         
-        // --- DEBUG LOG ---
-        console.log(`[Proxy] Engine Raw Response (${params.path}):`, JSON.stringify(rpcResponse, null, 2));
-        
         // Cleanup the temp file
         try { fs.unlinkSync(filePath); } catch(e) {}
 
@@ -78,19 +72,27 @@ export async function POST({ request, params, fetch }) {
             });
         }
 
-        const engineResult = rpcResponse.result?.result;
-        let finalResult = '';
-
-        if (params.path === 'citation') {
-            finalResult = typeof engineResult === 'string' ? engineResult : (engineResult?.result || '');
-        } else {
-            // Check for BibliographyResult struct
-            finalResult = engineResult?.content || (typeof engineResult === 'string' ? engineResult : '');
+        // Extremely flexible result extraction to handle any engine nesting
+        function extractContent(obj: any): string {
+            if (!obj) return '';
+            if (typeof obj === 'string') return obj;
+            
+            // Look for common content fields
+            if (obj.content && typeof obj.content === 'string') return obj.content;
+            if (obj.result) return extractContent(obj.result);
+            
+            // If it's an array (like entries), join it
+            if (Array.isArray(obj)) return obj.join('\n');
+            if (obj.entries && Array.isArray(obj.entries)) return obj.entries.join('\n');
+            
+            return JSON.stringify(obj);
         }
 
-        // Final fallback
-        if (!finalResult && rpcResponse.result) {
-            finalResult = typeof rpcResponse.result === 'string' ? rpcResponse.result : (rpcResponse.result.content || '');
+        let finalResult = extractContent(rpcResponse.result);
+
+        // If it's still empty, try one more fallback to the top-level result
+        if (!finalResult && rpcResponse.result?.result) {
+            finalResult = extractContent(rpcResponse.result.result);
         }
 
         return new Response(JSON.stringify({ result: finalResult || 'No output from engine' }), {

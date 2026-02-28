@@ -1,0 +1,46 @@
+.oracle-cache
+target/
+**/*.rs.bk
+*.swp
+**/*.cbor
+.DS_Store
+csl.json
+csln.json
+flattened_*.json
+tests/*.csl
+scripts/node_modules/
+scripts/*.json
+!scripts/package.json
+styles-report.json
+.migrated-temp.yaml
+migrated_*.yaml
+
+# Debug/analysis artifacts
+debug_*.yaml
+oracle_comparison.rs
+styles_analysis.txt
+# Baseline JSON files (keep directory structure)
+baselines/*.json
+!baselines/README.md
+!baselines/.gitkeep
+
+# Task management (local working data, not version controlled)
+tasks/
+tasks-backup-*/
+
+# Project-specific symlinks (local configuration)
+.agents/
+AGENT.md
+
+# Temporary development files
+debug.log
+f.md
+temp_*.csl
+*.log
+migrated_*.yaml
+*.yaml.bk
+
+bindings/latex/libcsln_processor.dylib
+
+# Benchmark baselines (local-only performance tracking)
+.bench-baselines/

@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://bdarcus.github.io/csl26/schemas/bib.json
+# Bibliography grouping example for Chicago author-date style.
+# Demonstrates primary/archival/secondary sections with localized headings.
+# Use with: csln render refs -b examples/bib-grouping-refs.yaml -s styles/chicago-author-date.yaml
+
+info:
+  description: Chicago-style grouped bibliography with primary, archival, and secondary sources
+
+references:
+  # PRIMARY SOURCES (note: primary)
+  - id: darwin1859
+    type: book
+    title: On the Origin of Species
+    author:
+      - family: Darwin
+        given: Charles
+    issued: "1859"
+    publisher:
+      name: John Murray
+      location: London
+    note: primary
+
+  - id: freud1900
+    type: book
+    title: Die Traumdeutung
+    author:
+      - family: Freud
+        given: Sigmund
+    issued: "1900"
+    publisher:
+      name: Franz Deuticke
+      location: Leipzig
+    language: de
+    note: primary
+
+  # ARCHIVAL SOURCES (note: archival)
+  - id: letter1876
+    type: document
+    title: Letter to T.H. Huxley, 14 September 1876
+    author:
+      - family: Darwin
+        given: Charles
+    issued: "1876"
+    note: archival
+
+  # SECONDARY SOURCES (no note — fallback group)
+  - id: browne2002
+    type: book
+    title: "Charles Darwin: The Power of Place"
+    author:
+      - family: Browne
+        given: Janet
+    issued: "2002"
+    publisher:
+      name: Alfred A. Knopf
+      location: New York
+
+  - id: gay1988
+    type: book
+    title: "Freud: A Life for Our Time"
+    author:
+      - family: Gay
+        given: Peter
+    issued: "1988"
+    publisher:
+      name: W.W. Norton
+      location: New York
+
+  - id: mayr1991
+    type: article
+    title: "Darwin's Impact on Modern Thought"
+    author:
+      - family: Mayr
+        given: Ernst
+    issued: "1991"
+    parent:
+      type: academic-journal
+      title: Proceedings of the American Philosophical Society
+    volume: "135"
+    issue: "4"
+    pages: 317-330

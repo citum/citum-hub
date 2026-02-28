@@ -1,0 +1,21 @@
+# Testing CSLN Document Processing
+
+This is a test document using the proposed Djot citation syntax.
+
+## Parenthetical Citations
+
+Multi-cite with locator: [@kuhn1962; @watson1953, ch. 2].
+
+Structured locator: [@kuhn1962, section: 5].
+
+Simple parenthetical: [@watson1953].
+
+## Integral Citations
+
+Basic integral: [+@kuhn1962] argues ..., [+@watson1953] that ...
+
+Integral with locator: [+@kuhn1962, p. 10] argues...
+
+## Visibility Modifiers
+
+Suppress author: [-@kuhn1962].

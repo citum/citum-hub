@@ -1,0 +1,417 @@
+{
+  "comment": "Expanded test data covering common reference types and citation mechanics",
+  "ITEM-1": {
+    "id": "ITEM-1",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "The Structure of Scientific Revolutions",
+    "author": [{ "family": "Kuhn", "given": "Thomas S." }],
+    "issued": { "date-parts": [[1962]] },
+    "container-title": "International Encyclopedia of Unified Science",
+    "volume": "2",
+    "issue": "2",
+    "publisher": "University of Chicago Press",
+    "publisher-place": "Chicago",
+    "DOI": "10.1234/example"
+  },
+  "ITEM-2": {
+    "id": "ITEM-2",
+    "class": "monograph",
+    "type": "book",
+    "title": "A Brief History of Time",
+    "author": [{ "family": "Hawking", "given": "Stephen" }],
+    "issued": { "date-parts": [[1988]] },
+    "publisher": "Bantam Dell Publishing Group",
+    "publisher-place": "New York"
+  },
+  "ITEM-3": {
+    "id": "ITEM-3",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Deep Learning",
+    "author": [
+      { "family": "LeCun", "given": "Yann" },
+      { "family": "Bengio", "given": "Yoshua" },
+      { "family": "Hinton", "given": "Geoffrey" }
+    ],
+    "issued": { "date-parts": [[2015]] },
+    "container-title": "Nature",
+    "volume": "521",
+    "page": "436-444",
+    "DOI": "10.1038/nature14539"
+  },
+  "ITEM-4": {
+    "id": "ITEM-4",
+    "class": "collection-component",
+    "type": "chapter",
+    "title": "The Role of Deliberate Practice",
+    "author": [{ "family": "Ericsson", "given": "K. Anders" }],
+    "editor": [
+      { "family": "Ericsson", "given": "K. Anders" },
+      { "family": "Charness", "given": "Neil" },
+      { "family": "Feltovich", "given": "Paul J." },
+      { "family": "Hoffman", "given": "Robert R." }
+    ],
+    "issued": { "date-parts": [[2006]] },
+    "container-title": "The Cambridge Handbook of Expertise and Expert Performance",
+    "publisher": "Cambridge University Press",
+    "page": "683-703"
+  },
+  "ITEM-5": {
+    "id": "ITEM-5",
+    "class": "monograph",
+    "type": "report",
+    "title": "World Development Report 2023",
+    "author": [{ "literal": "World Bank" }],
+    "issued": { "date-parts": [[2023]] },
+    "publisher": "World Bank Group",
+    "publisher-place": "Washington, DC"
+  },
+  "ITEM-6": {
+    "id": "ITEM-6",
+    "class": "monograph",
+    "type": "book",
+    "title": "The Psychology of Computer Programming",
+    "author": [
+      { "family": "Weinberg", "given": "Gerald M." },
+      { "family": "Freedman", "given": "Daniel P." }
+    ],
+    "issued": { "date-parts": [[1971]] },
+    "publisher": "Van Nostrand Reinhold",
+    "publisher-place": "New York",
+    "edition": "Silver Anniversary Edition"
+  },
+  "ITEM-7": {
+    "id": "ITEM-7",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Attention Is All You Need",
+    "author": [
+      { "family": "Vaswani", "given": "Ashish" },
+      { "family": "Shazeer", "given": "Noam" },
+      { "family": "Parmar", "given": "Niki" },
+      { "family": "Uszkoreit", "given": "Jakob" },
+      { "family": "Jones", "given": "Llion" },
+      { "family": "Gomez", "given": "Aidan N." },
+      { "family": "Kaiser", "given": "Lukasz" },
+      { "family": "Polosukhin", "given": "Illia" }
+    ],
+    "issued": { "date-parts": [[2017]] },
+    "container-title": "Advances in Neural Information Processing Systems",
+    "volume": "30",
+    "page": "5998-6008"
+  },
+  "ITEM-8": {
+    "id": "ITEM-8",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Scientific Paradigms and Normal Science",
+    "author": [{ "family": "Kuhn", "given": "Thomas S." }],
+    "issued": { "date-parts": [[1970]] },
+    "container-title": "Philosophy of Science",
+    "volume": "37",
+    "issue": "1",
+    "page": "1-13",
+    "DOI": "10.1086/288273"
+  },
+  "ITEM-9": {
+    "id": "ITEM-9",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Climate Change and Extreme Weather Events",
+    "author": [
+      { "family": "Smith", "given": "John" },
+      { "family": "Anderson", "given": "Mary" }
+    ],
+    "issued": { "date-parts": [[2020]] },
+    "container-title": "Nature Climate Change",
+    "volume": "10",
+    "page": "850-855",
+    "DOI": "10.1038/s41558-020-0871-4"
+  },
+  "ITEM-10": {
+    "id": "ITEM-10",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Machine Learning for Climate Prediction",
+    "author": [
+      { "family": "Smith", "given": "Jane" },
+      { "family": "Williams", "given": "Robert" }
+    ],
+    "issued": { "date-parts": [[2020]] },
+    "container-title": "Environmental Research Letters",
+    "volume": "15",
+    "issue": "11",
+    "page": "114042",
+    "DOI": "10.1088/1748-9326/abc123"
+  },
+  "ITEM-11": {
+    "id": "ITEM-11",
+    "class": "monograph",
+    "type": "thesis",
+    "title": "Neural Networks for Natural Language Understanding",
+    "author": [{ "family": "Chen", "given": "Wei" }],
+    "issued": { "date-parts": [[2019]] },
+    "publisher": "Stanford University",
+    "genre": "PhD thesis"
+  },
+  "ITEM-12": {
+    "id": "ITEM-12",
+    "class": "collection-component",
+    "type": "paper-conference",
+    "title": "Distributed Representations of Words and Phrases",
+    "author": [
+      { "family": "Mikolov", "given": "Tomas" },
+      { "family": "Sutskever", "given": "Ilya" },
+      { "family": "Chen", "given": "Kai" },
+      { "family": "Corrado", "given": "Greg" },
+      { "family": "Dean", "given": "Jeff" }
+    ],
+    "issued": { "date-parts": [[2013]] },
+    "container-title": "Proceedings of NIPS 2013",
+    "page": "3111-3119",
+    "event": "Neural Information Processing Systems"
+  },
+  "ITEM-13": {
+    "id": "ITEM-13",
+    "class": "monograph",
+    "type": "webpage",
+    "title": "The State of JavaScript 2023",
+    "author": [{ "literal": "State of JS Team" }],
+    "issued": { "date-parts": [[2023]] },
+    "URL": "https://stateofjs.com/2023",
+    "accessed": { "date-parts": [[2024, 1, 15]] }
+  },
+  "ITEM-14": {
+    "id": "ITEM-14",
+    "class": "collection",
+    "type": "book",
+    "title": "Handbook of Research Methods in Social Psychology",
+    "editor": [
+      { "family": "Reis", "given": "Harry T." },
+      { "family": "Judd", "given": "Charles M." }
+    ],
+    "issued": { "date-parts": [[2000]] },
+    "publisher": "Cambridge University Press",
+    "publisher-place": "Cambridge"
+  },
+  "ITEM-15": {
+    "id": "ITEM-15",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "The Role of Theory in Research",
+    "issued": { "date-parts": [[2018]] },
+    "container-title": "Journal of Theoretical Psychology",
+    "volume": "28",
+    "issue": "3",
+    "page": "201-215",
+    "note": "Author unknown"
+  },
+  "ITEM-16": {
+    "id": "ITEM-16",
+    "class": "serial-component",
+    "type": "article-newspaper",
+    "title": "Major Breakthrough in Quantum Computing Announced",
+    "author": [{ "family": "Rodriguez", "given": "Maria" }],
+    "issued": { "date-parts": [[2024, 3, 15]] },
+    "container-title": "The New York Times",
+    "section": "Science"
+  },
+  "ITEM-17": {
+    "id": "ITEM-17",
+    "class": "serial-component",
+    "type": "article-magazine",
+    "title": "The Art of Minimalism in Modern Design",
+    "author": [{ "family": "Thompson", "given": "Alexander" }],
+    "issued": { "date-parts": [[2023, 6]] },
+    "container-title": "Wired",
+    "volume": "31",
+    "issue": "6",
+    "page": "42-49"
+  },
+  "ITEM-18": {
+    "id": "ITEM-18",
+    "class": "serial-component",
+    "type": "entry-encyclopedia",
+    "title": "Renaissance Art and Culture",
+    "author": [{ "family": "Vasari", "given": "Giorgio" }],
+    "issued": { "date-parts": [[2022]] },
+    "container-title": "Encyclopedia of World History",
+    "publisher": "Oxford University Press",
+    "volume": "5",
+    "page": "234-256"
+  },
+  "ITEM-19": {
+    "id": "ITEM-19",
+    "class": "dataset",
+    "type": "dataset",
+    "title": "Global Temperature Anomalies 1880-2023",
+    "author": [{ "literal": "NASA Goddard Institute for Space Studies" }],
+    "issued": { "date-parts": [[2024]] },
+    "publisher": "NASA",
+    "URL": "https://data.giss.nasa.gov/gistemp/",
+    "accessed": { "date-parts": [[2024, 1, 20]] }
+  },
+  "ITEM-20": {
+    "id": "ITEM-20",
+    "class": "legal-case",
+    "type": "legal_case",
+    "title": "Brown v. Board of Education",
+    "issued": { "date-parts": [[1954, 5, 17]] },
+    "authority": "U.S. Supreme Court",
+    "page": "483",
+    "volume": "347",
+    "container-title": "U.S. Reports"
+  },
+  "ITEM-21": {
+    "id": "ITEM-21",
+    "class": "patent",
+    "type": "patent",
+    "title": "Method for Efficient Data Compression",
+    "author": [
+      { "family": "Johnson", "given": "David" },
+      { "family": "Lee", "given": "Sarah" }
+    ],
+    "issued": { "date-parts": [[2021, 7, 13]] },
+    "number": "US 11,043,211 B2",
+    "country": "US"
+  },
+  "ITEM-22": {
+    "id": "ITEM-22",
+    "class": "monograph",
+    "type": "motion_picture",
+    "title": "The Arrival of a Train at La Ciotat Station",
+    "author": [{ "family": "Lumière", "given": "Louis" }],
+    "issued": { "date-parts": [[1896]] },
+    "director": [{ "family": "Lumière", "given": "Louis" }],
+    "genre": "Short film",
+    "medium": "film"
+  },
+  "ITEM-23": {
+    "id": "ITEM-23",
+    "class": "serial-component",
+    "type": "broadcast",
+    "title": "The Universe in a Nutshell",
+    "author": [{ "family": "Sagan", "given": "Carl" }],
+    "issued": { "date-parts": [[1980, 9, 28]] },
+    "container-title": "Cosmos: A Spacetime Odyssey",
+    "number": "1",
+    "medium": "Television"
+  },
+  "ITEM-24": {
+    "id": "ITEM-24",
+    "class": "monograph",
+    "type": "interview",
+    "title": "The Future of Artificial Intelligence",
+    "author": [{ "family": "Bengio", "given": "Yoshua" }],
+    "issued": { "date-parts": [[2023, 11, 10]] },
+    "interviewer": [{ "family": "Colbert", "given": "Stephen" }],
+    "medium": "Video interview",
+    "URL": "https://example.com/interview"
+  },
+  "ITEM-25": {
+    "id": "ITEM-25",
+    "class": "monograph",
+    "type": "book",
+    "title": "Metamorphosis",
+    "author": [{ "family": "Kafka", "given": "Franz" }],
+    "issued": { "date-parts": [[1915]] },
+    "publisher": "Kurt Wolff Verlag",
+    "publisher-place": "Leipzig",
+    "translator": [{ "family": "Wyllie", "given": "David" }],
+    "language": "en"
+  },
+  "ITEM-26": {
+    "id": "ITEM-26",
+    "class": "monograph",
+    "type": "book",
+    "title": "Éthique",
+    "author": [{ "family": "Spinoza", "given": "Baruch" }],
+    "issued": { "date-parts": [[1677]] },
+    "publisher": "Jan Rieuwertsz",
+    "publisher-place": "Amsterdam",
+    "language": "la"
+  },
+  "ITEM-27": {
+    "id": "ITEM-27",
+    "class": "monograph",
+    "type": "report",
+    "title": "State of the World's Biodiversity",
+    "author": [{ "literal": "United Nations Environment Programme" }],
+    "editor": [{ "family": "Díaz", "given": "Sandra" }],
+    "issued": { "date-parts": [[2019]] },
+    "publisher": "UNEP",
+    "publisher-place": "Nairobi",
+    "genre": "Assessment report"
+  },
+  "ITEM-28": {
+    "id": "ITEM-28",
+    "class": "monograph",
+    "type": "personal_communication",
+    "title": "Discussion on CSLN Schema Design",
+    "author": [{ "family": "Smith", "given": "Patricia" }],
+    "issued": { "date-parts": [[2024, 2, 7]] },
+    "type-translated": "Email",
+    "recipient": [{ "family": "Darcus", "given": "Bruce" }]
+  },
+  "ITEM-29": {
+    "id": "ITEM-29",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Adaptive Climate Risk Modeling in Coastal Cities",
+    "author": [
+      { "family": "Smith", "given": "John" },
+      { "family": "Lee", "given": "Alice" },
+      { "family": "Kumar", "given": "Priya" },
+      { "family": "Zhou", "given": "Ming" }
+    ],
+    "issued": { "date-parts": [[2021]] },
+    "container-title": "Journal of Climate Analytics",
+    "volume": "12",
+    "issue": "2",
+    "page": "101-119",
+    "DOI": "10.5555/jca.2021.12.2.101"
+  },
+  "ITEM-30": {
+    "id": "ITEM-30",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Adaptive Climate Risk Modeling for Inland Regions",
+    "author": [
+      { "family": "Smith", "given": "John" },
+      { "family": "Lee", "given": "Alice" },
+      { "family": "Nguyen", "given": "Bao" },
+      { "family": "Patel", "given": "Ravi" }
+    ],
+    "issued": { "date-parts": [[2021]] },
+    "container-title": "Journal of Climate Analytics",
+    "volume": "12",
+    "issue": "3",
+    "page": "201-219",
+    "DOI": "10.5555/jca.2021.12.3.201"
+  },
+  "ITEM-31": {
+    "id": "ITEM-31",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Methods for Robust Climate Attribution",
+    "author": [{ "family": "Garcia", "given": "Maria" }],
+    "issued": { "date-parts": [[2019]] },
+    "container-title": "Annual Review of Climate Science",
+    "volume": "4",
+    "page": "55-80",
+    "DOI": "10.5555/arcs.2019.4.55"
+  },
+  "ITEM-32": {
+    "id": "ITEM-32",
+    "class": "serial-component",
+    "type": "article-journal",
+    "title": "Methods for Probabilistic Climate Attribution",
+    "author": [{ "family": "Garcia", "given": "Maria" }],
+    "issued": { "date-parts": [[2019]] },
+    "container-title": "Annual Review of Climate Science",
+    "volume": "4",
+    "page": "81-104",
+    "DOI": "10.5555/arcs.2019.4.81"
+  }
+}

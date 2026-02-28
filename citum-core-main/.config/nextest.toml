@@ -1,0 +1,40 @@
+# Default profile for local development
+[profile.default]
+# Enable JUnit XML output for CI integration
+junit.path = "target/junit.xml"
+junit.store-success-output = false
+
+# Default parallel execution (auto-detect CPU count)
+test-threads = "num-cpus"
+
+# Disable retries for deterministic results
+retries = 0
+
+# Show test timing information
+slow-timeout = { period = "30s", terminate-after = 10 }
+
+# Display output configuration
+status-level = "pass"
+success-output = "never"
+failure-output = "immediate"
+
+# For CI environments, use a more verbose profile
+[profile.ci]
+# Show all test output immediately for better debugging
+status-level = "all"
+success-output = "immediate"
+failure-output = "immediate"
+# Fail fast on first error
+fail-fast = true
+junit.path = "target/junit.xml"
+junit.store-success-output = false
+test-threads = "num-cpus"
+
+# For rapid local development
+[profile.quick]
+# Use fewer threads for faster turnaround on smaller machines
+test-threads = 2
+# Show failures only for faster feedback
+status-level = "fail"
+success-output = "never"
+failure-output = "immediate"
