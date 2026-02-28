@@ -12,11 +12,14 @@ RUN apt-get update && apt-get install -y \
     libclang-dev \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src/app
+# Use a specific directory for the build to avoid non-empty dir errors
+WORKDIR /usr/src
 
 # Force a fresh clone every time we build to get latest engine updates
 ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-RUN git clone https://github.com/citum/citum-core.git .
+RUN git clone https://github.com/citum/citum-core.git app
+
+WORKDIR /usr/src/app
 
 # Patch http.rs to bind to 0.0.0.0 instead of 127.0.0.1
 RUN sed -i 's/127, 0, 0, 1/0, 0, 0, 0/g' crates/citum-server/src/http.rs
@@ -33,7 +36,7 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy assets
+# Copy assets from builder
 COPY --from=builder /usr/src/app/target/release/citum-server /app/citum-server
 COPY --from=builder /usr/src/app/styles /app/styles
 COPY --from=builder /usr/src/app/locales /app/locales
