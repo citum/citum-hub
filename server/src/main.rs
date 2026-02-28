@@ -21,6 +21,7 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use dotenvy::dotenv;
 use oauth2::{AuthorizationCode, TokenResponse};
+use serde_yaml::{Mapping as YamlMapping, Value as YamlValue};
 
 mod auth;
 mod preview_data;
@@ -47,6 +48,8 @@ pub struct StyleRow {
 }
 
 fn process_style_metadata(mut row: StyleRow) -> StyleRow {
+    row.citum = normalize_legacy_style_yaml(&row.citum);
+
     match serde_yaml::from_str::<Style>(&row.citum) {
         Ok(style) => {
             row.description = style.info.description.clone();
@@ -57,6 +60,81 @@ fn process_style_metadata(mut row: StyleRow) -> StyleRow {
         }
     }
     row
+}
+
+fn normalize_legacy_style_yaml(raw: &str) -> String {
+    let Ok(mut value) = serde_yaml::from_str::<YamlValue>(raw) else {
+        return raw.to_string();
+    };
+
+    if !normalize_legacy_contributor_substitute(&mut value) {
+        return raw.to_string();
+    }
+
+    serde_yaml::to_string(&value).unwrap_or_else(|_| raw.to_string())
+}
+
+fn normalize_legacy_contributor_substitute(value: &mut YamlValue) -> bool {
+    match value {
+        YamlValue::Mapping(map) => {
+            let mut changed = move_legacy_contributor_substitute(map);
+            changed |= remove_legacy_date_fields(map);
+
+            for child in map.values_mut() {
+                changed |= normalize_legacy_contributor_substitute(child);
+            }
+
+            changed
+        }
+        YamlValue::Sequence(seq) => seq
+            .iter_mut()
+            .any(normalize_legacy_contributor_substitute),
+        _ => false,
+    }
+}
+
+fn move_legacy_contributor_substitute(map: &mut YamlMapping) -> bool {
+    let contributors_key = YamlValue::String("contributors".to_string());
+    let substitute_key = YamlValue::String("substitute".to_string());
+    let template_key = YamlValue::String("template".to_string());
+
+    let Some(YamlValue::Mapping(contributors)) = map.get_mut(&contributors_key) else {
+        return false;
+    };
+
+    let Some(legacy_substitute) = contributors.remove(&substitute_key) else {
+        return false;
+    };
+
+    if !map.contains_key(&substitute_key) {
+        let normalized_substitute = match legacy_substitute {
+            YamlValue::Sequence(_) => {
+                let mut explicit = YamlMapping::new();
+                explicit.insert(template_key, legacy_substitute);
+                YamlValue::Mapping(explicit)
+            }
+            other => other,
+        };
+
+        map.insert(substitute_key, normalized_substitute);
+    }
+
+    true
+}
+
+fn remove_legacy_date_fields(map: &mut YamlMapping) -> bool {
+    let dates_key = YamlValue::String("dates".to_string());
+    let form_key = YamlValue::String("form".to_string());
+    let substitute_key = YamlValue::String("substitute".to_string());
+
+    let Some(YamlValue::Mapping(dates)) = map.get_mut(&dates_key) else {
+        return false;
+    };
+
+    let removed_form = dates.remove(&form_key).is_some();
+    let removed_substitute = dates.remove(&substitute_key).is_some();
+
+    removed_form || removed_substitute
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -584,5 +662,89 @@ mod tests {
             !bibliography.trim().is_empty(),
             "bibliography preview should not be empty"
         );
+    }
+
+    #[test]
+    fn normalizes_legacy_contributor_substitute_lists() {
+        let raw = r#"
+info:
+  title: Legacy style
+options:
+  contributors:
+    initialize-with: ". "
+    substitute:
+      - editor
+      - translator
+"#;
+
+        let normalized = normalize_legacy_style_yaml(raw);
+        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
+
+        let options = style.options.expect("style should include options");
+        let substitute = options.substitute.expect("substitute should be hoisted");
+        let serialized = serde_yaml::to_string(&substitute).expect("substitute should serialize");
+
+        assert!(serialized.contains("editor"));
+        assert!(serialized.contains("translator"));
+        assert!(!normalized.contains("contributors:\n    substitute:"));
+    }
+
+    #[test]
+    fn preserves_existing_substitute_when_dropping_legacy_field() {
+        let raw = r#"
+info:
+  title: Legacy style
+options:
+  substitute:
+    template:
+      - title
+  contributors:
+    initialize-with: ". "
+    substitute:
+      - editor
+"#;
+
+        let normalized = normalize_legacy_style_yaml(raw);
+        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
+
+        let substitute = style
+            .options
+            .expect("style should include options")
+            .substitute
+            .expect("existing substitute should remain");
+        let serialized = serde_yaml::to_string(&substitute).expect("substitute should serialize");
+
+        assert!(serialized.contains("title"));
+        assert!(!normalized.contains("contributors:\n    substitute:"));
+    }
+
+    #[test]
+    fn removes_legacy_date_fields() {
+        let raw = r#"
+info:
+  title: Legacy style
+options:
+  dates:
+    form: numeric
+    month: long
+    substitute:
+      - term: no-date
+        form: short
+"#;
+
+        let normalized = normalize_legacy_style_yaml(raw);
+        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
+
+        let dates = style
+            .options
+            .expect("style should include options")
+            .dates
+            .expect("dates should remain present");
+
+        let serialized = serde_yaml::to_string(&dates).expect("dates should serialize");
+
+        assert!(serialized.contains("month: long"));
+        assert!(!normalized.contains("form: numeric"));
+        assert!(!normalized.contains("substitute:"));
     }
 }

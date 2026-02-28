@@ -1,6 +1,6 @@
 <script lang="ts">
     import { createEventDispatcher } from 'svelte';
-    import { browser } from '$app/environment';
+    import { onMount } from 'svelte';
     import { createInitialIntent, intent, resetIntent } from '$lib/stores/intent';
     import type { DecisionPackage, StyleIntent } from '$lib/types/bindings';
 
@@ -10,6 +10,8 @@
     let error = $state<string | null>(null);
     let decisionPackage = $state<DecisionPackage | null>(null);
     let requestSequence = 0;
+    let hasMounted = false;
+    let lastIntentKey = '';
 
     async function fetchDecision(currentIntent: StyleIntent) {
         const requestId = ++requestSequence;
@@ -39,9 +41,22 @@
         }
     }
 
-    // Effect to refetch when intent changes — guarded to browser-only to avoid SSR fetch warning
+    function syncDecision(currentIntent: StyleIntent) {
+        const nextIntentKey = JSON.stringify(currentIntent);
+        if (nextIntentKey === lastIntentKey) return;
+        lastIntentKey = nextIntentKey;
+        fetchDecision(currentIntent);
+    }
+
+    onMount(() => {
+        hasMounted = true;
+        syncDecision($intent);
+    });
+
     $effect(() => {
-        if (browser) fetchDecision($intent);
+        const currentIntent = $intent;
+        if (!hasMounted) return;
+        syncDecision(currentIntent);
     });
 
     function handleChoice(choice: any) {
@@ -50,9 +65,10 @@
 
     function doReset() {
         resetIntent();
+        lastIntentKey = '';
         decisionPackage = null;
         dispatch('decision', null);
-        fetchDecision(createInitialIntent());
+        syncDecision(createInitialIntent());
     }
 
     function doCustomize() {
