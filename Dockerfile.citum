@@ -17,6 +17,9 @@ WORKDIR /usr/src/app
 # Clone the engine repository
 RUN git clone https://github.com/citum/citum-core.git .
 
+# Patch http.rs to bind to 0.0.0.0 instead of 127.0.0.1
+RUN sed -i 's/127, 0, 0, 1/0, 0, 0, 0/g' crates/citum-server/src/http.rs
+
 # Ensure dependencies are up to date
 RUN cargo update
 
