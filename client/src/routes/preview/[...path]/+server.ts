@@ -38,7 +38,7 @@ export async function POST({ request, params, fetch }) {
         const rpcParams: any = {
             style_path: containerStylePath,
             refs: refsMap,
-            output_format: 'html' // Engine expects 'output_format'
+            output_format: 'html'
         };
         
         if (params.path === 'citation') {
@@ -68,22 +68,37 @@ export async function POST({ request, params, fetch }) {
         if (rpcResponse.error) {
             console.error('[Proxy] RPC Error:', rpcResponse.error);
             return new Response(JSON.stringify({ 
-                result: `<div class="text-red-500 text-xs font-mono p-2 bg-red-50 rounded">Engine Error: ${rpcResponse.error.message || rpcResponse.error}</div>` 
+                result: `<div class="text-red-500 text-xs font-mono p-2 bg-red-50 rounded">Engine Error: ${rpcResponse.error.message || JSON.stringify(rpcResponse.error)}</div>` 
             }), {
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
-        // Handle the engine's result structure
-        let resultData = rpcResponse.result?.result;
+        /**
+         * Engine Response Structure:
+         * {
+         *   "id": ...,
+         *   "result": {
+         *      "id": ...,
+         *      "result": "the actual content" OR { "content": "..." }
+         *   }
+         * }
+         */
+        const innerResult = rpcResponse.result?.result;
         let finalResult = '';
 
-        if (params.path === 'citation') {
-            // render_citation returns a simple string result
-            finalResult = resultData || '';
-        } else {
-            // render_bibliography returns a struct: { format, content, entries? }
-            finalResult = resultData?.content || '';
+        if (typeof innerResult === 'string') {
+            finalResult = innerResult;
+        } else if (innerResult && typeof innerResult === 'object') {
+            // For BibliographyResult struct
+            finalResult = innerResult.content || innerResult.result || '';
+        } else if (rpcResponse.result && typeof rpcResponse.result === 'string') {
+            // Fallback for simple string results
+            finalResult = rpcResponse.result;
+        }
+
+        if (Array.isArray(finalResult)) {
+            finalResult = finalResult.join('\n');
         }
 
         return new Response(JSON.stringify({ result: finalResult || 'No output from engine' }), {
