@@ -1,0 +1,40 @@
+# Dockerfile.citum
+FROM rust:1.80-slim as builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y 
+    git 
+    pkg-config 
+    libssl-dev 
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /usr/src/app
+
+# Clone the engine repository
+RUN git clone https://github.com/citum/citum-core.git .
+
+# Build the specific server crate
+# Using --release for performance since this is the engine
+RUN cargo build --release -p citum-server
+
+# Runtime image
+FROM debian:bookworm-slim
+RUN apt-get update && apt-get install -y 
+    ca-certificates 
+    libssl3 
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+# Copy the binary from builder
+COPY --from=builder /usr/src/app/target/release/citum-server /app/citum-server
+
+# Citum-server usually needs access to its resources/styles if it's not self-contained
+# We'll clone it again in the runtime or just the binary if it's self-contained.
+# Assuming binary-only for now, but citum-server likely needs its config.
+COPY --from=builder /usr/src/app/styles /app/styles
+COPY --from=builder /usr/src/app/locales /app/locales
+
+EXPOSE 3000
+
+CMD ["/app/citum-server"]

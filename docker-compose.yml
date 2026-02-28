@@ -12,10 +12,14 @@ services:
       - postgres_data:/var/lib/postgresql/data
 
   citum:
-    image: ghcr.io/citum/citum-server:latest
+    build:
+      context: .
+      dockerfile: Dockerfile.citum
     restart: always
     ports:
       - "3001:3000"
+    environment:
+      - RUST_LOG=info
 
 volumes:
   postgres_data:
