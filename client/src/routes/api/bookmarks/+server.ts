@@ -9,7 +9,7 @@ export async function GET({ request }) {
     const client = await pool.connect();
     try {
         const result = await client.query(
-            `SELECT s.id, s.user_id, s.title, s.intent, s.csln, s.is_public, s.created_at, s.updated_at 
+            `SELECT s.id, s.user_id, s.title, s.intent, s.citum, s.is_public, s.created_at, s.updated_at 
              FROM styles s
              JOIN bookmarks b ON s.id = b.style_id
              WHERE b.user_id = $1

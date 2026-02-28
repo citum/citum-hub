@@ -9,7 +9,7 @@ export async function GET({ request, params }) {
     const client = await pool.connect();
     try {
         const result = await client.query(
-            `SELECT id, user_id, title, intent, csln, is_public, created_at, updated_at 
+            `SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at 
              FROM styles WHERE id = $1 AND (user_id = $2 OR is_public = true)`,
             [params.id, user.id]
         );

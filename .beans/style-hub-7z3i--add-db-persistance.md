@@ -13,7 +13,7 @@ Implement multi-user persistence to allow users to save their progress, manage m
 ### User Roles & Permissions
 - **User**: 
   - Create and save multiple `StyleIntent` drafts to their personal library.
-  - Export/Download CSLN YAML.
+  - Export/Download Citum YAML.
   - Fork existing public styles from the "Hub".
 - **Editor**:
   - All User permissions.
@@ -26,7 +26,7 @@ Implement multi-user persistence to allow users to save their progress, manage m
    - Support OAuth (GitHub/Google) for developer-friendly onboarding.
 2. **Database Schema**:
    - `users`: Profile data and role assignment.
-   - `styles`: Stores the `StyleIntent` (JSONB) and the generated `CSLN` (text/YAML).
+   - `styles`: Stores the `StyleIntent` (JSONB) and the generated `Citum` (text/YAML).
    - `history`: Versioning for style changes to allow rollback.
 3. **API Enhancements**:
    - Secure existing preview/generate endpoints.

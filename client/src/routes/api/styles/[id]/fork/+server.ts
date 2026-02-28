@@ -9,7 +9,7 @@ export async function POST({ request, params }) {
     const client = await pool.connect();
     try {
         const original = await client.query(
-            `SELECT title, intent, csln FROM styles 
+            `SELECT title, intent, citum FROM styles 
              WHERE id = $1 AND (is_public = true OR user_id = $2)`,
             [params.id, user.id]
         );
@@ -22,10 +22,10 @@ export async function POST({ request, params }) {
         const forkedTitle = `${source.title} (Fork)`;
 
         const result = await client.query(
-            `INSERT INTO styles (user_id, title, intent, csln, is_public)
+            `INSERT INTO styles (user_id, title, intent, citum, is_public)
              VALUES ($1, $2, $3, $4, false)
              RETURNING *`,
-            [user.id, forkedTitle, source.intent, source.csln]
+            [user.id, forkedTitle, source.intent, source.citum]
         );
 
         return json(result.rows[0]);

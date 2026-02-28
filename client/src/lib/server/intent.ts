@@ -156,7 +156,7 @@ export function toStyle(intent: StyleIntent): any {
     return style;
 }
 
-export function generateCSLN(intent: StyleIntent): string {
+export function generateCitum(intent: StyleIntent): string {
     const style = toStyle(intent);
     return yaml.dump(style);
 }

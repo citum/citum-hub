@@ -33,7 +33,7 @@
                 body: JSON.stringify({
                     title: 'My Custom Style', 
                     intent: $intent,
-                    csln: '', 
+                    citum: '', 
                 })
             });
 
@@ -132,7 +132,7 @@
                 <div class="mt-8 p-6 bg-blue-50/50 rounded-2xl border border-blue-100/50">
                     <h4 class="text-xs font-black text-blue-900 uppercase tracking-widest mb-2">Technical Insight</h4>
                     <p class="text-[11px] text-blue-800/70 leading-relaxed">
-                        These previews are generated in real-time using the <strong>CSLN Processor</strong>. 
+                        These previews are generated in real-time using the <strong>Citum Processor</strong>. 
                         The formatting matches exactly what will appear in your document editor based on the current logic.
                     </p>
                 </div>

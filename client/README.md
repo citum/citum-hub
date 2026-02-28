@@ -1,6 +1,6 @@
 # Citation Style Editor Client
 
-This is the SvelteKit-based frontend for the CSL Style Hub.
+This is the SvelteKit-based frontend for the Citum Hub.
 
 ## Tech Stack
 

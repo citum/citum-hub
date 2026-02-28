@@ -32,7 +32,7 @@
                 Find the perfect citation style for your research
             </h1>
             <p class="text-xl text-slate-400 max-w-2xl">
-                Browse, fork, and customize thousands of academic styles managed by the CSL community.
+                Browse, fork, and customize thousands of academic styles managed by the Citum community.
             </p>
             
             <div class="w-full max-w-xl mt-4 relative">

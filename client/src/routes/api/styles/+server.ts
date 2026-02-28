@@ -9,7 +9,7 @@ export async function GET({ request }) {
     const client = await pool.connect();
     try {
         const result = await client.query(
-            `SELECT id, user_id, title, intent, csln, is_public, created_at, updated_at 
+            `SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at 
              FROM styles WHERE user_id = $1 ORDER BY updated_at DESC`,
             [user.id]
         );
@@ -24,7 +24,7 @@ export async function POST({ request }) {
     if (!user) throw error(401, 'Unauthorized');
 
     const payload = await request.json();
-    const { id, title, intent, csln, is_public } = payload;
+    const { id, title, intent, citum, is_public } = payload;
 
     const client = await pool.connect();
     try {
@@ -34,18 +34,18 @@ export async function POST({ request }) {
         if (id) {
             const result = await client.query(
                 `UPDATE styles 
-                 SET title = $1, intent = $2, csln = $3, is_public = $4
+                 SET title = $1, intent = $2, citum = $3, is_public = $4
                  WHERE id = $5 AND user_id = $6
                  RETURNING *`,
-                [title, intent, csln, is_public || false, id, user.id]
+                [title, intent, citum, is_public || false, id, user.id]
             );
             style = result.rows[0];
         } else {
             const result = await client.query(
-                `INSERT INTO styles (user_id, title, intent, csln, is_public)
+                `INSERT INTO styles (user_id, title, intent, citum, is_public)
                  VALUES ($1, $2, $3, $4, $5)
                  RETURNING *`,
-                [user.id, title, intent, csln, is_public || false]
+                [user.id, title, intent, citum, is_public || false]
             );
             style = result.rows[0];
         }

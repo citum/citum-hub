@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS styles (
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
     intent JSONB NOT NULL DEFAULT '{}',
-    csln TEXT,
+    citum TEXT,
     is_public BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

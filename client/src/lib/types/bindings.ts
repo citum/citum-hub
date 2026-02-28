@@ -4,7 +4,7 @@
 /**
  * Represents the user's intent for the citation style they are building.
  * This struct captures the state of the "Decision Wizard" and is used
- * to generate the next set of questions or the final CSL style.
+ * to generate the next set of questions or the final Citum style.
  */
 export type StyleIntent = { base_archetype: string | null; field: string | null; class: CitationClass | null; author_format: NameOptions | null; has_bibliography: boolean | null; citation_preset: string | null; bibliography_preset: string | null; detailed_config: boolean | null };
 

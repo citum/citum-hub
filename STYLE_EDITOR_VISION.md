@@ -1,6 +1,6 @@
 # Citation Style Platform Vision
 
-> A user story for a web-based citation style platform built on CSLN.
+> A user story for a web-based citation style platform built on Citum.
 
 ## Overview
 
@@ -11,7 +11,7 @@ This represents a shift from just an "editor" to a platform where the hierarchy 
 2.  **Tweak** a close match (Modification).
 3.  **Build** from scratch (Creation).
 
-**Goal**: Validate that the CSLN model supports this vision and document API requirements.
+**Goal**: Validate that the Citum model supports this vision and document API requirements.
 
 ## Core User Stories
 
@@ -20,7 +20,7 @@ This represents a shift from just an "editor" to a platform where the hierarchy 
 
 - **Search**: By name ("Nature"), field ("Neuroscience"), or generic type ("Author-Date").
 - **Search by Example**: User pastes a formatted citation (e.g., "Doe, J. (2020)..."), system finds styles that match this output.
-- **One-Click Use**: "Copy CSL JSON", "Download CSL", or "Get ID" for use in Zotero, Mendeley, Pandoc, etc.
+- **One-Click Use**: "Copy Citum JSON", "Download Citum", or "Get ID" for use in Zotero, Mendeley, Pandoc, etc.
 
 ### 2. Smart Modification ("Like X but...")
 *Secondary workflow for minor adjustments.*
@@ -89,9 +89,9 @@ GET  /examples/:field       # Field-specific references
 
 ## Relevant Links
 
-- [Issue #28: MakeCSL Vision](https://github.com/bdarcus/csln/issues/28)
+- [Issue #28: MakeCitum Vision](https://github.com/bdarcus/citum/issues/28)
 - [PERSONAS.md](.agent/PERSONAS.md) - stakeholder alignment
-- [options.rs](crates/csln_core/src/options.rs) - configuration model
+- [options.rs](crates/citum_core/src/options.rs) - configuration model
 
 ---
 

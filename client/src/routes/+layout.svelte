@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet" />
-    <title>CSL Style Hub</title>
+    <title>Citum Hub</title>
 </svelte:head>
 
 <div class="min-h-screen flex flex-col bg-background-light">
@@ -30,7 +30,7 @@
             <div class="size-8 text-primary flex items-center justify-center">
                 <span class="material-symbols-outlined text-3xl">school</span>
             </div>
-            <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-slate-900">CSL Style Hub</h2>
+            <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-slate-900">Citum Hub</h2>
         </a>
         <div class="hidden md:flex flex-1 justify-end gap-8">
             <nav class="flex items-center gap-9">
@@ -72,7 +72,7 @@
                     <div class="size-6 text-primary flex items-center justify-center">
                         <span class="material-symbols-outlined text-2xl">school</span>
                     </div>
-                    <span class="text-lg font-bold text-slate-900">CSL Style Hub</span>
+                    <span class="text-lg font-bold text-slate-900">Citum Hub</span>
                 </div>
                 <p class="text-sm text-slate-500 leading-relaxed">
                     An open-source initiative to modernize academic referencing. 
@@ -94,7 +94,7 @@
             </div>
         </div>
         <div class="mt-16 pt-8 border-t border-slate-100 text-center">
-            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 CSL Style Hub. All rights reserved.</p>
+            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 Citum Hub. All rights reserved.</p>
         </div>
     </footer>
 </div>

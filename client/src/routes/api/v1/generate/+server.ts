@@ -1,11 +1,11 @@
-import { generateCSLN } from '$lib/server/intent';
+import { generateCitum } from '$lib/server/intent';
 import type { StyleIntent } from '$lib/types/bindings';
 
 export async function POST({ request }) {
     const intent: StyleIntent = await request.json();
-    const csln = generateCSLN(intent);
+    const citum = generateCitum(intent);
     
-    return new Response(csln, {
+    return new Response(citum, {
         headers: {
             'Content-Type': 'application/x-yaml',
             'Content-Disposition': 'attachment; filename="custom-style.yaml"'
