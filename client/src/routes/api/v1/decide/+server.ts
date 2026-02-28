@@ -11,7 +11,10 @@ export async function POST({ request, fetch }) {
         try {
             const style = toStyle(intent);
             const refsResponse = await fetch('/references');
-            const references = Object.values(await refsResponse.json()).slice(0, 3);
+            const refsData = await refsResponse.json();
+            const references = Object.entries(refsData)
+                .slice(0, 3)
+                .map(([id, ref]: [string, any]) => ({ ...ref, id }));
 
             const [citRes, bibRes] = await Promise.all([
                 fetch('/preview/citation', {

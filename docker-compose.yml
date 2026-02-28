@@ -18,6 +18,8 @@ services:
     restart: always
     ports:
       - "3001:3000"
+    volumes:
+      - ./client/temp_styles:/tmp/citum/styles
     environment:
       - RUST_LOG=info
 
