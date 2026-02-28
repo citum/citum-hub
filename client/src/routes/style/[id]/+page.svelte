@@ -4,11 +4,20 @@
     import { auth } from '$lib/stores/auth';
     import { goto } from '$app/navigation';
     import ComprehensivePreview from '$lib/components/ComprehensivePreview.svelte';
+    import { toStyle } from '$lib/server/intent';
+    import yaml from 'js-yaml';
 
     let style = $state(null);
     let loading = $state(true);
+    let previewLoading = $state(false);
     let error = $state(null);
     let isForking = $state(false);
+    
+    let previewSet = $state({
+        in_text: null,
+        note: null,
+        bibliography: null
+    });
 
     onMount(async () => {
         try {
@@ -17,6 +26,7 @@
             });
             if (res.ok) {
                 style = await res.json();
+                generatePreviews();
             } else {
                 error = 'Style not found or private';
             }
@@ -26,6 +36,60 @@
             loading = false;
         }
     });
+
+    async function generatePreviews() {
+        if (!style) return;
+        previewLoading = true;
+        
+        try {
+            // 1. Get references
+            const refsRes = await fetch('/references');
+            const refsData = await refsRes.json();
+            const references = Object.entries(refsData)
+                .slice(0, 3)
+                .map(([id, ref]: [string, any]) => ({ ...ref, id }));
+
+            // 2. Prepare the style object
+            let styleObj;
+            if (style.citum) {
+                try {
+                    styleObj = yaml.load(style.citum);
+                } catch (e) {
+                    console.error('Failed to parse Citum YAML, falling back to intent', e);
+                    styleObj = toStyle(style.intent);
+                }
+            } else {
+                styleObj = toStyle(style.intent);
+            }
+
+            // 3. Fetch previews via our proxy
+            const [citRes, bibRes] = await Promise.all([
+                fetch('/preview/citation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ style: styleObj, references })
+                }),
+                fetch('/preview/bibliography', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ style: styleObj, references })
+                })
+            ]);
+
+            if (citRes.ok) {
+                const data = await citRes.json();
+                previewSet.in_text = data.result;
+            }
+            if (bibRes.ok) {
+                const data = await bibRes.json();
+                previewSet.bibliography = data.result;
+            }
+        } catch (e) {
+            console.error('Failed to generate previews', e);
+        } finally {
+            previewLoading = false;
+        }
+    }
 
     async function forkStyle() {
         if (!$auth.user) return;
@@ -37,7 +101,7 @@
             });
             if (res.ok) {
                 const newStyle = await res.json();
-                goto(`/library`); // Go to library to see the new fork
+                goto(`/library`);
             }
         } finally {
             isForking = false;
@@ -95,12 +159,14 @@
                 {/if}
             </div>
 
-            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-                <h2 class="text-xl font-bold text-slate-900 mb-8">Comprehensive Preview</h2>
-                <!-- Previews would ideally be re-generated here using the intent -->
-                <div class="p-10 border border-dashed border-slate-200 rounded-2xl text-center text-slate-400">
-                    [ Style Preview Mockup ]
-                </div>
+            <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden">
+                {#if previewLoading}
+                    <div class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex items-center justify-center">
+                        <span class="material-symbols-outlined animate-spin text-3xl text-primary">progress_activity</span>
+                    </div>
+                {/if}
+                
+                <ComprehensivePreview {previewSet} />
             </div>
         </div>
     {/if}
