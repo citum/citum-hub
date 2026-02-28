@@ -1,8 +1,0 @@
-info:
-  id: custom-style
-  title: Custom Style
-citation:
-  use_preset: apa
-  wrap: parentheses
-bibliography:
-  use_preset: apa
