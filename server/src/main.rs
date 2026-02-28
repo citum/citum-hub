@@ -9,6 +9,7 @@ use axum::{
     Router, Json,
     response::{Redirect, IntoResponse},
 };
+use std::collections::HashSet;
 use std::fs;
 use std::path::{Path as FsPath, PathBuf};
 use std::sync::Arc;
@@ -24,6 +25,7 @@ use chrono::{DateTime, Utc};
 use dotenvy::dotenv;
 use oauth2::{AuthorizationCode, TokenResponse};
 use serde_yaml::{Mapping as YamlMapping, Value as YamlValue};
+use auth::User;
 
 mod auth;
 mod preview_data;
@@ -90,6 +92,17 @@ fn local_styles_dir() -> PathBuf {
         .join("../../citum-core/styles")
 }
 
+fn is_supported_style_file(path: &FsPath) -> bool {
+    matches!(
+        path.extension().and_then(|ext| ext.to_str()),
+        Some("yaml" | "yml")
+    )
+}
+
+fn is_public_style_filename(filename: &str) -> bool {
+    !filename.starts_with("experimental/")
+}
+
 fn load_style_yaml_from_root(root: &FsPath, filename: &str) -> Option<String> {
     fs::read_to_string(root.join(filename)).ok()
 }
@@ -100,6 +113,135 @@ fn preferred_style_filenames(filename: &str) -> Vec<String> {
     } else {
         vec![filename.to_string()]
     }
+}
+
+#[derive(Debug)]
+struct LocalStyleDefinition {
+    filename: String,
+    title: String,
+    citum: String,
+}
+
+fn discover_local_public_styles() -> Vec<LocalStyleDefinition> {
+    discover_local_public_styles_from_root(&local_styles_dir())
+}
+
+fn discover_local_public_styles_from_root(root: &FsPath) -> Vec<LocalStyleDefinition> {
+    let mut styles = Vec::new();
+    collect_local_public_styles(root, root, &mut styles);
+    styles.sort_by(|left, right| left.filename.cmp(&right.filename));
+    styles
+}
+
+fn collect_local_public_styles(root: &FsPath, dir: &FsPath, styles: &mut Vec<LocalStyleDefinition>) {
+    let Ok(entries) = fs::read_dir(dir) else {
+        return;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+
+        if path.is_dir() {
+            collect_local_public_styles(root, &path, styles);
+            continue;
+        }
+
+        if !is_supported_style_file(&path) {
+            continue;
+        }
+
+        let Ok(relative) = path.strip_prefix(root) else {
+            continue;
+        };
+        let filename = relative.to_string_lossy().replace('\\', "/");
+
+        if !is_public_style_filename(&filename) {
+            continue;
+        }
+
+        let Ok(citum) = fs::read_to_string(&path) else {
+            continue;
+        };
+
+        let title = serde_yaml::from_str::<Style>(&citum)
+            .ok()
+            .and_then(|style| style.info.title)
+            .unwrap_or_else(|| {
+                path.file_stem()
+                    .and_then(|name| name.to_str())
+                    .unwrap_or("Untitled Style")
+                    .to_string()
+            });
+
+        styles.push(LocalStyleDefinition {
+            filename,
+            title,
+            citum,
+        });
+    }
+}
+
+async fn ensure_system_user(db: &Pool<Postgres>) -> Option<User> {
+    if let Ok(Some(user)) = sqlx::query_as::<_, User>(
+        "SELECT id, email, role FROM users WHERE email = 'system@citum.org'"
+    )
+    .fetch_optional(db)
+    .await
+    {
+        return Some(user);
+    }
+
+    sqlx::query_as::<_, User>(
+        "INSERT INTO users (email, role) VALUES ('system@citum.org', 'admin') RETURNING id, email, role"
+    )
+    .fetch_one(db)
+    .await
+    .ok()
+}
+
+async fn sync_local_public_style_rows(db: &Pool<Postgres>) -> Option<Vec<StyleRow>> {
+    let local_styles = discover_local_public_styles();
+    if local_styles.is_empty() {
+        return None;
+    }
+
+    let system_user = ensure_system_user(db).await?;
+    let mut rows = Vec::with_capacity(local_styles.len());
+
+    for style in local_styles {
+        let row = sqlx::query_as::<_, StyleRow>(
+            "INSERT INTO styles (user_id, title, filename, intent, citum, is_public)
+             VALUES ($1, $2, $3, $4, $5, true)
+             ON CONFLICT (filename) DO UPDATE SET
+               user_id = EXCLUDED.user_id,
+               title = EXCLUDED.title,
+               intent = EXCLUDED.intent,
+               citum = EXCLUDED.citum,
+               is_public = true,
+               updated_at = CASE
+                 WHEN styles.user_id IS DISTINCT FROM EXCLUDED.user_id
+                   OR styles.title IS DISTINCT FROM EXCLUDED.title
+                   OR styles.intent IS DISTINCT FROM EXCLUDED.intent
+                   OR styles.citum IS DISTINCT FROM EXCLUDED.citum
+                   OR styles.is_public IS DISTINCT FROM true
+                 THEN NOW()
+                 ELSE styles.updated_at
+               END
+             RETURNING id, user_id, title, filename, intent, citum, is_public, created_at, updated_at"
+        )
+        .bind(system_user.id)
+        .bind(&style.title)
+        .bind(&style.filename)
+        .bind(serde_json::json!({}))
+        .bind(&style.citum)
+        .fetch_one(db)
+        .await
+        .ok()?;
+
+        rows.push(row);
+    }
+
+    Some(rows)
 }
 
 fn normalize_legacy_style_yaml(raw: &str) -> String {
@@ -594,16 +736,38 @@ async fn list_user_styles(
 }
 
 async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<StyleRow>> {
-    let styles = sqlx::query_as::<_, StyleRow>(
-        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
-         FROM styles
-         WHERE is_public = true
-           AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
-         ORDER BY updated_at DESC"
-    )
-    .fetch_all(&state.db)
-    .await
-    .unwrap_or_default();
+    let mut styles = if let Some(mut official_styles) = sync_local_public_style_rows(&state.db).await {
+        let custom_public_styles = sqlx::query_as::<_, StyleRow>(
+            "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
+             FROM styles
+             WHERE is_public = true
+               AND filename IS NULL
+             ORDER BY updated_at DESC"
+        )
+        .fetch_all(&state.db)
+        .await
+        .unwrap_or_default();
+
+        official_styles.extend(custom_public_styles);
+        official_styles
+    } else {
+        sqlx::query_as::<_, StyleRow>(
+            "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
+             FROM styles
+             WHERE is_public = true
+               AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
+             ORDER BY updated_at DESC"
+        )
+        .fetch_all(&state.db)
+        .await
+        .unwrap_or_default()
+    };
+    styles.sort_by(|left, right| {
+        right
+            .updated_at
+            .cmp(&left.updated_at)
+            .then_with(|| left.title.cmp(&right.title))
+    });
 
     let styles = styles.into_iter().map(process_style_metadata).collect();
     Json(styles)
@@ -614,6 +778,8 @@ async fn get_style(
     user: auth::OptionalUser,
     Path(id): Path<Uuid>
 ) -> impl IntoResponse {
+    let _ = sync_local_public_style_rows(&state.db).await;
+
     let user_id = user.0;
     let style = sqlx::query_as::<_, StyleRow>(
         "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
@@ -696,6 +862,8 @@ async fn fork_style(
     user: auth::AuthenticatedUser,
     Path(id): Path<Uuid>
 ) -> impl IntoResponse {
+    let _ = sync_local_public_style_rows(&state.db).await;
+
     let original = sqlx::query!(
         "SELECT title, intent, citum
          FROM styles
@@ -752,12 +920,20 @@ async fn list_bookmarks(
     State(state): State<Arc<AppState>>,
     user: auth::AuthenticatedUser
 ) -> Json<Vec<StyleRow>> {
+    let synced_filenames = sync_local_public_style_rows(&state.db)
+        .await
+        .map(|styles| {
+            styles
+                .into_iter()
+                .filter_map(|style| style.filename)
+                .collect::<HashSet<_>>()
+        });
+
     let styles = sqlx::query_as::<_, StyleRow>(
         "SELECT s.id, s.user_id, s.title, s.filename, s.intent, s.citum, s.is_public, s.created_at, s.updated_at
          FROM styles s
          JOIN bookmarks b ON s.id = b.style_id
          WHERE b.user_id = $1
-           AND (s.filename IS NULL OR s.filename NOT LIKE 'experimental/%')
          ORDER BY s.updated_at DESC"
     )
     .bind(user.id)
@@ -765,7 +941,17 @@ async fn list_bookmarks(
     .await
     .unwrap_or_default();
 
-    let styles = styles.into_iter().map(process_style_metadata).collect();
+    let styles = styles
+        .into_iter()
+        .filter(|style| {
+            synced_filenames.as_ref().map_or(true, |filenames| {
+                style.filename.as_ref().map_or(true, |filename| {
+                    is_public_style_filename(filename) && filenames.contains(filename)
+                })
+            })
+        })
+        .map(process_style_metadata)
+        .collect();
     Json(styles)
 }
 
@@ -972,6 +1158,45 @@ bibliography:
         fs::remove_dir_all(&temp_root).expect("temp root should be removed");
 
         assert_eq!(loaded.as_deref(), Some(local_yaml));
+    }
+
+    #[test]
+    fn discovers_local_styles_recursively_and_skips_experimental() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock should be after unix epoch")
+            .as_nanos();
+        let temp_root = std::env::temp_dir().join(format!("citum-hub-discover-test-{unique}"));
+        let nested_dir = temp_root.join("nested");
+        let experimental_dir = temp_root.join("experimental");
+
+        fs::create_dir_all(&nested_dir).expect("nested dir should be created");
+        fs::create_dir_all(&experimental_dir).expect("experimental dir should be created");
+
+        fs::write(
+            temp_root.join("root-style.yaml"),
+            "info:\n  title: Root Style\n",
+        )
+        .expect("root style should be written");
+        fs::write(
+            nested_dir.join("nested-style.yaml"),
+            "info:\n  title: Nested Style\n",
+        )
+        .expect("nested style should be written");
+        fs::write(
+            experimental_dir.join("skip-style.yaml"),
+            "info:\n  title: Experimental Style\n",
+        )
+        .expect("experimental style should be written");
+
+        let styles = discover_local_public_styles_from_root(&temp_root);
+        fs::remove_dir_all(&temp_root).expect("temp root should be removed");
+
+        let filenames = styles.into_iter().map(|style| style.filename).collect::<Vec<_>>();
+
+        assert!(filenames.contains(&"root-style.yaml".to_string()));
+        assert!(filenames.contains(&"nested/nested-style.yaml".to_string()));
+        assert!(!filenames.contains(&"experimental/skip-style.yaml".to_string()));
     }
 
     #[test]
