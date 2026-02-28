@@ -10,6 +10,9 @@ dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/stylehub';
 const LOCAL_STYLES_DIR = '/Users/brucedarcus/Code/citum/citum-core/styles';
 
+function shouldSyncStyle(filename: string) {
+    return !filename.startsWith('experimental/');
+}
 
 async function sync() {
     console.log(`Connecting to DB...`);
@@ -58,6 +61,9 @@ async function sync() {
 
         for (const filePath of allFiles) {
             const filename = path.relative(LOCAL_STYLES_DIR, filePath);
+            if (!shouldSyncStyle(filename)) {
+                continue;
+            }
             try {
                 const content = fs.readFileSync(filePath, 'utf-8');
                 const styleData = yaml.load(content) as any;

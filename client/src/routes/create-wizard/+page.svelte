@@ -3,6 +3,7 @@
     import ComprehensivePreview from '$lib/components/ComprehensivePreview.svelte';
     import DecisionWizard from '$lib/components/DecisionWizard.svelte';
     import { onMount } from 'svelte';
+    import { get } from 'svelte/store';
     import { intent } from '$lib/stores/intent';
     import { auth } from '$lib/stores/auth';
     import { goto } from '$app/navigation';
@@ -57,17 +58,27 @@
         }
     }
 
-    // Auto-save logic
     let autoSaveTimeout: any;
-    $effect(() => {
-        // Watch intent store
-        const currentIntent = $intent;
-        if ($auth.user && Object.values(currentIntent).some(v => v !== null)) {
-            clearTimeout(autoSaveTimeout);
-            autoSaveTimeout = setTimeout(() => {
-                saveStyle();
-            }, 3000); // 3 second debounce
+    
+    function scheduleAutoSave(currentIntent: typeof $intent) {
+        const authState = get(auth);
+        if (!authState.user || !Object.values(currentIntent).some(v => v !== null)) {
+            return;
         }
+
+        clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            saveStyle();
+        }, 3000);
+    }
+
+    onMount(() => {
+        const unsubscribe = intent.subscribe(scheduleAutoSave);
+
+        return () => {
+            clearTimeout(autoSaveTimeout);
+            unsubscribe();
+        };
     });
 
     const progress = $derived.by(() => {

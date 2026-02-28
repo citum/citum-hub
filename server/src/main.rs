@@ -75,7 +75,10 @@ fn resolve_synced_public_style_yaml(row: &StyleRow) -> String {
         return row.citum.clone();
     }
 
-    load_local_style_yaml(filename).unwrap_or_else(|| row.citum.clone())
+    preferred_style_filenames(filename)
+        .into_iter()
+        .find_map(|candidate| load_local_style_yaml(&candidate))
+        .unwrap_or_else(|| row.citum.clone())
 }
 
 fn load_local_style_yaml(filename: &str) -> Option<String> {
@@ -89,6 +92,14 @@ fn local_styles_dir() -> PathBuf {
 
 fn load_style_yaml_from_root(root: &FsPath, filename: &str) -> Option<String> {
     fs::read_to_string(root.join(filename)).ok()
+}
+
+fn preferred_style_filenames(filename: &str) -> Vec<String> {
+    if let Some(stripped) = filename.strip_prefix("experimental/") {
+        vec![stripped.to_string(), filename.to_string()]
+    } else {
+        vec![filename.to_string()]
+    }
 }
 
 fn normalize_legacy_style_yaml(raw: &str) -> String {
@@ -107,6 +118,7 @@ fn normalize_legacy_contributor_substitute(value: &mut YamlValue) -> bool {
     match value {
         YamlValue::Mapping(map) => {
             let mut changed = move_legacy_contributor_substitute(map);
+            changed |= normalize_legacy_contributor_et_al(map);
             changed |= remove_legacy_date_fields(map);
             changed |= normalize_legacy_bibliography_separator(map);
 
@@ -147,6 +159,26 @@ fn move_legacy_contributor_substitute(map: &mut YamlMapping) -> bool {
         };
 
         map.insert(substitute_key, normalized_substitute);
+    }
+
+    true
+}
+
+fn normalize_legacy_contributor_et_al(map: &mut YamlMapping) -> bool {
+    let contributors_key = YamlValue::String("contributors".to_string());
+    let et_al_key = YamlValue::String("et-al".to_string());
+    let shorten_key = YamlValue::String("shorten".to_string());
+
+    let Some(YamlValue::Mapping(contributors)) = map.get_mut(&contributors_key) else {
+        return false;
+    };
+
+    let Some(legacy_et_al) = contributors.remove(&et_al_key) else {
+        return false;
+    };
+
+    if !contributors.contains_key(&shorten_key) {
+        contributors.insert(shorten_key, legacy_et_al);
     }
 
     true
@@ -553,7 +585,11 @@ async fn list_user_styles(
 
 async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<StyleRow>> {
     let styles = sqlx::query_as::<_, StyleRow>(
-        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at FROM styles WHERE is_public = true ORDER BY updated_at DESC"
+        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
+         FROM styles
+         WHERE is_public = true
+           AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
+         ORDER BY updated_at DESC"
     )
     .fetch_all(&state.db)
     .await
@@ -570,7 +606,16 @@ async fn get_style(
 ) -> impl IntoResponse {
     let user_id = user.0;
     let style = sqlx::query_as::<_, StyleRow>(
-        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at FROM styles WHERE id = $1 AND (is_public = true OR user_id = $2)"
+        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
+         FROM styles
+         WHERE id = $1
+           AND (
+             user_id = $2
+             OR (
+               is_public = true
+               AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
+             )
+           )"
     )
     .bind(id)
     .bind(user_id)
@@ -642,7 +687,16 @@ async fn fork_style(
     Path(id): Path<Uuid>
 ) -> impl IntoResponse {
     let original = sqlx::query!(
-        "SELECT title, intent, citum FROM styles WHERE id = $1 AND (is_public = true OR user_id = $2)",
+        "SELECT title, intent, citum
+         FROM styles
+         WHERE id = $1
+           AND (
+             user_id = $2
+             OR (
+               is_public = true
+               AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
+             )
+           )",
         id,
         user.id
     )
@@ -689,9 +743,12 @@ async fn list_bookmarks(
     user: auth::AuthenticatedUser
 ) -> Json<Vec<StyleRow>> {
     let styles = sqlx::query_as::<_, StyleRow>(
-        "SELECT s.id, s.user_id, s.title, s.filename, s.intent, s.citum, s.is_public, s.created_at, s.updated_at 
-         FROM styles s JOIN bookmarks b ON s.id = b.style_id 
-         WHERE b.user_id = $1 ORDER BY s.updated_at DESC"
+        "SELECT s.id, s.user_id, s.title, s.filename, s.intent, s.citum, s.is_public, s.created_at, s.updated_at
+         FROM styles s
+         JOIN bookmarks b ON s.id = b.style_id
+         WHERE b.user_id = $1
+           AND (s.filename IS NULL OR s.filename NOT LIKE 'experimental/%')
+         ORDER BY s.updated_at DESC"
     )
     .bind(user.id)
     .fetch_all(&state.db)
@@ -775,6 +832,35 @@ options:
         assert!(serialized.contains("editor"));
         assert!(serialized.contains("translator"));
         assert!(!normalized.contains("contributors:\n    substitute:"));
+    }
+
+    #[test]
+    fn normalizes_legacy_contributor_et_al_blocks() {
+        let raw = r#"
+info:
+  title: Legacy style
+options:
+  contributors:
+    et-al:
+      min: 10
+      use-first: 7
+"#;
+
+        let normalized = normalize_legacy_style_yaml(raw);
+        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
+
+        let contributors = style
+            .options
+            .expect("style should include options")
+            .contributors
+            .expect("contributors should remain present");
+        let serialized =
+            serde_yaml::to_string(&contributors).expect("contributors should serialize");
+
+        assert!(serialized.contains("shorten:"));
+        assert!(serialized.contains("min: 10"));
+        assert!(serialized.contains("use-first: 7"));
+        assert!(!normalized.contains("et-al:"));
     }
 
     #[test]

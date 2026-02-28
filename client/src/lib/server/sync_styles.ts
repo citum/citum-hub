@@ -10,6 +10,10 @@ const STYLES_DIR = 'styles';
 // Path to local styles in this workspace
 const LOCAL_STYLES_DIR = path.resolve('../citum-core-main/styles');
 
+function shouldSyncStyle(name: string) {
+    return !name.startsWith('experimental/');
+}
+
 export async function syncStylesFromGitHub() {
     // Check if we should use local files instead
     if (fs.existsSync(LOCAL_STYLES_DIR)) {
@@ -34,7 +38,11 @@ export async function syncStylesFromGitHub() {
         }
 
         const yamlFiles = files.filter((f: any) => f.name.endsWith('.yaml') || f.name.endsWith('.yml'));
-        await processSync(yamlFiles.map(f => ({ name: f.name, download_url: f.download_url })));
+        await processSync(
+            yamlFiles
+                .map(f => ({ name: f.name, download_url: f.download_url }))
+                .filter(file => shouldSyncStyle(file.name))
+        );
         
         console.log('Sync complete.');
     } catch (e) {
@@ -50,7 +58,8 @@ async function syncStylesLocally() {
             .map(f => ({
                 name: f,
                 content: fs.readFileSync(path.join(LOCAL_STYLES_DIR, f), 'utf-8')
-            }));
+            }))
+            .filter(file => shouldSyncStyle(file.name));
 
         await processSync(yamlFiles);
         console.log('Local sync complete.');
