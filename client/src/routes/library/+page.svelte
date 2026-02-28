@@ -16,10 +16,10 @@
 
         try {
             const [stylesRes, bookmarksRes] = await Promise.all([
-                fetch('http://localhost:3000/api/styles', {
+                fetch('/api/styles', {
                     headers: { 'Authorization': `Bearer ${$auth.token}` }
                 }),
-                fetch('http://localhost:3000/api/bookmarks', {
+                fetch('/api/bookmarks', {
                     headers: { 'Authorization': `Bearer ${$auth.token}` }
                 })
             ]);
@@ -38,7 +38,7 @@
     });
 
     async function handleRemoveBookmark(id: string) {
-        const res = await fetch(`http://localhost:3000/api/styles/${id}/bookmark`, {
+        const res = await fetch(`/api/styles/${id}/bookmark`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${$auth.token}` }
         });

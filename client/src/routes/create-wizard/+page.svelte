@@ -24,7 +24,7 @@
         // unless it's the first save or a manual save
         
         try {
-            const res = await fetch('http://localhost:3000/api/styles', {
+            const res = await fetch('/api/styles', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

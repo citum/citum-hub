@@ -12,7 +12,7 @@
 
     onMount(async () => {
         try {
-            const res = await fetch(`http://localhost:3000/api/styles/${$page.params.id}`, {
+            const res = await fetch(`/api/styles/${$page.params.id}`, {
                 headers: $auth.token ? { 'Authorization': `Bearer ${$auth.token}` } : {}
             });
             if (res.ok) {
@@ -31,7 +31,7 @@
         if (!$auth.user) return;
         isForking = true;
         try {
-            const res = await fetch(`http://localhost:3000/api/styles/${style.id}/fork`, {
+            const res = await fetch(`/api/styles/${style.id}/fork`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${$auth.token}` }
             });
@@ -46,7 +46,7 @@
 
     async function bookmarkStyle() {
         if (!$auth.user) return;
-        await fetch(`http://localhost:3000/api/styles/${style.id}/bookmark`, {
+        await fetch(`/api/styles/${style.id}/bookmark`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${$auth.token}` }
         });

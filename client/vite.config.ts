@@ -6,21 +6,5 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     sveltekit()
-  ],
-  server: {
-    proxy: {
-      '/api': {
-        target: 'http://localhost:3000',
-        changeOrigin: true
-      },
-      '/preview': {
-        target: 'http://localhost:3000',
-        changeOrigin: true
-      },
-      '/references': {
-        target: 'http://localhost:3000',
-        changeOrigin: true
-      }
-    }
-  }
+  ]
 });

@@ -12,7 +12,7 @@
 
     onMount(async () => {
         try {
-            const res = await fetch('http://localhost:3000/api/hub');
+            const res = await fetch('/api/hub');
             if (res.ok) {
                 publicStyles = await res.json();
             } else {

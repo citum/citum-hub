@@ -6,7 +6,7 @@
     let { children } = $props();
 
     function handleLogin() {
-        window.location.href = 'http://localhost:3000/auth/github';
+        window.location.href = '/api/auth/github';
     }
 
     function handleLogout() {
