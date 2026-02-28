@@ -38,7 +38,8 @@ export async function POST({ request, params, fetch }) {
         const rpcParams: any = {
             style_path: containerStylePath,
             refs: refsMap,
-            output_format: 'html' // Ensure this matches engine expectations
+            output_format: 'html', // Correct key from rpc.rs
+            format: 'html'        // Redundant key just in case
         };
         
         if (params.path === 'citation') {
@@ -62,6 +63,9 @@ export async function POST({ request, params, fetch }) {
         
         const rpcResponse = await response.json();
         
+        // --- DEBUG LOG ---
+        console.log(`[Proxy] Engine Raw Response (${params.path}):`, JSON.stringify(rpcResponse, null, 2));
+        
         // Cleanup the temp file
         try { fs.unlinkSync(filePath); } catch(e) {}
 
@@ -74,19 +78,17 @@ export async function POST({ request, params, fetch }) {
             });
         }
 
-        // Handle the engine's double-nested result structure
         const engineResult = rpcResponse.result?.result;
         let finalResult = '';
 
         if (params.path === 'citation') {
-            // For citation, engineResult is usually just the rendered string
             finalResult = typeof engineResult === 'string' ? engineResult : (engineResult?.result || '');
         } else {
-            // For bibliography, engineResult is { format, content, entries? }
+            // Check for BibliographyResult struct
             finalResult = engineResult?.content || (typeof engineResult === 'string' ? engineResult : '');
         }
 
-        // Final fallback to the top-level result if nesting was different
+        // Final fallback
         if (!finalResult && rpcResponse.result) {
             finalResult = typeof rpcResponse.result === 'string' ? rpcResponse.result : (rpcResponse.result.content || '');
         }
