@@ -17,6 +17,9 @@ WORKDIR /usr/src/app
 # Clone the engine repository
 RUN git clone https://github.com/citum/citum-core.git .
 
+# Ensure dependencies are up to date
+RUN cargo update
+
 # Build the specific server crate with http feature
 RUN cargo build --release -p citum-server --features http
 
@@ -40,6 +43,10 @@ COPY --from=builder /usr/src/app/locales /app/locales
 RUN mkdir -p /tmp/citum/styles
 
 EXPOSE 3000
+
+# Set environment variables for resources
+ENV CITUM_STYLES_DIR=/app/styles
+ENV CITUM_LOCALES_DIR=/app/locales
 
 # Start in HTTP mode
 CMD ["/app/citum-server", "--http", "--port", "3000"]
