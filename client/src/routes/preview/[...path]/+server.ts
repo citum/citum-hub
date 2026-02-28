@@ -5,7 +5,7 @@ import path from 'path';
 import yaml from 'js-yaml';
 
 export async function POST({ request, params, fetch }) {
-    const citumUrl = env.CITUM_URL || 'http://127.0.0.1:9000';
+    const citumUrl = env.CITUM_URL || 'http://127.0.0.1:9001';
     console.log(`[Proxy] Incoming preview request for ${params.path}`);
     
     try {
