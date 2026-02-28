@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS styles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title TEXT NOT NULL,
+    filename TEXT UNIQUE,
     intent JSONB NOT NULL DEFAULT '{}',
     citum TEXT,
     is_public BOOLEAN NOT NULL DEFAULT FALSE,

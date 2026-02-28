@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "sync-styles": "curl -X POST http://localhost:5173/api/admin/sync-styles",
+    "sync-styles": "curl -X POST http://localhost:5173/api/admin/sync-styles -H 'Content-Type: application/json'",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
