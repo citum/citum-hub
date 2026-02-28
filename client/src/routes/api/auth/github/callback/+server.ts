@@ -3,7 +3,7 @@ import { redirect } from '@sveltejs/kit';
 import { pool } from '$lib/server/db';
 import { createJWT } from '$lib/server/auth';
 
-export async function GET({ url }) {
+export async function GET({ url, fetch }) {
     const code = url.searchParams.get('code');
     if (!code) {
         throw redirect(302, '/');
@@ -11,7 +11,7 @@ export async function GET({ url }) {
 
     const clientId = env.GITHUB_CLIENT_ID || 'dummy';
     const clientSecret = env.GITHUB_CLIENT_SECRET || 'dummy';
-    const redirectUri = env.REDIRECT_URL || 'http://localhost:5173/api/auth/github/callback';
+    const redirectUri = env.REDIRECT_URL || `${url.origin}/api/auth/github/callback`;
 
     // 1. Exchange code for access token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
