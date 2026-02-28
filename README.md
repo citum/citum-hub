@@ -1,23 +1,23 @@
-# CSLN Style Hub
+# Citum Hub
 
-A modern repository to quickly find, edit, and create CSLN Citation Styles. Developed in lockstep with that broader ecosystem!
+A modern repository to quickly find, edit, and create citation styles. Developed in lockstep with the broader Citum ecosystem!
 
 ![Citation Style Editor Preview](resources/img/main.png)
 
 ## Project Structure
 
-- `server/`: Rust backend using Axum and a custom intent-based decision engine.
-- `client/`: SvelteKit 5 frontend with Tailwind CSS 4.
+- `client/`: SvelteKit 5 application. Contains both the frontend UI and the backend API logic.
+- `docker-compose.yml`: Orchestrates the database and the Citum preview engine.
 
 ## Features
 
-- **Style Discovery**: Find and browse existing citation styles from the CSL repository.
-- **Intent-Based Wizard**: Create new styles by answering simple questions about how you want your citations to look, rather than editing XML directly.
+- **Style Discovery**: Find and browse existing citation styles.
+- **Intent-Based Wizard**: Create new styles by answering simple questions about how you want your citations to look.
 - **Personal Library**: Create an account to save and manage your custom styles.
-- **Persistence**: Securely store your styles in a database, allowing you to return and edit them later.
-- **GitHub Integration**: Sign in with your GitHub account for a seamless experience.
-- **Live Preview**: Real-time rendering of citations and bibliographies as you make decisions.
-- **CSL Export**: Download your finished style as a valid CSL XML file.
+- **Persistence**: Securely store your styles in a PostgreSQL database.
+- **GitHub Integration**: Sign in with your GitHub account.
+- **Live Preview**: Real-time rendering of citations and bibliographies powered by `citum-server`.
+- **Citum Export**: Download your finished style as a valid Citum JSON/YAML file.
 
 ## Design Philosophy
 
@@ -27,46 +27,44 @@ The interface uses a clean, premium "Paper" aesthetic for previews, providing an
 
 ## Technology Stack
 
-- **Backend**: Rust, Axum, SQLx, Postgres, OAuth2.
-- **Frontend**: Svelte 5, SvelteKit, Tailwind CSS 4, Lucide Svelte.
+- **Fullstack**: Svelte 5, SvelteKit, TypeScript, Tailwind CSS 4.
+- **Engine**: Citum-Server (Rust), integrated as a sidecar.
 - **Database**: PostgreSQL for persistent storage.
-- **Authentication**: GitHub OAuth for user management.
+- **Authentication**: GitHub OAuth with JWT.
 
 ## Setup & Development
 
 ### Prerequisites
 
-- [Docker](https://www.docker.com/) (for running the database)
-- [Rust](https://www.rust-lang.org/)
-- [Node.js](https://nodejs.org/) or [Bun](https://bun.sh/) (preferred by some developers)
+- [Docker](https://www.docker.com/)
+- [Bun](https://bun.sh/) (recommended) or [Node.js](https://nodejs.org/)
 
 ### Environment Configuration
 
-1. Copy the example environment file in the server directory:
-   ```bash
-   cp server/.env.example server/.env
-   ```
-2. Fill in the required values in `server/.env`, including your GitHub OAuth credentials.
+Create a `.env` file in the `client/` directory with the following:
+
+```bash
+GITHUB_CLIENT_ID=your_id
+GITHUB_CLIENT_SECRET=your_secret
+JWT_SECRET=your_random_secret
+DATABASE_URL=postgresql://postgres:password@localhost:5432/stylehub
+REDIRECT_URL=http://localhost:5173/api/auth/github/callback
+CITUM_URL=http://localhost:3001
+```
 
 ### Running the Project
 
-1. **Start the Database**:
+1. **Start the Services**:
+   From the root directory, start the database and the preview engine:
    ```bash
    docker-compose up -d
    ```
 
-2. **Run Migrations** (optional, the server runs them on startup):
+2. **Run the Application**:
    ```bash
-   cd server
-   cargo sqlx migrate run
+   cd client
+   bun install
+   bun dev
    ```
 
-3. **Start the Application**:
-   From the root directory:
-   ```bash
-   npm run dev
-   # OR if you prefer Bun
-   bun run dev
-   ```
-
-   This will start both the backend server (at `http://localhost:3000`) and the frontend client (at `http://localhost:5173`) concurrently. The scripts are configured to automatically prefer Bun if it is installed, or use Node.js otherwise. You can override this by setting the `PM` environment variable (e.g., `PM=npm npm run dev`).
+   The app will be available at `http://localhost:5173`.

@@ -39,7 +39,7 @@ export async function GET({ url }) {
     const userResponse = await fetch('https://api.github.com/user', {
         headers: {
             'Authorization': `Bearer ${accessToken}`,
-            'User-Agent': 'style-editor-server'
+            'User-Agent': 'citum-hub'
         }
     });
     

@@ -1,14 +1,9 @@
 {
-    "name": "style-editor",
+    "name": "citum-hub",
     "private": true,
     "scripts": {
-        "dev:client": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run dev",
-        "dev:server": "cargo run -p style-editor-api",
-        "dev": "concurrently \"${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run dev:client\" \"${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run dev:server\"",
-        "build": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run build && cargo build --release",
-        "check": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run check && cargo check --workspace"
-    },
-    "devDependencies": {
-        "concurrently": "^8.2.2"
+        "dev": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run dev",
+        "build": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run build",
+        "check": "cd client && ${PM:-$(command -v bun >/dev/null 2>&1 && echo bun || echo npm)} run check"
     }
 }
