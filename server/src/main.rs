@@ -268,6 +268,7 @@ pub struct PreviewSet {
 #[serde(untagged)]
 enum PreviewRequestPayload {
     Style(Box<Style>),
+    Citum { citum: String },
     Intent(StyleIntent),
 }
 
@@ -392,6 +393,15 @@ async fn preview_set_handler(
             };
             let field = intent.field.clone();
             (intent.to_style(), class.to_string(), field)
+        }
+        PreviewRequestPayload::Citum { citum } => {
+            let style = serde_yaml::from_str::<Style>(&normalize_legacy_style_yaml(&citum))
+                .unwrap_or_else(|_| Style::default());
+            let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
+                Some(citum_schema::options::Processing::Note) => "note",
+                _ => "in_text",
+            };
+            (style, class.to_string(), None)
         }
     };
     
@@ -962,5 +972,60 @@ bibliography:
         fs::remove_dir_all(&temp_root).expect("temp root should be removed");
 
         assert_eq!(loaded.as_deref(), Some(local_yaml));
+    }
+
+    #[test]
+    fn local_chicago_author_date_preview_does_not_repeat_period_separators() {
+        let raw = fs::read_to_string(local_styles_dir().join("chicago-author-date.yaml"))
+            .expect("local chicago style should be readable");
+        let style = serde_yaml::from_str::<Style>(&raw).expect("local chicago style should parse");
+
+        let preview = generate_preview_set_internal(&style, "in_text", None);
+        let bibliography = preview
+            .bibliography
+            .expect("expected bibliography preview for chicago author-date");
+
+        assert!(
+            !bibliography.contains(" . "),
+            "bibliography should not contain spaced repeated periods: {bibliography}"
+        );
+        assert!(
+            !bibliography.contains(". ."),
+            "bibliography should not contain repeated sentence separators: {bibliography}"
+        );
+    }
+
+    #[test]
+    fn raw_citum_preview_payload_preserves_canonical_chicago_rendering() {
+        let raw = fs::read_to_string(local_styles_dir().join("chicago-author-date.yaml"))
+            .expect("local chicago style should be readable");
+
+        let payload = serde_json::from_value::<PreviewRequestPayload>(json!({
+            "citum": raw
+        }))
+        .expect("raw citum payload should deserialize");
+
+        let (style, class) = match payload {
+            PreviewRequestPayload::Citum { citum } => {
+                let style = serde_yaml::from_str::<Style>(&normalize_legacy_style_yaml(&citum))
+                    .expect("raw citum should parse as style");
+                let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
+                    Some(citum_schema::options::Processing::Note) => "note",
+                    _ => "in_text",
+                };
+                (style, class)
+            }
+            _ => panic!("expected raw citum preview payload"),
+        };
+
+        let preview = generate_preview_set_internal(&style, class, None);
+        let bibliography = preview
+            .bibliography
+            .expect("expected bibliography preview for raw citum payload");
+
+        assert!(
+            !bibliography.contains(" . ") && !bibliography.contains(". ."),
+            "raw citum preview should not add repeated periods: {bibliography}"
+        );
     }
 }

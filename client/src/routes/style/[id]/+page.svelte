@@ -4,7 +4,6 @@
     import { auth } from '$lib/stores/auth';
     import { goto } from '$app/navigation';
     import ComprehensivePreview from '$lib/components/ComprehensivePreview.svelte';
-    import yaml from 'js-yaml';
 
     let style = $state(null);
     let loading = $state(true);
@@ -43,21 +42,10 @@
         previewLoading = true;
         
         try {
-            let payload;
-            if (style.citum) {
-                try {
-                    payload = yaml.load(style.citum, { schema: yaml.FAILSAFE_SCHEMA });
-                } catch (e) {
-                    payload = style.intent;
-                }
-            } else {
-                payload = style.intent;
-            }
-
             const res = await fetch('/api/v1/preview', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
+                body: JSON.stringify(style.citum ? { citum: style.citum } : style.intent)
             });
 
             if (res.ok) {
