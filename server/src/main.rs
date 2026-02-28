@@ -9,6 +9,8 @@ use axum::{
     Router, Json,
     response::{Redirect, IntoResponse},
 };
+use std::fs;
+use std::path::{Path as FsPath, PathBuf};
 use std::sync::Arc;
 use std::net::SocketAddr;
 use serde::{Deserialize, Serialize};
@@ -36,6 +38,7 @@ pub struct StyleRow {
     pub id: Uuid,
     pub user_id: Uuid,
     pub title: String,
+    pub filename: Option<String>,
     pub intent: Value,
     pub citum: String,
     pub is_public: bool,
@@ -48,6 +51,7 @@ pub struct StyleRow {
 }
 
 fn process_style_metadata(mut row: StyleRow) -> StyleRow {
+    row.citum = resolve_synced_public_style_yaml(&row);
     row.citum = normalize_legacy_style_yaml(&row.citum);
 
     match serde_yaml::from_str::<Style>(&row.citum) {
@@ -60,6 +64,31 @@ fn process_style_metadata(mut row: StyleRow) -> StyleRow {
         }
     }
     row
+}
+
+fn resolve_synced_public_style_yaml(row: &StyleRow) -> String {
+    let Some(filename) = row.filename.as_deref() else {
+        return row.citum.clone();
+    };
+
+    if !row.is_public {
+        return row.citum.clone();
+    }
+
+    load_local_style_yaml(filename).unwrap_or_else(|| row.citum.clone())
+}
+
+fn load_local_style_yaml(filename: &str) -> Option<String> {
+    load_style_yaml_from_root(&local_styles_dir(), filename)
+}
+
+fn local_styles_dir() -> PathBuf {
+    FsPath::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../citum-core/styles")
+}
+
+fn load_style_yaml_from_root(root: &FsPath, filename: &str) -> Option<String> {
+    fs::read_to_string(root.join(filename)).ok()
 }
 
 fn normalize_legacy_style_yaml(raw: &str) -> String {
@@ -79,6 +108,7 @@ fn normalize_legacy_contributor_substitute(value: &mut YamlValue) -> bool {
         YamlValue::Mapping(map) => {
             let mut changed = move_legacy_contributor_substitute(map);
             changed |= remove_legacy_date_fields(map);
+            changed |= normalize_legacy_bibliography_separator(map);
 
             for child in map.values_mut() {
                 changed |= normalize_legacy_contributor_substitute(child);
@@ -135,6 +165,63 @@ fn remove_legacy_date_fields(map: &mut YamlMapping) -> bool {
     let removed_substitute = dates.remove(&substitute_key).is_some();
 
     removed_form || removed_substitute
+}
+
+fn normalize_legacy_bibliography_separator(map: &mut YamlMapping) -> bool {
+    let bibliography_key = YamlValue::String("bibliography".to_string());
+    let options_key = YamlValue::String("options".to_string());
+    let separator_key = YamlValue::String("separator".to_string());
+
+    let has_suffix_heavy_template = map
+        .get(&bibliography_key)
+        .and_then(template_contains_multiple_period_suffixes)
+        .unwrap_or(false);
+
+    if !has_suffix_heavy_template {
+        return false;
+    }
+
+    let Some(YamlValue::Mapping(options)) = map.get_mut(&options_key) else {
+        return false;
+    };
+
+    let Some(YamlValue::Mapping(bibliography_options)) = options.get_mut(&bibliography_key) else {
+        return false;
+    };
+
+    if bibliography_options.contains_key(&separator_key) {
+        return false;
+    }
+
+    bibliography_options.insert(separator_key, YamlValue::String(" ".to_string()));
+    true
+}
+
+fn template_contains_multiple_period_suffixes(value: &YamlValue) -> Option<bool> {
+    let YamlValue::Mapping(bibliography) = value else {
+        return None;
+    };
+
+    let template_key = YamlValue::String("template".to_string());
+    let YamlValue::Sequence(template) = bibliography.get(&template_key)? else {
+        return None;
+    };
+
+    let suffix_count = template
+        .iter()
+        .filter(|component| mapping_has_period_suffix(component))
+        .count();
+
+    Some(suffix_count >= 2)
+}
+
+fn mapping_has_period_suffix(value: &YamlValue) -> bool {
+    let YamlValue::Mapping(component) = value else {
+        return false;
+    };
+
+    let suffix_key = YamlValue::String("suffix".to_string());
+    matches!(component.get(&suffix_key), Some(YamlValue::String(suffix)) if suffix == ".")
 }
 
 #[derive(Debug, Serialize, Deserialize, Default)]
@@ -453,7 +540,7 @@ async fn list_user_styles(
     user: auth::AuthenticatedUser
 ) -> Json<Vec<StyleRow>> {
     let styles = sqlx::query_as::<_, StyleRow>(
-        "SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at FROM styles WHERE user_id = $1 ORDER BY updated_at DESC"
+        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at FROM styles WHERE user_id = $1 ORDER BY updated_at DESC"
     )
     .bind(user.id)
     .fetch_all(&state.db)
@@ -466,7 +553,7 @@ async fn list_user_styles(
 
 async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<StyleRow>> {
     let styles = sqlx::query_as::<_, StyleRow>(
-        "SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at FROM styles WHERE is_public = true ORDER BY updated_at DESC"
+        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at FROM styles WHERE is_public = true ORDER BY updated_at DESC"
     )
     .fetch_all(&state.db)
     .await
@@ -483,7 +570,7 @@ async fn get_style(
 ) -> impl IntoResponse {
     let user_id = user.0;
     let style = sqlx::query_as::<_, StyleRow>(
-        "SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at FROM styles WHERE id = $1 AND (is_public = true OR user_id = $2)"
+        "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at FROM styles WHERE id = $1 AND (is_public = true OR user_id = $2)"
     )
     .bind(id)
     .bind(user_id)
@@ -508,7 +595,7 @@ async fn create_style(
     let intent_val = serde_json::to_value(&payload).unwrap();
 
     let style = sqlx::query_as::<_, StyleRow>(
-        "INSERT INTO styles (user_id, title, intent, citum, is_public) VALUES ($1, $2, $3, $4, false) RETURNING id, user_id, title, intent, citum, is_public, created_at, updated_at"
+        "INSERT INTO styles (user_id, title, intent, citum, is_public) VALUES ($1, $2, $3, $4, false) RETURNING id, user_id, title, filename, intent, citum, is_public, created_at, updated_at"
     )
     .bind(user.id)
     .bind(title)
@@ -534,7 +621,7 @@ async fn update_style(
     let is_public = true;
 
     let style = sqlx::query_as::<_, StyleRow>(
-        "UPDATE styles SET title = $1, intent = $2, citum = $3, is_public = $4, updated_at = NOW() WHERE id = $5 AND user_id = $6 RETURNING id, user_id, title, intent, citum, is_public, created_at, updated_at"
+        "UPDATE styles SET title = $1, intent = $2, citum = $3, is_public = $4, updated_at = NOW() WHERE id = $5 AND user_id = $6 RETURNING id, user_id, title, filename, intent, citum, is_public, created_at, updated_at"
     )
     .bind(title)
     .bind(intent_val)
@@ -566,7 +653,7 @@ async fn fork_style(
     match original {
         Some(orig) => {
             let style = sqlx::query_as::<_, StyleRow>(
-                "INSERT INTO styles (user_id, title, intent, citum, is_public) VALUES ($1, $2, $3, $4, false) RETURNING id, user_id, title, intent, citum, is_public, created_at, updated_at"
+                "INSERT INTO styles (user_id, title, intent, citum, is_public) VALUES ($1, $2, $3, $4, false) RETURNING id, user_id, title, filename, intent, citum, is_public, created_at, updated_at"
             )
             .bind(user.id)
             .bind(format!("{} (Fork)", orig.title))
@@ -602,7 +689,7 @@ async fn list_bookmarks(
     user: auth::AuthenticatedUser
 ) -> Json<Vec<StyleRow>> {
     let styles = sqlx::query_as::<_, StyleRow>(
-        "SELECT s.id, s.user_id, s.title, s.intent, s.citum, s.is_public, s.created_at, s.updated_at 
+        "SELECT s.id, s.user_id, s.title, s.filename, s.intent, s.citum, s.is_public, s.created_at, s.updated_at 
          FROM styles s JOIN bookmarks b ON s.id = b.style_id 
          WHERE b.user_id = $1 ORDER BY s.updated_at DESC"
     )
@@ -619,6 +706,7 @@ async fn list_bookmarks(
 mod tests {
     use super::*;
     use serde_json::json;
+    use std::time::{SystemTime, UNIX_EPOCH};
 
     #[test]
     fn saved_author_date_styles_render_parenthetical_and_narrative_previews() {
@@ -746,5 +834,47 @@ options:
         assert!(serialized.contains("month: long"));
         assert!(!normalized.contains("form: numeric"));
         assert!(!normalized.contains("substitute:"));
+    }
+
+    #[test]
+    fn adds_space_separator_for_suffix_heavy_legacy_bibliographies() {
+        let raw = r#"
+info:
+  title: Legacy style
+options:
+  bibliography:
+    hanging-indent: true
+bibliography:
+  template:
+    - contributor: author
+      suffix: "."
+    - date: issued
+      suffix: "."
+    - title: primary
+      suffix: "."
+"#;
+
+        let normalized = normalize_legacy_style_yaml(raw);
+
+        assert!(normalized.contains("separator: ' '") || normalized.contains("separator: \" \""));
+    }
+
+    #[test]
+    fn synced_public_styles_prefer_local_checkout_yaml() {
+        let unique = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("clock should be after unix epoch")
+            .as_nanos();
+        let temp_root = std::env::temp_dir().join(format!("citum-hub-style-test-{unique}"));
+        fs::create_dir_all(&temp_root).expect("temp root should be created");
+
+        let filename = "test-style.yaml";
+        let local_yaml = "info:\n  title: Fresh Local Style\n";
+        fs::write(temp_root.join(filename), local_yaml).expect("local style should be written");
+
+        let loaded = load_style_yaml_from_root(&temp_root, filename);
+        fs::remove_dir_all(&temp_root).expect("temp root should be removed");
+
+        assert_eq!(loaded.as_deref(), Some(local_yaml));
     }
 }
