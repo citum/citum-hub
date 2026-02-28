@@ -38,7 +38,7 @@ export async function POST({ request, params, fetch }) {
         const rpcParams: any = {
             style_path: containerStylePath,
             refs: refsMap,
-            output_format: 'html'
+            output_format: 'html' // Ensure this matches engine expectations
         };
         
         if (params.path === 'citation') {
@@ -74,31 +74,21 @@ export async function POST({ request, params, fetch }) {
             });
         }
 
-        /**
-         * Engine Response Structure:
-         * {
-         *   "id": ...,
-         *   "result": {
-         *      "id": ...,
-         *      "result": "the actual content" OR { "content": "..." }
-         *   }
-         * }
-         */
-        const innerResult = rpcResponse.result?.result;
+        // Handle the engine's double-nested result structure
+        const engineResult = rpcResponse.result?.result;
         let finalResult = '';
 
-        if (typeof innerResult === 'string') {
-            finalResult = innerResult;
-        } else if (innerResult && typeof innerResult === 'object') {
-            // For BibliographyResult struct
-            finalResult = innerResult.content || innerResult.result || '';
-        } else if (rpcResponse.result && typeof rpcResponse.result === 'string') {
-            // Fallback for simple string results
-            finalResult = rpcResponse.result;
+        if (params.path === 'citation') {
+            // For citation, engineResult is usually just the rendered string
+            finalResult = typeof engineResult === 'string' ? engineResult : (engineResult?.result || '');
+        } else {
+            // For bibliography, engineResult is { format, content, entries? }
+            finalResult = engineResult?.content || (typeof engineResult === 'string' ? engineResult : '');
         }
 
-        if (Array.isArray(finalResult)) {
-            finalResult = finalResult.join('\n');
+        // Final fallback to the top-level result if nesting was different
+        if (!finalResult && rpcResponse.result) {
+            finalResult = typeof rpcResponse.result === 'string' ? rpcResponse.result : (rpcResponse.result.content || '');
         }
 
         return new Response(JSON.stringify({ result: finalResult || 'No output from engine' }), {
