@@ -38,11 +38,10 @@ export async function POST({ request, params, fetch }) {
         const rpcParams: any = {
             style_path: containerStylePath,
             refs: refsMap,
-            format: 'html' // Use the new HTML format parameter
+            output_format: 'html' // Engine expects 'output_format'
         };
         
         if (params.path === 'citation') {
-            // For render_citation, we need a citation object. 
             rpcParams.citation = {
                 items: references.map((r: any) => ({ id: r.id }))
             };
@@ -75,14 +74,19 @@ export async function POST({ request, params, fetch }) {
             });
         }
 
-        let result = rpcResponse.result?.result || rpcResponse.result;
-        
-        // If it's a bibliography result (array of strings), join with newlines or wrap in divs
-        if (Array.isArray(result)) {
-            result = result.join('\n');
+        // Handle the engine's result structure
+        let resultData = rpcResponse.result?.result;
+        let finalResult = '';
+
+        if (params.path === 'citation') {
+            // render_citation returns a simple string result
+            finalResult = resultData || '';
+        } else {
+            // render_bibliography returns a struct: { format, content, entries? }
+            finalResult = resultData?.content || '';
         }
 
-        return new Response(JSON.stringify({ result: result || 'No output' }), {
+        return new Response(JSON.stringify({ result: finalResult || 'No output from engine' }), {
             headers: { 'Content-Type': 'application/json' }
         });
     } catch (e: any) {
