@@ -1,15 +1,15 @@
-import { error } from '@sveltejs/kit';
+import { json, error } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
 
 const BACKEND_URL = env.BACKEND_URL || 'http://localhost:3000';
 
 export async function POST({ request, fetch }) {
     try {
-        const intent = await request.json();
-        const res = await fetch(`${BACKEND_URL}/api/v1/generate`, {
+        const payload = await request.json();
+        const res = await fetch(`${BACKEND_URL}/api/v1/preview`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(intent)
+            body: JSON.stringify(payload)
         });
         
         if (!res.ok) {
@@ -17,15 +17,10 @@ export async function POST({ request, fetch }) {
             throw error(res.status as any, errorText || `Backend error: ${res.status}`);
         }
         
-        const citum = await res.text();
-        return new Response(citum, {
-            headers: {
-                'Content-Type': 'application/x-yaml',
-                'Content-Disposition': 'attachment; filename="custom-style.yaml"'
-            }
-        });
+        const data = await res.json();
+        return json(data);
     } catch (e: any) {
-        console.error('Failed to proxy generate request to Rust backend:', e);
+        console.error('Failed to proxy preview request to Rust backend:', e);
         throw error(500, `Backend communication failed: ${e.message}`);
     }
 }

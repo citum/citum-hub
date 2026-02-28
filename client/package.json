@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "sync-styles": "curl -X POST http://localhost:5173/api/admin/sync-styles -H 'Content-Type: application/json'",
+    "sync-styles": "bun run scripts/sync-local.ts",
     "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json"
   },
   "devDependencies": {
@@ -28,6 +28,7 @@
     "vite": "^5.0.0"
   },
   "dependencies": {
+    "dotenv": "^17.3.1",
     "jose": "^6.1.3",
     "js-yaml": "^4.1.1",
     "lucide-svelte": "^0.400.0",

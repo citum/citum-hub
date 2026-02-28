@@ -1,35 +1,20 @@
 import { json, error } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
-import { requireAuth } from '$lib/server/auth';
+import { env } from '$env/dynamic/private';
 
-export async function POST({ request, params }) {
-    const user = await requireAuth(request);
-    if (!user) throw error(401, 'Unauthorized');
+const BACKEND_URL = env.BACKEND_URL || 'http://localhost:3000';
 
-    const client = await pool.connect();
+export async function POST({ request, params, fetch }) {
     try {
-        const original = await client.query(
-            `SELECT title, intent, citum FROM styles 
-             WHERE id = $1 AND (is_public = true OR user_id = $2)`,
-            [params.id, user.id]
-        );
-
-        if (original.rows.length === 0) {
-            throw error(404, 'Source style not found');
-        }
-
-        const source = original.rows[0];
-        const forkedTitle = `${source.title} (Fork)`;
-
-        const result = await client.query(
-            `INSERT INTO styles (user_id, title, intent, citum, is_public)
-             VALUES ($1, $2, $3, $4, false)
-             RETURNING *`,
-            [user.id, forkedTitle, source.intent, source.citum]
-        );
-
-        return json(result.rows[0]);
-    } finally {
-        client.release();
+        const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}/fork`, {
+            method: 'POST',
+            headers: {
+                'Authorization': request.headers.get('Authorization') || ''
+            }
+        });
+        if (!res.ok) throw error(res.status as any, 'Backend error');
+        const data = await res.json();
+        return json(data);
+    } catch (e: any) {
+        throw error(500, `Backend error: ${e.message}`);
     }
 }

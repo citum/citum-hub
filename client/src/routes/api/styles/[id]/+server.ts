@@ -1,25 +1,38 @@
 import { json, error } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
-import { requireAuth } from '$lib/server/auth';
+import { env } from '$env/dynamic/private';
 
-export async function GET({ request, params }) {
-    const user = await requireAuth(request);
-    if (!user) throw error(401, 'Unauthorized');
+const BACKEND_URL = env.BACKEND_URL || 'http://localhost:3000';
 
-    const client = await pool.connect();
+export async function GET({ request, params, fetch }) {
     try {
-        const result = await client.query(
-            `SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at 
-             FROM styles WHERE id = $1 AND (user_id = $2 OR is_public = true)`,
-            [params.id, user.id]
-        );
-        
-        if (result.rows.length === 0) {
-            throw error(404, 'Not found');
-        }
-        
-        return json(result.rows[0]);
-    } finally {
-        client.release();
+        const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}`, {
+            headers: {
+                'Authorization': request.headers.get('Authorization') || ''
+            }
+        });
+        if (!res.ok) throw error(res.status as any, 'Backend error');
+        const data = await res.json();
+        return json(data);
+    } catch (e: any) {
+        throw error(500, `Backend error: ${e.message}`);
+    }
+}
+
+export async function PUT({ request, params, fetch }) {
+    try {
+        const body = await request.json();
+        const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': request.headers.get('Authorization') || ''
+            },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw error(res.status as any, 'Backend error');
+        const data = await res.json();
+        return json(data);
+    } catch (e: any) {
+        throw error(500, `Backend error: ${e.message}`);
     }
 }

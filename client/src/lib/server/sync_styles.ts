@@ -1,11 +1,22 @@
 import { pool } from './db';
 import yaml from 'js-yaml';
+import fs from 'fs';
+import path from 'path';
 
 const REPO_OWNER = 'citum';
 const REPO_NAME = 'citum-core';
 const STYLES_DIR = 'styles';
 
+// Path to local styles in this workspace
+const LOCAL_STYLES_DIR = path.resolve('../citum-core-main/styles');
+
 export async function syncStylesFromGitHub() {
+    // Check if we should use local files instead
+    if (fs.existsSync(LOCAL_STYLES_DIR)) {
+        console.log(`Found local styles at ${LOCAL_STYLES_DIR}. Using local sync...`);
+        return syncStylesLocally();
+    }
+
     console.log('Starting style sync from GitHub...');
     
     try {
@@ -23,51 +34,73 @@ export async function syncStylesFromGitHub() {
         }
 
         const yamlFiles = files.filter((f: any) => f.name.endsWith('.yaml') || f.name.endsWith('.yml'));
-
-        console.log(`Found ${yamlFiles.length} styles to sync.`);
-
-        const client = await pool.connect();
-        try {
-            let systemUserId;
-            const userRes = await client.query("SELECT id FROM users WHERE email = 'system@citum.org'");
-            if (userRes.rows.length === 0) {
-                const newUser = await client.query(
-                    "INSERT INTO users (email, role) VALUES ('system@citum.org', 'admin') RETURNING id"
-                );
-                systemUserId = newUser.rows[0].id;
-            } else {
-                systemUserId = userRes.rows[0].id;
-            }
-
-            for (const file of yamlFiles) {
-                try {
-                    console.log(`Syncing ${file.name}...`);
-                    
-                    const contentRes = await fetch(file.download_url);
-                    const content = await contentRes.text();
-                    const styleData = yaml.load(content) as any;
-                    
-                    const title = styleData.info?.title || file.name.replace(/\.yaml$|\.yml$/, '');
-                    
-                    await client.query(`
-                        INSERT INTO styles (user_id, title, filename, intent, citum, is_public, updated_at)
-                        VALUES ($1, $2, $3, $4, $5, true, NOW())
-                        ON CONFLICT (filename) DO UPDATE SET 
-                            title = EXCLUDED.title,
-                            intent = EXCLUDED.intent,
-                            citum = EXCLUDED.citum,
-                            updated_at = NOW()
-                    `, [systemUserId, title, file.name, {}, content]);
-                } catch (err) {
-                    console.error(`Failed to sync ${file.name}:`, err);
-                }
-            }
-        } finally {
-            client.release();
-        }
-
+        await processSync(yamlFiles.map(f => ({ name: f.name, download_url: f.download_url })));
+        
         console.log('Sync complete.');
     } catch (e) {
         console.error('Sync failed:', e);
+    }
+}
+
+async function syncStylesLocally() {
+    try {
+        const files = fs.readdirSync(LOCAL_STYLES_DIR);
+        const yamlFiles = files
+            .filter(f => f.endsWith('.yaml') || f.endsWith('.yml'))
+            .map(f => ({
+                name: f,
+                content: fs.readFileSync(path.join(LOCAL_STYLES_DIR, f), 'utf-8')
+            }));
+
+        await processSync(yamlFiles);
+        console.log('Local sync complete.');
+    } catch (e) {
+        console.error('Local sync failed:', e);
+    }
+}
+
+async function processSync(files: any[]) {
+    const client = await pool.connect();
+    try {
+        let systemUserId;
+        const userRes = await client.query("SELECT id FROM users WHERE email = 'system@citum.org'");
+        if (userRes.rows.length === 0) {
+            const newUser = await client.query(
+                "INSERT INTO users (email, role) VALUES ('system@citum.org', 'admin') RETURNING id"
+            );
+            systemUserId = newUser.rows[0].id;
+        } else {
+            systemUserId = userRes.rows[0].id;
+        }
+
+        for (const file of files) {
+            try {
+                console.log(`Syncing ${file.name}...`);
+                
+                let content = file.content;
+                if (!content && file.download_url) {
+                    const contentRes = await fetch(file.download_url);
+                    content = await contentRes.text();
+                }
+
+                const styleData = yaml.load(content) as any;
+                const title = styleData.info?.title || file.name.replace(/\.yaml$|\.yml$/, '');
+                
+                // Note: 'citum' column stores the raw YAML string
+                await client.query(`
+                    INSERT INTO styles (user_id, title, filename, intent, citum, is_public, updated_at)
+                    VALUES ($1, $2, $3, $4, $5, true, NOW())
+                    ON CONFLICT (filename) DO UPDATE SET 
+                        title = EXCLUDED.title,
+                        intent = EXCLUDED.intent,
+                        citum = EXCLUDED.citum,
+                        updated_at = NOW()
+                `, [systemUserId, title, file.name, {}, content]);
+            } catch (err) {
+                console.error(`Failed to sync ${file.name}:`, err);
+            }
+        }
+    } finally {
+        client.release();
     }
 }

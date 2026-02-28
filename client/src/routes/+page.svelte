@@ -7,7 +7,13 @@
     let loading = $state(true);
 
     const filteredStyles = $derived(
-        publicStyles.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
+        publicStyles.filter(s => {
+            const query = searchQuery.toLowerCase();
+            const inTitle = s.title.toLowerCase().includes(query);
+            const inDesc = (s.description || '').toLowerCase().includes(query);
+            const inFields = (s.fields || []).some(f => f.toLowerCase().includes(query));
+            return inTitle || inDesc || inFields;
+        })
     );
 
     onMount(async () => {
@@ -16,96 +22,75 @@
             if (res.ok) {
                 publicStyles = await res.json();
             }
-        } catch (e) {
-            console.error('Failed to load hub', e);
         } finally {
             loading = false;
         }
     });
 </script>
 
-<main class="flex flex-col gap-12 pb-20">
-    <!-- Hero Section -->
-    <section class="bg-slate-900 text-white py-20 px-4 lg:px-10">
-        <div class="max-w-[1200px] mx-auto flex flex-col items-center text-center gap-6">
-            <h1 class="text-5xl lg:text-6xl font-black tracking-tight max-w-3xl leading-[1.1]">
-                Find the perfect citation style for your research
-            </h1>
-            <p class="text-xl text-slate-400 max-w-2xl">
-                Browse, fork, and customize thousands of academic styles managed by the Citum community.
+<main class="min-h-screen bg-slate-50">
+    <section class="bg-slate-900 pt-24 pb-20 px-4">
+        <div class="max-w-[1200px] mx-auto text-center">
+            <h1 class="text-5xl font-black text-white mb-6 tracking-tight">Style Hub</h1>
+            <p class="text-slate-400 text-xl max-w-2xl mx-auto mb-10 leading-relaxed">
+                Discover, fork, and customize 100+ citation styles for any discipline.
             </p>
             
-            <div class="w-full max-w-xl mt-4 relative">
-                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+            <div class="max-w-2xl mx-auto relative group">
+                <span class="material-symbols-outlined absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-primary transition-colors">search</span>
                 <input 
-                    bind:value={searchQuery}
                     type="text" 
-                    placeholder="Search styles (e.g., 'APA', 'Nature', 'Harvard')..." 
-                    class="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+                    bind:value={searchQuery}
+                    placeholder="Search by title, field, or discipline..." 
+                    class="w-full bg-white/5 border border-white/10 text-white pl-16 pr-6 py-5 rounded-3xl text-lg focus:outline-none focus:ring-4 focus:ring-primary/20 focus:bg-white/10 focus:border-primary/50 transition-all placeholder:text-slate-600 shadow-2xl"
                 />
             </div>
         </div>
     </section>
 
-    <!-- Style Grid -->
-    <section class="px-4 lg:px-10 max-w-[1200px] mx-auto w-full">
-        <div class="flex justify-between items-end mb-8">
-            <div>
-                <h2 class="text-2xl font-bold text-slate-900">Featured Styles</h2>
-                <p class="text-slate-500">Popular and verified styles from the hub</p>
-            </div>
-            <p class="text-sm font-bold text-slate-400 uppercase tracking-widest">
-                {filteredStyles.length} styles found
-            </p>
-        </div>
-
+    <section class="max-w-[1200px] mx-auto py-16 px-4">
         {#if loading}
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {#each Array(6) as _}
-                    <div class="h-64 bg-slate-100 animate-pulse rounded-3xl"></div>
-                {/each}
-            </div>
-        {:else if filteredStyles.length === 0}
-            <div class="text-center py-20 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
-                <span class="material-symbols-outlined text-6xl text-slate-200 mb-4">search_off</span>
-                <p class="text-slate-500 text-lg">No styles match your search.</p>
+            <div class="flex justify-center py-20">
+                <span class="material-symbols-outlined animate-spin text-4xl text-slate-300">progress_activity</span>
             </div>
         {:else}
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {#each filteredStyles as style}
-                    <a 
-                        href="/style/{style.id}"
-                        class="group bg-white p-8 rounded-3xl border border-slate-200 shadow-sm hover:shadow-xl hover:border-primary/30 transition-all flex flex-col justify-between">
+                    <a href="/style/{style.id}" class="group bg-white rounded-[32px] border border-slate-200/60 p-8 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/5 hover:-translate-y-1 transition-all flex flex-col justify-between">
                         <div>
-                            <div class="flex justify-between items-start mb-6">
-                                <div class="size-12 bg-slate-50 rounded-2xl flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                                    <span class="material-symbols-outlined text-2xl">description</span>
+                            <div class="flex items-center gap-3 mb-6">
+                                <div class="size-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-primary/5 transition-colors">
+                                    <span class="material-symbols-outlined text-2xl text-slate-400 group-hover:text-primary">description</span>
                                 </div>
-                                <span class="text-[10px] font-black uppercase tracking-widest text-slate-400 bg-slate-100 px-2 py-1 rounded">Verified</span>
+                                <span class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Official Style</span>
                             </div>
                             <h3 class="text-xl font-bold text-slate-900 mb-2 group-hover:text-primary transition-colors">{style.title}</h3>
-                            <p class="text-sm text-slate-500 leading-relaxed mb-6 line-clamp-2">
-                                Official citation style for {style.title}. Supports {style.intent?.class || 'standard'} formatting with comprehensive bibliography rules.
+                            <p class="text-sm text-slate-500 leading-relaxed mb-4 line-clamp-2">
+                                {style.description || `Official citation style for ${style.title}.`}
                             </p>
+                            
+                            {#if style.fields?.length}
+                                <div class="flex flex-wrap gap-2 mb-4">
+                                    {#each style.fields as field}
+                                        <span class="text-[10px] font-bold text-slate-400 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100 uppercase tracking-tighter">{field}</span>
+                                    {/each}
+                                </div>
+                            {/if}
                         </div>
                         <div class="flex items-center justify-between pt-6 border-t border-slate-50">
-                            <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Updated {new Date(style.updated_at).toLocaleDateString()}</span>
+                            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Updated {new Date(style.updated_at).toLocaleDateString()}</span>
                             <span class="material-symbols-outlined text-slate-300 group-hover:text-primary transition-colors">arrow_forward</span>
                         </div>
                     </a>
                 {/each}
             </div>
         {/if}
-    </section>
 
-    <!-- Call to Action -->
-    <section class="px-4 lg:px-10 max-w-[1200px] mx-auto w-full mt-10">
-        <div class="bg-primary/5 rounded-[40px] p-12 flex flex-col items-center text-center gap-6 border border-primary/10">
-            <h2 class="text-3xl font-black text-slate-900">Can't find what you're looking for?</h2>
-            <p class="text-slate-600 max-w-xl">
-                Use our Decision Wizard to build a custom style from scratch or by modifying an existing archetype.
-            </p>
-            <a href="/create-wizard" class="bg-primary text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
+        <div class="mt-20 text-center bg-white rounded-[40px] border border-slate-200/60 p-12 lg:p-20 shadow-sm">
+            <h2 class="text-3xl font-bold text-slate-900 mb-4">Can't find what you need?</h2>
+            <p class="text-slate-500 text-lg mb-10 max-w-xl mx-auto">Build your own custom style in minutes using our guided visual wizard.</p>
+            <a href="/create-wizard" class="bg-primary text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-primary-dark transition-all shadow-lg shadow-primary/20 inline-flex items-center gap-3">
+                <span class="material-symbols-outlined">auto_fix</span>
                 Start the Wizard
             </a>
         </div>

@@ -1,0 +1,20 @@
+[workspace]
+resolver = "2"
+members = [
+    "server/crates/api",
+    "server/crates/intent-engine",
+    "server",
+]
+
+[workspace.package]
+version = "0.6.0"
+edition = "2024"
+
+[workspace.lints.rust]
+unsafe_code = "warn"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+strip = true
+panic = "abort"

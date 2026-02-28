@@ -3,24 +3,15 @@
 
 /**
  * Represents the user's intent for the citation style they are building.
- * This struct captures the state of the "Decision Wizard" and is used
- * to generate the next set of questions or the final Citum style.
+ * Redesigned to center around pervasive presets.
  */
-export type StyleIntent = { base_archetype: string | null; field: string | null; class: CitationClass | null; author_format: NameOptions | null; has_bibliography: boolean | null; citation_preset: string | null; bibliography_preset: string | null; detailed_config: boolean | null };
+export type StyleIntent = { field: string | null; class: CitationClass | null; from_preset: string | null; customize_target: CustomizeTarget | null; contributor_preset: string | null; date_preset: string | null; title_preset: string | null; sort_preset: string | null; bib_template: string | null; has_bibliography: boolean | null };
 
-export type CitationClass = "author_date" | "footnote" | "endnote" | "numeric";
+export type CitationClass = "author_date" | "footnote" | "endnote" | "numeric" | "label";
 
-export type NameOptions = { form: NameForm; et_al: EtAlConfig | null };
+export type CustomizeTarget = "menu" | "contributors" | "dates" | "titles" | "bibliography" | "bibliography_usage";
 
-export type NameForm = "long" | "short";
-
-export type EtAlConfig = { min: number; use_first: number };
-
-/**
- * A package returned by the backend containing everything the frontend
- * needs to render the next step in the wizard.
- */
-export type DecisionPackage = { missing_fields: string[]; question: Question | null; previews: Preview[]; in_text_preview: string | null; note_preview: string | null; bibliography_preview: string | null };
+export type DecisionPackage = { missing_fields: string[]; question: Question | null; previews: Preview[]; in_text_parenthetical: string | null; in_text_narrative: string | null; note: string | null; bibliography: string | null };
 
 export type Question = { id: string; text: string; description: string | null };
 

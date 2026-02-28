@@ -1,18 +1,16 @@
 import { json, error } from '@sveltejs/kit';
-import { pool } from '$lib/server/db';
+import { env } from '$env/dynamic/private';
 
-export async function GET() {
-    const client = await pool.connect();
+const BACKEND_URL = env.BACKEND_URL || 'http://localhost:3000';
+
+export async function GET({ fetch }) {
     try {
-        const result = await client.query(
-            `SELECT id, user_id, title, intent, citum, is_public, created_at, updated_at 
-             FROM styles WHERE is_public = true ORDER BY updated_at DESC`
-        );
-        return json(result.rows);
-    } catch (err: any) {
-        console.error('Database error in /api/hub:', err);
-        throw error(500, `Database error: ${err.message}`);
-    } finally {
-        client.release();
+        const res = await fetch(`${BACKEND_URL}/api/hub`);
+        if (!res.ok) throw error(res.status as any, 'Backend error');
+        const data = await res.json();
+        return json(data);
+    } catch (e: any) {
+        console.error('Failed to proxy hub request:', e);
+        throw error(500, `Backend error: ${e.message}`);
     }
 }
