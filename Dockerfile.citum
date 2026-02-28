@@ -1,7 +1,7 @@
 # Dockerfile.citum
 FROM rust:latest as builder
 
-# Install a broader set of build dependencies
+# Install build dependencies
 RUN apt-get update && apt-get install -y \
     git \
     pkg-config \
@@ -14,14 +14,12 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /usr/src/app
 
-# Clone the engine repository
+# Force a fresh clone every time we build to get latest engine updates
+ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
 RUN git clone https://github.com/citum/citum-core.git .
 
 # Patch http.rs to bind to 0.0.0.0 instead of 127.0.0.1
 RUN sed -i 's/127, 0, 0, 1/0, 0, 0, 0/g' crates/citum-server/src/http.rs
-
-# Ensure dependencies are up to date
-RUN cargo update
 
 # Build the specific server crate with http feature
 RUN cargo build --release -p citum-server --features http
@@ -35,10 +33,8 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Copy the binary from builder
+# Copy assets
 COPY --from=builder /usr/src/app/target/release/citum-server /app/citum-server
-
-# Copy static resources
 COPY --from=builder /usr/src/app/styles /app/styles
 COPY --from=builder /usr/src/app/locales /app/locales
 
