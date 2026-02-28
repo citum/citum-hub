@@ -4,7 +4,7 @@
     import { auth } from '$lib/stores/auth';
     import { goto } from '$app/navigation';
     import ComprehensivePreview from '$lib/components/ComprehensivePreview.svelte';
-    import { toStyle } from '$lib/server/intent';
+    import { toStyle } from '$lib/intent';
     import yaml from 'js-yaml';
 
     let style = $state(null);

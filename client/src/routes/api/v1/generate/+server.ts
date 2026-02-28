@@ -1,4 +1,4 @@
-import { generateCitum } from '$lib/server/intent';
+import { generateCitum } from '$lib/intent';
 import type { StyleIntent } from '$lib/types/bindings';
 
 export async function POST({ request }) {
