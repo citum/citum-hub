@@ -6,6 +6,7 @@
 
 # Translated Book
 foucault_discipline:
+  class: monograph
   type: book
   keywords: [humanities, philosophy, translation]
   title:
@@ -26,6 +27,7 @@ foucault_discipline:
 
 # Classic Work (Standard Book)
 austen_pride:
+  class: monograph
   type: book
   keywords: [humanities, literature]
   title: Pride and Prejudice
@@ -40,6 +42,7 @@ austen_pride:
 
 # Art History (Edited Book / Catalog)
 met_catalog_2020:
+  class: collection
   type: edited-book
   keywords: [humanities, art-history]
   title:
@@ -58,6 +61,7 @@ met_catalog_2020:
 
 # Co-authored Book
 berger_luckmann:
+  class: monograph
   type: book
   keywords: [social-sciences, sociology]
   title: The Social Construction of Reality
@@ -74,6 +78,7 @@ berger_luckmann:
 
 # Report
 pew_social_media:
+  class: monograph
   type: report
   keywords: [social-sciences, internet]
   title: Social Media Use in 2021
@@ -91,6 +96,7 @@ pew_social_media:
 
 # Journal Article (Single Author)
 einstein_relativity:
+  class: serial-component
   type: article
   keywords: [hard-sciences, physics]
   title: Zur Elektrodynamik bewegter Körper
@@ -108,6 +114,7 @@ einstein_relativity:
 
 # Journal Article (Massive Author List)
 aad_atlas_higgs:
+  class: serial-component
   type: article
   keywords: [hard-sciences, physics, massive-author-list]
   title: Observation of a new particle in the search for the Standard Model Higgs boson with the ATLAS detector at the LHC
@@ -144,6 +151,7 @@ aad_atlas_higgs:
 
 # Paper in Proceedings
 vaswani_attention:
+  class: collection-component
   type: chapter
   keywords: [hard-sciences, computer-science, ai]
   title: Attention Is All You Need
@@ -167,6 +175,7 @@ vaswani_attention:
       given: Illia
   issued: "2017"
   parent:
+    class: collection
     type: proceedings
     title: Advances in Neural Information Processing Systems 30
     issued: "2017"
@@ -185,6 +194,7 @@ vaswani_attention:
 # --- Law ---
 
 brown_v_board:
+  class: serial-component
   type: article
   keywords: [law]
   title: Brown v. Board of Education of Topeka
@@ -199,6 +209,7 @@ brown_v_board:
 # --- Edge Cases ---
 
 who_report:
+  class: monograph
   type: report
   keywords: [medicine, global-health]
   author:
@@ -212,6 +223,7 @@ who_report:
   url: "https://www.who.int/publications/i/item/9789240074323"
 
 economist_editorial:
+  class: serial-component
   type: article
   keywords: [news, anonymous]
   title: The global economy

@@ -115,40 +115,50 @@ export function toStyle(intent: StyleIntent): any {
     };
 
     let preset = null;
-    if (intent.class === 'numeric') preset = 'vancouver';
-    else if (intent.class === 'footnote' || intent.class === 'endnote') preset = 'chicago-author-date';
-    else if (intent.class === 'author_date') {
+    let processingMode = 'author-date';
+
+    if (intent.class === 'numeric') {
+        preset = 'vancouver';
+        processingMode = 'numeric';
+    } else if (intent.class === 'footnote' || intent.class === 'endnote') {
+        preset = 'chicago-author-date';
+        processingMode = 'note';
+    } else if (intent.class === 'author_date') {
+        processingMode = 'author-date';
         if (intent.bibliography_preset === 'year-wrapped') preset = 'apa';
         else if (intent.bibliography_preset === 'flat') preset = 'chicago-author-date';
         else preset = 'apa';
     }
 
+    // Set global processing mode
+    style.options = {
+        processing: processingMode
+    };
+
     if (preset) {
         let wrap = null;
         if (intent.class === 'author_date') wrap = 'parentheses';
 
-        let options = undefined;
+        let configOptions: any = {};
         if (intent.author_format && intent.author_format.et_al) {
-            options = {
-                contributors: {
-                    shorten: {
-                        min: intent.author_format.et_al.min,
-                        use_first: intent.author_format.et_al.use_first
-                    }
+            configOptions.contributors = {
+                shorten: {
+                    min: intent.author_format.et_al.min,
+                    'use-first': intent.author_format.et_al.use_first
                 }
             };
         }
 
         style.citation = {
-            use_preset: preset,
+            'use-preset': preset,
             wrap,
-            options
+            options: configOptions
         };
 
         if (intent.has_bibliography) {
             style.bibliography = {
-                use_preset: preset,
-                options
+                'use-preset': preset,
+                options: configOptions
             };
         }
     }
