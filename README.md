@@ -47,9 +47,9 @@ Create a `.env` file in the `client/` directory with the following:
 GITHUB_CLIENT_ID=your_id
 GITHUB_CLIENT_SECRET=your_secret
 JWT_SECRET=your_random_secret
-DATABASE_URL=postgresql://postgres:password@localhost:5432/stylehub
+DATABASE_URL=postgresql://postgres:password@localhost:5433/stylehub
 REDIRECT_URL=http://localhost:5173/api/auth/github/callback
-CITUM_URL=http://localhost:3001
+CITUM_URL=http://localhost:9000
 ```
 
 ### Running the Project
@@ -65,6 +65,13 @@ CITUM_URL=http://localhost:3001
    cd client
    bun install
    bun dev
+   ```
+
+3. **Populate Styles**:
+   In another terminal:
+   ```bash
+   cd client
+   bun run sync-styles
    ```
 
    The app will be available at `http://localhost:5173`.

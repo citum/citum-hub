@@ -7,7 +7,7 @@ services:
       POSTGRES_PASSWORD: password
       POSTGRES_DB: stylehub
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -17,7 +17,7 @@ services:
       dockerfile: Dockerfile.citum
     restart: always
     ports:
-      - "3001:3000"
+      - "9000:3000"
     volumes:
       - ./client/temp_styles:/tmp/citum/styles
     environment:

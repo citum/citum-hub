@@ -5,8 +5,14 @@ import path from 'path';
 
 const { Pool } = pg;
 
+const connectionString = env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/stylehub';
+
+// Mask password for logging
+const maskedUrl = connectionString.replace(/:([^@]+)@/, ':****@');
+console.log(`Connecting to DB: ${maskedUrl}`);
+
 export const pool = new Pool({
-    connectionString: env.DATABASE_URL || 'postgresql://postgres:password@localhost:5432/stylehub'
+    connectionString
 });
 
 /**
@@ -14,8 +20,9 @@ export const pool = new Pool({
  */
 export async function runMigrations() {
     console.log('Checking database migrations...');
-    const client = await pool.connect();
+    let client;
     try {
+        client = await pool.connect();
         // Create a migrations table if it doesn't exist
         await client.query(`
             CREATE TABLE IF NOT EXISTS _migrations (
@@ -53,7 +60,10 @@ export async function runMigrations() {
             }
         }
         console.log('Database migrations complete.');
+    } catch (err) {
+        console.error('Migration connection error:', err);
+        throw err;
     } finally {
-        client.release();
+        if (client) client.release();
     }
 }
