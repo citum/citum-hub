@@ -45,7 +45,8 @@
             // 1. Get references
             const refsRes = await fetch('/references');
             const refsData = await refsRes.json();
-            const references = Object.entries(refsData)
+            const firstRef = [Object.entries(refsData)[0]].map(([id, ref]: [string, any]) => ({ ...ref, id }));
+            const multiRefs = Object.entries(refsData)
                 .slice(0, 3)
                 .map(([id, ref]: [string, any]) => ({ ...ref, id }));
 
@@ -67,18 +68,27 @@
                 fetch('/preview/citation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ style: styleObj, references })
+                    body: JSON.stringify({ style: styleObj, references: firstRef })
                 }),
                 fetch('/preview/bibliography', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ style: styleObj, references })
+                    body: JSON.stringify({ style: styleObj, references: multiRefs })
                 })
             ]);
 
             if (citRes.ok) {
                 const data = await citRes.json();
-                previewSet.in_text = data.result;
+                // Check if the style object or intent suggests a note style
+                const isNote = styleObj.options?.processing === 'note' || style.intent?.class === 'footnote';
+                
+                if (isNote) {
+                    previewSet.note = data.result;
+                    previewSet.in_text = '<sup class="text-primary font-bold">1</sup>';
+                } else {
+                    previewSet.in_text = data.result;
+                    previewSet.note = null;
+                }
             }
             if (bibRes.ok) {
                 const data = await bibRes.json();

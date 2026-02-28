@@ -37,10 +37,12 @@ export async function POST({ request, params, fetch }) {
 
         const rpcParams: any = {
             style_path: containerStylePath,
-            refs: refsMap
+            refs: refsMap,
+            format: 'html' // Use the new HTML format parameter
         };
         
         if (params.path === 'citation') {
+            // For render_citation, we need a citation object. 
             rpcParams.citation = {
                 items: references.map((r: any) => ({ id: r.id }))
             };
@@ -66,7 +68,6 @@ export async function POST({ request, params, fetch }) {
 
         if (rpcResponse.error) {
             console.error('[Proxy] RPC Error:', rpcResponse.error);
-            // Return the error message so the user sees it in the preview area
             return new Response(JSON.stringify({ 
                 result: `<div class="text-red-500 text-xs font-mono p-2 bg-red-50 rounded">Engine Error: ${rpcResponse.error.message || rpcResponse.error}</div>` 
             }), {
@@ -75,6 +76,8 @@ export async function POST({ request, params, fetch }) {
         }
 
         let result = rpcResponse.result?.result || rpcResponse.result;
+        
+        // If it's a bibliography result (array of strings), join with newlines or wrap in divs
         if (Array.isArray(result)) {
             result = result.join('\n');
         }
