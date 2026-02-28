@@ -1,17 +1,22 @@
 # Dockerfile.citum
-FROM rust:1.80-slim as builder
+FROM rust:latest as builder
 
-# Install build dependencies
+# Install a broader set of build dependencies
 RUN apt-get update && apt-get install -y \
     git \
     pkg-config \
     libssl-dev \
+    cmake \
+    protobuf-compiler \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src/app
 
 # Clone the engine repository
 RUN git clone https://github.com/citum/citum-core.git .
+
+# Ensure dependencies are up to date
+RUN cargo update
 
 # Build the specific server crate
 RUN cargo build --release -p citum-server
