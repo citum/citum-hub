@@ -1,91 +1,91 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-    import { auth } from '$lib/stores/auth';
-    import { goto } from '$app/navigation';
-    import ComprehensivePreview from '$lib/components/ComprehensivePreview.svelte';
+import { onMount } from "svelte";
+import { goto } from "$app/navigation";
+import { page } from "$app/stores";
+import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
+import { auth } from "$lib/stores/auth";
 
-    let style = $state(null);
-    let loading = $state(true);
-    let previewLoading = $state(false);
-    let error = $state(null);
-    let isForking = $state(false);
-    let showSource = $state(false);
-    
-    let previewSet = $state({
-        in_text_parenthetical: null,
-        in_text_narrative: null,
-        note: null,
-        bibliography: null
-    });
+let style = $state(null);
+let loading = $state(true);
+let previewLoading = $state(false);
+let error = $state(null);
+let isForking = $state(false);
+let showSource = $state(false);
 
-    onMount(async () => {
-        try {
-            const res = await fetch(`/api/styles/${$page.params.id}`, {
-                headers: $auth.token ? { 'Authorization': `Bearer ${$auth.token}` } : {}
-            });
-            if (res.ok) {
-                style = await res.json();
-                generatePreviews();
-            } else {
-                error = 'Style not found or private';
-            }
-        } catch (e) {
-            error = 'Network error';
-        } finally {
-            loading = false;
-        }
-    });
+let previewSet = $state({
+	in_text_parenthetical: null,
+	in_text_narrative: null,
+	note: null,
+	bibliography: null,
+});
 
-    async function generatePreviews() {
-        if (!style) return;
-        previewLoading = true;
-        
-        try {
-            const res = await fetch('/api/v1/preview', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(style.citum ? { citum: style.citum } : style.intent)
-            });
+onMount(async () => {
+	try {
+		const res = await fetch(`/api/styles/${$page.params.id}`, {
+			headers: $auth.token ? { Authorization: `Bearer ${$auth.token}` } : {},
+		});
+		if (res.ok) {
+			style = await res.json();
+			generatePreviews();
+		} else {
+			error = "Style not found or private";
+		}
+	} catch (e) {
+		error = "Network error";
+	} finally {
+		loading = false;
+	}
+});
 
-            if (res.ok) {
-                const data = await res.json();
-                previewSet.in_text_parenthetical = data.in_text_parenthetical;
-                previewSet.in_text_narrative = data.in_text_narrative;
-                previewSet.note = data.note;
-                previewSet.bibliography = data.bibliography;
-            }
-        } catch (e) {
-            console.error('Failed to generate previews', e);
-        } finally {
-            previewLoading = false;
-        }
-    }
+async function generatePreviews() {
+	if (!style) return;
+	previewLoading = true;
 
-    async function forkStyle() {
-        if (!$auth.user) return;
-        isForking = true;
-        try {
-            const res = await fetch(`/api/styles/${style.id}/fork`, {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${$auth.token}` }
-            });
-            if (res.ok) {
-                goto(`/library`);
-            }
-        } finally {
-            isForking = false;
-        }
-    }
+	try {
+		const res = await fetch("/api/v1/preview", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(style.citum ? { citum: style.citum } : style.intent),
+		});
 
-    async function bookmarkStyle() {
-        if (!$auth.user) return;
-        await fetch(`/api/styles/${style.id}/bookmark`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${$auth.token}` }
-        });
-        alert('Bookmarked!');
-    }
+		if (res.ok) {
+			const data = await res.json();
+			previewSet.in_text_parenthetical = data.in_text_parenthetical;
+			previewSet.in_text_narrative = data.in_text_narrative;
+			previewSet.note = data.note;
+			previewSet.bibliography = data.bibliography;
+		}
+	} catch (e) {
+		console.error("Failed to generate previews", e);
+	} finally {
+		previewLoading = false;
+	}
+}
+
+async function forkStyle() {
+	if (!$auth.user) return;
+	isForking = true;
+	try {
+		const res = await fetch(`/api/styles/${style.id}/fork`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${$auth.token}` },
+		});
+		if (res.ok) {
+			goto(`/library`);
+		}
+	} finally {
+		isForking = false;
+	}
+}
+
+async function bookmarkStyle() {
+	if (!$auth.user) return;
+	await fetch(`/api/styles/${style.id}/bookmark`, {
+		method: "POST",
+		headers: { Authorization: `Bearer ${$auth.token}` },
+	});
+	alert("Bookmarked!");
+}
 </script>
 
 <div class="px-4 py-10 lg:px-10 max-w-[1000px] mx-auto">

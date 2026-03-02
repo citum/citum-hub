@@ -1,13 +1,13 @@
 <script lang="ts">
-    /**
-     * LivePreview component
-     * Displays raw HTML content from the backend in a styled container.
-     */
-    interface Props {
-        html: string;
-    }
+/**
+ * LivePreview component
+ * Displays raw HTML content from the backend in a styled container.
+ */
+interface Props {
+	html: string;
+}
 
-    let { html }: Props = $props();
+let { html }: Props = $props();
 </script>
 
 <div class="live-preview-content">

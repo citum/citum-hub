@@ -1,15 +1,15 @@
 {
-    "colors": {
-        "primary": "#135bec",
-        "background-light": "#f8f9fc",
-        "background-dark": "#101622",
-        "surface-light": "#ffffff",
-        "border-light": "#e7ebf3",
-        "text-main": "#0d121b",
-        "text-secondary": "#4c669a"
-    },
-    "fonts": {
-        "display": "Lexend",
-        "serif": "Merriweather"
-    }
+	"colors": {
+		"primary": "#135bec",
+		"background-light": "#f8f9fc",
+		"background-dark": "#101622",
+		"surface-light": "#ffffff",
+		"border-light": "#e7ebf3",
+		"text-main": "#0d121b",
+		"text-secondary": "#4c669a"
+	},
+	"fonts": {
+		"display": "Lexend",
+		"serif": "Merriweather"
+	}
 }

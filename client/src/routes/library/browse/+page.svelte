@@ -1,29 +1,31 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
+import { onMount } from "svelte";
 
-    let publicStyles: any[] = $state([]);
-    let searchQuery = $state('');
-    let loading = $state(true);
-    let error = $state(null);
+let publicStyles: any[] = $state([]);
+let searchQuery = $state("");
+let loading = $state(true);
+let error = $state(null);
 
-    const filteredStyles = $derived(
-        publicStyles.filter(s => s.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    );
+const filteredStyles = $derived(
+	publicStyles.filter((s) =>
+		s.title.toLowerCase().includes(searchQuery.toLowerCase()),
+	),
+);
 
-    onMount(async () => {
-        try {
-            const res = await fetch('/api/hub');
-            if (res.ok) {
-                publicStyles = await res.json();
-            } else {
-                error = 'Failed to load hub styles';
-            }
-        } catch (e) {
-            error = 'Network error';
-        } finally {
-            loading = false;
-        }
-    });
+onMount(async () => {
+	try {
+		const res = await fetch("/api/hub");
+		if (res.ok) {
+			publicStyles = await res.json();
+		} else {
+			error = "Failed to load hub styles";
+		}
+	} catch (e) {
+		error = "Network error";
+	} finally {
+		loading = false;
+	}
+});
 </script>
 
 <div class="px-4 py-10 lg:px-10 max-w-[1200px] mx-auto">

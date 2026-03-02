@@ -1,16 +1,16 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import { page } from '$app/stores';
-    import { goto } from '$app/navigation';
-    import { auth } from '$lib/stores/auth';
+import { onMount } from "svelte";
+import { goto } from "$app/navigation";
+import { page } from "$app/stores";
+import { auth } from "$lib/stores/auth";
 
-    onMount(() => {
-        const token = $page.url.searchParams.get('token');
-        if (token) {
-            auth.login(token);
-        }
-        goto('/');
-    });
+onMount(() => {
+	const token = $page.url.searchParams.get("token");
+	if (token) {
+		auth.login(token);
+	}
+	goto("/");
+});
 </script>
 
 <div class="flex items-center justify-center min-h-screen">
