@@ -4,6 +4,16 @@ A modern repository to quickly find, edit, and create citation styles. Developed
 
 ![Citation Style Editor Preview](resources/img/main.png)
 
+### Code Quality
+
+This project uses [Biome](https://biomejs.dev/) for fast formatting and linting.
+
+- **Check & Lint**: `bun run lint`
+- **Auto-Fix**: `bun run lint:fix`
+- **Format**: `bun run format`
+
+Biome is integrated into the root `check` command and should be run before committing changes.
+
 ## Project Structure
 
 - `client/`: SvelteKit 5 application. Contains both the frontend UI and the backend API logic.
