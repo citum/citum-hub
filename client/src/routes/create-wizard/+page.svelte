@@ -1,97 +1,110 @@
 <script lang="ts">
-    import LivePreview from '$lib/components/LivePreview.svelte';
-    import ComprehensivePreview from '$lib/components/ComprehensivePreview.svelte';
-    import DecisionWizard from '$lib/components/DecisionWizard.svelte';
-    import { onMount } from 'svelte';
-    import { get } from 'svelte/store';
-    import { intent } from '$lib/stores/intent';
-    import { auth } from '$lib/stores/auth';
-    import { goto } from '$app/navigation';
-    import type { DecisionPackage, Preview } from '$lib/types/bindings';
+import { onMount } from "svelte";
+import { get } from "svelte/store";
+import { goto } from "$app/navigation";
+import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
+import DecisionWizard from "$lib/components/DecisionWizard.svelte";
+import LivePreview from "$lib/components/LivePreview.svelte";
+import { auth } from "$lib/stores/auth";
+import { intent } from "$lib/stores/intent";
+import type { DecisionPackage, Preview } from "$lib/types/bindings";
 
-    let currentDecision: DecisionPackage | null = $state(null);
-    let progressBaseline = $state(0);
-    let isSaving = $state(false);
-    let saveMessage = $state('');
+let currentDecision: DecisionPackage | null = $state(null);
+let progressBaseline = $state(0);
+let isSaving = $state(false);
+let saveMessage = $state("");
 
-    function handleDecision(event: CustomEvent<DecisionPackage | null>) {
-        currentDecision = event.detail;
+function handleDecision(event: CustomEvent<DecisionPackage | null>) {
+	currentDecision = event.detail;
 
-        if (!event.detail) {
-            progressBaseline = 0;
-            return;
-        }
+	if (!event.detail) {
+		progressBaseline = 0;
+		return;
+	}
 
-        progressBaseline = Math.max(progressBaseline, event.detail.missing_fields.length);
-    }
+	progressBaseline = Math.max(
+		progressBaseline,
+		event.detail.missing_fields.length,
+	);
+}
 
-    async function saveStyle() {
-        if (!$auth.user) return;
-        
-        isSaving = true;
-        // Don't show "Saving..." text for auto-saves to avoid flicker
-        // unless it's the first save or a manual save
-        
-        try {
-            const res = await fetch('/api/styles', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${$auth.token}`
-                },
-                body: JSON.stringify({
-                    title: 'My Custom Style', 
-                    intent: $intent,
-                    citum: '', 
-                })
-            });
+async function saveStyle() {
+	if (!$auth.user) return;
 
-            if (res.ok) {
-                const data = await res.json();
-                // We could store the style ID to update the same record
-                // For now, it creates a new one or we'd need to track it
-            }
-        } catch (e) {
-            console.error('Auto-save failed', e);
-        } finally {
-            isSaving = false;
-        }
-    }
+	isSaving = true;
+	// Don't show "Saving..." text for auto-saves to avoid flicker
+	// unless it's the first save or a manual save
 
-    let autoSaveTimeout: any;
-    
-    function scheduleAutoSave(currentIntent: typeof $intent) {
-        const authState = get(auth);
-        if (!authState.user || !Object.values(currentIntent).some(v => v !== null)) {
-            return;
-        }
+	try {
+		const res = await fetch("/api/styles", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${$auth.token}`,
+			},
+			body: JSON.stringify({
+				title: "My Custom Style",
+				intent: $intent,
+				citum: "",
+			}),
+		});
 
-        clearTimeout(autoSaveTimeout);
-        autoSaveTimeout = setTimeout(() => {
-            saveStyle();
-        }, 3000);
-    }
+		if (res.ok) {
+			const data = await res.json();
+			// We could store the style ID to update the same record
+			// For now, it creates a new one or we'd need to track it
+		}
+	} catch (e) {
+		console.error("Auto-save failed", e);
+	} finally {
+		isSaving = false;
+	}
+}
 
-    onMount(() => {
-        const unsubscribe = intent.subscribe(scheduleAutoSave);
+let autoSaveTimeout: any;
 
-        return () => {
-            clearTimeout(autoSaveTimeout);
-            unsubscribe();
-        };
-    });
+function scheduleAutoSave(currentIntent: typeof $intent) {
+	const authState = get(auth);
+	if (
+		!authState.user ||
+		!Object.values(currentIntent).some((v) => v !== null)
+	) {
+		return;
+	}
 
-    const progress = $derived.by(() => {
-        if (!currentDecision) {
-            return 0;
-        }
+	clearTimeout(autoSaveTimeout);
+	autoSaveTimeout = setTimeout(() => {
+		saveStyle();
+	}, 3000);
+}
 
-        const totalSteps = Math.max(progressBaseline, currentDecision.missing_fields.length, 1);
-        const completedSteps = totalSteps - currentDecision.missing_fields.length;
+onMount(() => {
+	const unsubscribe = intent.subscribe(scheduleAutoSave);
 
-        return Math.max(0, Math.min(100, Math.round((completedSteps / totalSteps) * 100)));
-    });
-    const isComplete = $derived(currentDecision && !currentDecision.question);
+	return () => {
+		clearTimeout(autoSaveTimeout);
+		unsubscribe();
+	};
+});
+
+const progress = $derived.by(() => {
+	if (!currentDecision) {
+		return 0;
+	}
+
+	const totalSteps = Math.max(
+		progressBaseline,
+		currentDecision.missing_fields.length,
+		1,
+	);
+	const completedSteps = totalSteps - currentDecision.missing_fields.length;
+
+	return Math.max(
+		0,
+		Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
+	);
+});
+const isComplete = $derived(currentDecision && !currentDecision.question);
 </script>
 
 <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
