@@ -1,7 +1,7 @@
+import fs from "node:fs";
+import path from "node:path";
 import { json } from "@sveltejs/kit";
-import fs from "fs";
 import yaml from "js-yaml";
-import path from "path";
 
 export async function GET() {
 	try {

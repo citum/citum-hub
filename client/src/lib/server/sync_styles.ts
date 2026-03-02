@@ -1,6 +1,6 @@
-import fs from "fs";
+import fs from "node:fs";
+import path from "node:path";
 import yaml from "js-yaml";
-import path from "path";
 import { pool } from "./db";
 
 const REPO_OWNER = "citum";
@@ -44,9 +44,9 @@ export async function syncStylesFromGitHub() {
 			);
 		}
 
-		const yamlFiles = files.filter(
-			(f: any) => f.name.endsWith(".yaml") || f.name.endsWith(".yml"),
-		);
+		const yamlFiles = (
+			files as { name: string; download_url: string }[]
+		).filter((f) => f.name.endsWith(".yaml") || f.name.endsWith(".yml"));
 		await processSync(
 			yamlFiles
 				.map((f) => ({ name: f.name, download_url: f.download_url }))
@@ -77,10 +77,16 @@ async function syncStylesLocally() {
 	}
 }
 
-async function processSync(files: any[]) {
+interface SyncFile {
+	name: string;
+	content?: string;
+	download_url?: string;
+}
+
+async function processSync(files: SyncFile[]) {
 	const client = await pool.connect();
 	try {
-		let systemUserId;
+		let systemUserId: string;
 		const userRes = await client.query(
 			"SELECT id FROM users WHERE email = 'system@citum.org'",
 		);
@@ -103,7 +109,9 @@ async function processSync(files: any[]) {
 					content = await contentRes.text();
 				}
 
-				const styleData = yaml.load(content) as any;
+				if (!content) continue;
+
+				const styleData = yaml.load(content) as { info?: { title?: string } };
 				const title =
 					styleData.info?.title || file.name.replace(/\.yaml$|\.yml$/, "");
 

@@ -7,12 +7,12 @@ interface Props {
 	html: string;
 }
 
-let { html }: Props = $props();
+let { _html }: Props = $props();
 </script>
 
 <div class="live-preview-content">
-    {#if html}
-        {@html html}
+    {#if _html}
+        {@html _html}
     {:else}
         <div class="empty-state">
             <p>Select options to see how your citations will look.</p>

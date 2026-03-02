@@ -1,16 +1,19 @@
-import { error, json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
+import { error, json, type NumericRange } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
-const BACKEND_URL = env.BACKEND_URL || "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
 
-export async function GET({ fetch }) {
+export const GET: RequestHandler = async ({ fetch }) => {
 	try {
 		const res = await fetch(`${BACKEND_URL}/api/hub`);
-		if (!res.ok) throw error(res.status as any, "Backend error");
+		if (!res.ok) {
+			throw error(res.status as NumericRange<400, 599>, "Backend error");
+		}
 		const data = await res.json();
 		return json(data);
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error("Failed to proxy hub request:", e);
-		throw error(500, `Backend error: ${e.message}`);
+		const message = e instanceof Error ? e.message : "Unknown error";
+		throw error(500, `Backend error: ${message}`);
 	}
-}
+};

@@ -1,6 +1,4 @@
 <script lang="ts">
-import LivePreview from "./LivePreview.svelte";
-
 interface PreviewSet {
 	in_text_parenthetical: string | null;
 	in_text_narrative: string | null;
@@ -9,9 +7,9 @@ interface PreviewSet {
 }
 
 let {
-	previewSet,
-	title = "Comprehensive Preview",
-	subtitle = "Review how this style handles common citation scenarios across your document.",
+	_previewSet,
+	_title = "Comprehensive Preview",
+	_subtitle = "Review how this style handles common citation scenarios across your document.",
 } = $props<{
 	previewSet: PreviewSet | null;
 	title?: string;

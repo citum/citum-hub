@@ -1,12 +1,13 @@
 <script lang="ts">
 import { onMount } from "svelte";
-import { auth } from "$lib/stores/auth";
 
-let publicStyles: any[] = $state([]);
+import type { Style } from "$lib/types/style";
+
+let publicStyles: Style[] = $state([]);
 let searchQuery = $state("");
-let loading = $state(true);
+let _loading = $state(true);
 
-const filteredStyles = $derived(
+const _filteredStyles = $derived(
 	publicStyles.filter((s) => {
 		const query = searchQuery.toLowerCase();
 		const inTitle = s.title.toLowerCase().includes(query);
@@ -25,7 +26,7 @@ onMount(async () => {
 			publicStyles = await res.json();
 		}
 	} finally {
-		loading = false;
+		_loading = false;
 	}
 });
 </script>

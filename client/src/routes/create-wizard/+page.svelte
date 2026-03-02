@@ -1,20 +1,16 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { get } from "svelte/store";
-import { goto } from "$app/navigation";
-import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
-import DecisionWizard from "$lib/components/DecisionWizard.svelte";
-import LivePreview from "$lib/components/LivePreview.svelte";
 import { auth } from "$lib/stores/auth";
 import { intent } from "$lib/stores/intent";
-import type { DecisionPackage, Preview } from "$lib/types/bindings";
+import type { DecisionPackage } from "$lib/types/bindings";
 
 let currentDecision: DecisionPackage | null = $state(null);
 let progressBaseline = $state(0);
-let isSaving = $state(false);
-let saveMessage = $state("");
+let _isSaving = $state(false);
+let _saveMessage = $state("");
 
-function handleDecision(event: CustomEvent<DecisionPackage | null>) {
+function _handleDecision(event: CustomEvent<DecisionPackage | null>) {
 	currentDecision = event.detail;
 
 	if (!event.detail) {
@@ -31,7 +27,7 @@ function handleDecision(event: CustomEvent<DecisionPackage | null>) {
 async function saveStyle() {
 	if (!$auth.user) return;
 
-	isSaving = true;
+	_isSaving = true;
 	// Don't show "Saving..." text for auto-saves to avoid flicker
 	// unless it's the first save or a manual save
 
@@ -50,18 +46,18 @@ async function saveStyle() {
 		});
 
 		if (res.ok) {
-			const data = await res.json();
+			const _data = await res.json();
 			// We could store the style ID to update the same record
 			// For now, it creates a new one or we'd need to track it
 		}
 	} catch (e) {
 		console.error("Auto-save failed", e);
 	} finally {
-		isSaving = false;
+		_isSaving = false;
 	}
 }
 
-let autoSaveTimeout: any;
+let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined;
 
 function scheduleAutoSave(currentIntent: typeof $intent) {
 	const authState = get(auth);
@@ -87,7 +83,7 @@ onMount(() => {
 	};
 });
 
-const progress = $derived.by(() => {
+const _progress = $derived.by(() => {
 	if (!currentDecision) {
 		return 0;
 	}
@@ -104,7 +100,7 @@ const progress = $derived.by(() => {
 		Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
 	);
 });
-const isComplete = $derived(currentDecision && !currentDecision.question);
+const _isComplete = $derived(currentDecision && !currentDecision.question);
 </script>
 
 <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">

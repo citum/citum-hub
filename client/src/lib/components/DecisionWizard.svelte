@@ -5,8 +5,8 @@ import type { DecisionPackage, StyleIntent } from "$lib/types/bindings";
 
 const dispatch = createEventDispatcher();
 
-let loading = $state(false);
-let error = $state<string | null>(null);
+let _loading = $state(false);
+let _error = $state<string | null>(null);
 let decisionPackage = $state<DecisionPackage | null>(null);
 let requestSequence = 0;
 let hasMounted = false;
@@ -14,8 +14,8 @@ let lastIntentKey = "";
 
 async function fetchDecision(currentIntent: StyleIntent) {
 	const requestId = ++requestSequence;
-	loading = true;
-	error = null;
+	_loading = true;
+	_error = null;
 	try {
 		const res = await fetch("/api/v1/decide", {
 			method: "POST",
@@ -29,14 +29,15 @@ async function fetchDecision(currentIntent: StyleIntent) {
 			dispatch("decision", data);
 		} else {
 			if (requestId !== requestSequence) return;
-			error = `Error: ${res.statusText}`;
+			_error = `Error: ${res.statusText}`;
 		}
 	} catch (e) {
 		if (requestId !== requestSequence) return;
-		error = String(e);
+		_error = String(e);
 	} finally {
-		if (requestId !== requestSequence) return;
-		loading = false;
+		if (requestId === requestSequence) {
+			_loading = false;
+		}
 	}
 }
 
@@ -58,11 +59,11 @@ $effect(() => {
 	syncDecision(currentIntent);
 });
 
-function handleChoice(choice: any) {
+function _handleChoice(choice: Partial<StyleIntent>) {
 	intent.update((prev) => ({ ...prev, ...choice }));
 }
 
-function doReset() {
+function _doReset() {
 	resetIntent();
 	lastIntentKey = "";
 	decisionPackage = null;
@@ -70,17 +71,17 @@ function doReset() {
 	syncDecision(createInitialIntent());
 }
 
-function doCustomize() {
+function _doCustomize() {
 	intent.update((prev) => ({ ...prev, customize_target: "menu" }));
 }
 
-function shouldShowChoicePreview() {
+function _shouldShowChoicePreview() {
 	return !["field", "customize_target"].includes(
 		decisionPackage?.question?.id ?? "",
 	);
 }
 
-function canCustomizeCurrentStyle() {
+function _canCustomizeCurrentStyle() {
 	const hasPresetBackedChoices = Boolean(
 		$intent.from_preset ||
 			$intent.contributor_preset ||
@@ -97,7 +98,7 @@ function canCustomizeCurrentStyle() {
 	);
 }
 
-async function downloadCitum() {
+async function _downloadCitum() {
 	try {
 		const res = await fetch("/api/v1/generate", {
 			method: "POST",
@@ -117,18 +118,18 @@ async function downloadCitum() {
 			alert("Failed to generate Citum");
 		}
 	} catch (e) {
-		alert("Error: " + String(e));
+		alert(`Error: ${String(e)}`);
 	}
 }
 </script>
 
-{#if loading && !decisionPackage}
+{#if _loading && !decisionPackage}
     <div class="flex items-center justify-center py-20">
         <div class="animate-spin size-8 border-4 border-primary border-t-transparent rounded-full"></div>
     </div>
-{:else if error}
+{:else if _error}
     <div class="p-6 bg-red-50 border border-red-100 rounded-xl text-red-700 text-sm">
-        <p class="font-medium mb-2">{error}</p>
+        <p class="font-medium mb-2">{_error}</p>
         <button onclick={() => fetchDecision($intent)} class="font-bold hover:underline flex items-center gap-1">
             <span class="material-symbols-outlined text-sm">refresh</span> Retry
         </button>
@@ -146,7 +147,7 @@ async function downloadCitum() {
             <div class="grid grid-cols-1 gap-4">
                 {#each decisionPackage.previews as choice, i}
                     <button
-                        onclick={() => handleChoice(choice.choice_value)}
+                        onclick={() => _handleChoice(choice.choice_value)}
                         class="p-4 rounded-xl border border-slate-200 text-left hover:border-primary hover:bg-blue-50/30 transition-all group overflow-hidden relative"
                     >
                         <div class="flex flex-col gap-3 relative z-10">
@@ -158,7 +159,7 @@ async function downloadCitum() {
                                     arrow_forward
                                 </span>
                             </div>
-                            {#if shouldShowChoicePreview()}
+                            {#if _shouldShowChoicePreview()}
                                 <div class="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[11px] font-serif text-slate-600 group-hover:bg-white transition-colors">
                                     {@html choice.html}
                                 </div>
@@ -180,14 +181,14 @@ async function downloadCitum() {
                     Your citation style has been configured. You can now download the Citum file or use it in your editor.
                 </p>
             </div>
-            <button onclick={downloadCitum} class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
+            <button onclick={_downloadCitum} class="w-full py-4 bg-slate-900 text-white rounded-xl font-bold hover:bg-slate-800 transition-all shadow-xl shadow-slate-200">
                 Download Citum Style
             </button>
-            <button onclick={doCustomize} class="w-full py-3 text-primary text-sm font-bold hover:text-primary-dark transition-colors flex items-center justify-center gap-2">
+            <button onclick={_doCustomize} class="w-full py-3 text-primary text-sm font-bold hover:text-primary-dark transition-colors flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">tune</span>
                 Customize Style
             </button>
-            <button onclick={doReset} class="w-full py-3 text-slate-500 text-sm font-bold hover:text-slate-900 transition-colors">
+            <button onclick={_doReset} class="w-full py-3 text-slate-500 text-sm font-bold hover:text-slate-900 transition-colors">
                 Start Over
             </button>
         </div>
@@ -196,12 +197,12 @@ async function downloadCitum() {
     <!-- Sticky footer reset button in wizard -->
     {#if decisionPackage.question}
         <div class="mt-8 pt-6 border-t border-slate-100">
-            {#if canCustomizeCurrentStyle()}
-                <button onclick={doCustomize} class="w-full py-2.5 text-primary text-xs font-bold uppercase tracking-widest hover:text-primary-dark transition-colors flex items-center justify-center gap-2 mb-3">
+            {#if _canCustomizeCurrentStyle()}
+                <button onclick={_doCustomize} class="w-full py-2.5 text-primary text-xs font-bold uppercase tracking-widest hover:text-primary-dark transition-colors flex items-center justify-center gap-2 mb-3">
                     <span class="material-symbols-outlined text-sm">tune</span> Customize Style
                 </button>
             {/if}
-            <button onclick={doReset} class="w-full py-2.5 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-red-500 transition-colors flex items-center justify-center gap-2">
+            <button onclick={_doReset} class="w-full py-2.5 text-slate-400 text-xs font-bold uppercase tracking-widest hover:text-red-500 transition-colors flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">restart_alt</span> Reset Wizard
             </button>
         </div>

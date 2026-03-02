@@ -1,9 +1,9 @@
-import { error, json } from "@sveltejs/kit";
-import { env } from "$env/dynamic/private";
+import { error, json, type NumericRange } from "@sveltejs/kit";
+import type { RequestHandler } from "./$types";
 
-const BACKEND_URL = env.BACKEND_URL || "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8080";
 
-export async function POST({ request, fetch }) {
+export const POST: RequestHandler = async ({ request, fetch }) => {
 	try {
 		const intent = await request.json();
 		const res = await fetch(`${BACKEND_URL}/api/v1/decide`, {
@@ -15,15 +15,16 @@ export async function POST({ request, fetch }) {
 		if (!res.ok) {
 			const errorText = await res.text();
 			throw error(
-				res.status as any,
+				res.status as NumericRange<400, 599>,
 				errorText || `Backend error: ${res.status}`,
 			);
 		}
 
 		const decision = await res.json();
 		return json(decision);
-	} catch (e: any) {
+	} catch (e: unknown) {
 		console.error("Failed to proxy decide request to Rust backend:", e);
-		throw error(500, `Backend communication failed: ${e.message}`);
+		const message = e instanceof Error ? e.message : "Unknown error";
+		throw error(500, `Backend communication failed: ${message}`);
 	}
-}
+};

@@ -72,7 +72,7 @@ async function sync() {
 			}
 			try {
 				const content = fs.readFileSync(filePath, "utf-8");
-				const styleData = yaml.load(content) as any;
+				const styleData = yaml.load(content) as { info?: { title?: string } };
 				const title =
 					styleData.info?.title || filename.replace(/\.yaml$|\.yml$/, "");
 

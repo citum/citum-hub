@@ -45,4 +45,8 @@ export type DecisionPackage = {
 
 export type Question = { id: string; text: string; description: string | null };
 
-export type Preview = { label: string; html: string; choice_value: any };
+export type Preview = {
+	label: string;
+	html: string;
+	choice_value: Partial<StyleIntent>;
+};

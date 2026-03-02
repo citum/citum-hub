@@ -1,12 +1,13 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { goto } from "$app/navigation";
-import { auth } from "$lib/stores/auth";
 
-let styles: any[] = $state([]);
-let bookmarks: any[] = $state([]);
-let loading = $state(true);
-let error = $state(null);
+import type { Style } from "$lib/types/style";
+
+let _styles: Style[] = $state([]);
+let bookmarks: Style[] = $state([]);
+let _loading = $state(true);
+let _error = $state(null);
 
 onMount(async () => {
 	if (!$auth.user) {
@@ -25,19 +26,19 @@ onMount(async () => {
 		]);
 
 		if (stylesRes.ok && bookmarksRes.ok) {
-			styles = await stylesRes.json();
+			_styles = await stylesRes.json();
 			bookmarks = await bookmarksRes.json();
 		} else {
-			error = "Failed to load library data";
+			_error = "Failed to load library data";
 		}
-	} catch (e) {
-		error = "Network error";
+	} catch (_e) {
+		_error = "Network error";
 	} finally {
-		loading = false;
+		_loading = false;
 	}
 });
 
-async function handleRemoveBookmark(id: string) {
+async function _handleRemoveBookmark(id: string) {
 	const res = await fetch(`/api/styles/${id}/bookmark`, {
 		method: "DELETE",
 		headers: { Authorization: `Bearer ${$auth.token}` },

@@ -1,6 +1,6 @@
-import fs from "fs";
-import path from "path";
-import pg from "pg";
+import fs from "node:fs";
+import path from "node:path";
+import pg, { type PoolClient } from "pg";
 import { env } from "$env/dynamic/private";
 
 const { Pool } = pg;
@@ -21,9 +21,9 @@ export const pool = new Pool({
  */
 export async function runMigrations() {
 	console.log("Checking database migrations...");
-	let client;
+	let client: PoolClient | undefined;
 	try {
-		client = await pool.connect();
+		client = (await pool.connect()) as PoolClient;
 		// Create a migrations table if it doesn't exist
 		await client.query(`
             CREATE TABLE IF NOT EXISTS _migrations (

@@ -1,16 +1,13 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { goto } from "$app/navigation";
-import { page } from "$app/stores";
-import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
-import { auth } from "$lib/stores/auth";
 
 let style = $state(null);
-let loading = $state(true);
-let previewLoading = $state(false);
-let error = $state(null);
-let isForking = $state(false);
-let showSource = $state(false);
+let _loading = $state(true);
+let _previewLoading = $state(false);
+let _error = $state(null);
+let _isForking = $state(false);
+let _showSource = $state(false);
 
 let previewSet = $state({
 	in_text_parenthetical: null,
@@ -28,18 +25,18 @@ onMount(async () => {
 			style = await res.json();
 			generatePreviews();
 		} else {
-			error = "Style not found or private";
+			_error = "Style not found or private";
 		}
-	} catch (e) {
-		error = "Network error";
+	} catch (_e) {
+		_error = "Network error";
 	} finally {
-		loading = false;
+		_loading = false;
 	}
 });
 
 async function generatePreviews() {
 	if (!style) return;
-	previewLoading = true;
+	_previewLoading = true;
 
 	try {
 		const res = await fetch("/api/v1/preview", {
@@ -58,13 +55,13 @@ async function generatePreviews() {
 	} catch (e) {
 		console.error("Failed to generate previews", e);
 	} finally {
-		previewLoading = false;
+		_previewLoading = false;
 	}
 }
 
-async function forkStyle() {
+async function _forkStyle() {
 	if (!$auth.user) return;
-	isForking = true;
+	_isForking = true;
 	try {
 		const res = await fetch(`/api/styles/${style.id}/fork`, {
 			method: "POST",
@@ -74,11 +71,11 @@ async function forkStyle() {
 			goto(`/library`);
 		}
 	} finally {
-		isForking = false;
+		_isForking = false;
 	}
 }
 
-async function bookmarkStyle() {
+async function _bookmarkStyle() {
 	if (!$auth.user) return;
 	await fetch(`/api/styles/${style.id}/bookmark`, {
 		method: "POST",

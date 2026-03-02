@@ -1,12 +1,14 @@
 <script lang="ts">
 import { onMount } from "svelte";
 
-let publicStyles: any[] = $state([]);
-let searchQuery = $state("");
-let loading = $state(true);
-let error = $state(null);
+import type { Style } from "$lib/types/style";
 
-const filteredStyles = $derived(
+let publicStyles: Style[] = $state([]);
+let searchQuery = $state("");
+let _loading = $state(true);
+let _error = $state(null);
+
+const _filteredStyles = $derived(
 	publicStyles.filter((s) =>
 		s.title.toLowerCase().includes(searchQuery.toLowerCase()),
 	),
@@ -18,12 +20,12 @@ onMount(async () => {
 		if (res.ok) {
 			publicStyles = await res.json();
 		} else {
-			error = "Failed to load hub styles";
+			_error = "Failed to load hub styles";
 		}
-	} catch (e) {
-		error = "Network error";
+	} catch (_e) {
+		_error = "Network error";
 	} finally {
-		loading = false;
+		_loading = false;
 	}
 });
 </script>

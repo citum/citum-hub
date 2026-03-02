@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.5/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.4/schema.json",
 	"vcs": {
 		"enabled": true,
 		"clientKind": "git",
@@ -7,43 +7,54 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
+		"indentStyle": "tab",
+		"lineWidth": 80
 	},
 	"linter": {
 		"enabled": true,
 		"rules": {
-			"recommended": true
+			"recommended": true,
+			"suspicious": {
+				"noExplicitAny": "warn",
+				"noImplicitAnyLet": "error"
+			},
+			"correctness": {
+				"noUnusedVariables": "warn",
+				"noUnusedImports": "error"
+			},
+			"style": {
+				"useNodejsImportProtocol": "error"
+			}
+		}
+	},
+	"css": {
+		"parser": {
+			"tailwindDirectives": true,
+			"cssModules": true
 		}
 	},
 	"overrides": [
 		{
-			"includes": ["client/src/index.css", "client/temp_app/**"],
+			"includes": [
+				"client/src/index.css",
+				"client/temp_app/**",
+				"client/stitch_mockups/**/*.html"
+			],
 			"formatter": { "enabled": false },
 			"linter": { "enabled": false }
-		}
-	],
-	"css": {
-		"parser": {
-			"cssModules": true
 		},
-		"linter": {
-			"enabled": true
-		},
-		"formatter": {
-			"enabled": true
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "double"
-		}
-	},
-	"assist": {
-		"enabled": true,
-		"actions": {
-			"source": {
-				"organizeImports": "on"
+		{
+			"includes": ["*.svelte"],
+			"linter": {
+				"rules": {
+					"style": {
+						"useSelfClosingElements": "off"
+					},
+					"a11y": {
+						"useButtonType": "off"
+					}
+				}
 			}
 		}
-	}
+	]
 }

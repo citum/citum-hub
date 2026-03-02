@@ -1,15 +1,14 @@
 <script lang="ts">
-import favicon from "$lib/assets/favicon.svg";
 import "../index.css";
 import { auth } from "$lib/stores/auth";
 
-let { children } = $props();
+let { _children } = $props();
 
-function handleLogin() {
+function _handleLogin() {
 	window.location.href = "/api/auth/github";
 }
 
-function handleLogout() {
+function _handleLogout() {
 	auth.logout();
 }
 </script>
@@ -44,13 +43,13 @@ function handleLogout() {
             <div class="flex gap-2">
                 {#if $auth.user}
                     <button 
-                        onclick={handleLogout}
+                        onclick={_handleLogout}
                         class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm font-bold transition-colors">
                         Sign Out
                     </button>
                 {:else}
                     <button 
-                        onclick={handleLogin}
+                        onclick={_handleLogin}
                         class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white hover:bg-primary-dark text-sm font-bold transition-colors">
                         Sign In
                     </button>
@@ -61,7 +60,7 @@ function handleLogout() {
 
     <!-- Page Content -->
     <div class="flex-grow">
-        {@render children()}
+        {@render _children()}
     </div>
 
     <!-- Shared Footer -->
