@@ -1,17 +1,13 @@
 import { error, redirect } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 
-const BACKEND_URL = env.BACKEND_URL || "http://localhost:3000";
+const BACKEND_URL = env.BACKEND_URL || "http://localhost:3002";
 
 export async function GET({ url }) {
 	const code = url.searchParams.get("code");
-	const state = url.searchParams.get("state");
 
-	if (!code || !state) throw error(400, "Missing code or state");
+	if (!code) throw error(400, "Missing code");
 
-	// Redirect to backend callback
-	throw redirect(
-		302,
-		`${BACKEND_URL}/api/auth/github/callback?code=${code}&state=${state}`,
-	);
+	// Forward all query params (code, state, etc.) to backend callback
+	throw redirect(302, `${BACKEND_URL}/api/auth/github/callback${url.search}`);
 }

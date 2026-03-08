@@ -6,9 +6,11 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite",
+		"dev:api": "bun run --hot src/api/index.ts",
 		"build": "vite build",
 		"preview": "vite preview",
 		"sync-styles": "bun run scripts/sync-local.ts",
+		"migrate": "bun run scripts/migrate.ts",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"lint": "biome check .",
 		"lint:fix": "biome check --write .",
@@ -32,6 +34,7 @@
 	},
 	"dependencies": {
 		"dotenv": "^17.3.1",
+		"hono": "^4.12.5",
 		"jose": "^6.1.3",
 		"js-yaml": "^4.1.1",
 		"lucide-svelte": "^0.400.0",

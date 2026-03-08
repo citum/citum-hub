@@ -5,29 +5,29 @@ import type { Style } from "$lib/types/style";
 
 let publicStyles: Style[] = $state([]);
 let searchQuery = $state("");
-let _loading = $state(true);
+let loading = $state(true);
 
-const _filteredStyles = $derived(
-	publicStyles.filter((s) => {
-		const query = searchQuery.toLowerCase();
-		const inTitle = s.title.toLowerCase().includes(query);
-		const inDesc = (s.description || "").toLowerCase().includes(query);
-		const inFields = (s.fields || []).some((f) =>
-			f.toLowerCase().includes(query),
-		);
-		return inTitle || inDesc || inFields;
-	}),
+const filteredStyles = $derived(
+        publicStyles.filter((s) => {
+                const query = searchQuery.toLowerCase();
+                const inTitle = s.title.toLowerCase().includes(query);
+                const inDesc = (s.description || "").toLowerCase().includes(query);
+                const inFields = (s.fields || []).some((f) =>
+                        f.toLowerCase().includes(query),
+                );
+                return inTitle || inDesc || inFields;
+        }),
 );
 
 onMount(async () => {
-	try {
-		const res = await fetch("/api/hub");
-		if (res.ok) {
-			publicStyles = await res.json();
-		}
-	} finally {
-		_loading = false;
-	}
+        try {
+                const res = await fetch("/api/hub");
+                if (res.ok) {
+                        publicStyles = await res.json();
+                }
+        } finally {
+                loading = false;
+        }
 });
 </script>
 

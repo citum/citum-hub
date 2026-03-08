@@ -4,15 +4,15 @@
  * Displays raw HTML content from the backend in a styled container.
  */
 interface Props {
-	html: string;
+    html: string | null;
 }
 
-let { _html }: Props = $props();
+let { html }: Props = $props();
 </script>
 
 <div class="live-preview-content">
-    {#if _html}
-        {@html _html}
+    {#if html}
+        {@html html}
     {:else}
         <div class="empty-state">
             <p>Select options to see how your citations will look.</p>
@@ -26,7 +26,7 @@ let { _html }: Props = $props();
     }
 
     .empty-state {
-        color: var(--color-text-secondary);
+        color: #64748b;
         font-style: italic;
         font-size: 0.9rem;
     }

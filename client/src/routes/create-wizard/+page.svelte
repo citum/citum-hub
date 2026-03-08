@@ -4,103 +4,101 @@ import { get } from "svelte/store";
 import { auth } from "$lib/stores/auth";
 import { intent } from "$lib/stores/intent";
 import type { DecisionPackage } from "$lib/types/bindings";
+import DecisionWizard from "$lib/components/DecisionWizard.svelte";
+import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
 
 let currentDecision: DecisionPackage | null = $state(null);
 let progressBaseline = $state(0);
-let _isSaving = $state(false);
-let _saveMessage = $state("");
+let isSaving = $state(false);
+let saveMessage = $state("");
 
-function _handleDecision(event: CustomEvent<DecisionPackage | null>) {
-	currentDecision = event.detail;
+function handleDecision(decision: DecisionPackage | null) {
+    currentDecision = decision;
 
-	if (!event.detail) {
-		progressBaseline = 0;
-		return;
-	}
+    if (!decision) {
+        progressBaseline = 0;
+        return;
+    }
 
-	progressBaseline = Math.max(
-		progressBaseline,
-		event.detail.missing_fields.length,
-	);
+    progressBaseline = Math.max(
+        progressBaseline,
+        decision.missing_fields.length,
+    );
 }
 
 async function saveStyle() {
-	if (!$auth.user) return;
+    if (!$auth.user) return;
 
-	_isSaving = true;
-	// Don't show "Saving..." text for auto-saves to avoid flicker
-	// unless it's the first save or a manual save
+    isSaving = true;
+    try {
+        const res = await fetch("/api/styles", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${$auth.token}`,
+            },
+            body: JSON.stringify({
+                title: "My Custom Style",
+                intent: $intent,
+                citum: "",
+            }),
+        });
 
-	try {
-		const res = await fetch("/api/styles", {
-			method: "POST",
-			headers: {
-				"Content-Type": "application/json",
-				Authorization: `Bearer ${$auth.token}`,
-			},
-			body: JSON.stringify({
-				title: "My Custom Style",
-				intent: $intent,
-				citum: "",
-			}),
-		});
-
-		if (res.ok) {
-			const _data = await res.json();
-			// We could store the style ID to update the same record
-			// For now, it creates a new one or we'd need to track it
-		}
-	} catch (e) {
-		console.error("Auto-save failed", e);
-	} finally {
-		_isSaving = false;
-	}
+        if (res.ok) {
+            saveMessage = "Saved!";
+            setTimeout(() => { saveMessage = ""; }, 2000);
+        }
+    } catch (e) {
+        console.error("Auto-save failed", e);
+    } finally {
+        isSaving = false;
+    }
 }
 
 let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined;
 
 function scheduleAutoSave(currentIntent: typeof $intent) {
-	const authState = get(auth);
-	if (
-		!authState.user ||
-		!Object.values(currentIntent).some((v) => v !== null)
-	) {
-		return;
-	}
+    const authState = get(auth);
+    if (
+        !authState.user ||
+        !Object.values(currentIntent).some((v) => v !== null)
+    ) {
+        return;
+    }
 
-	clearTimeout(autoSaveTimeout);
-	autoSaveTimeout = setTimeout(() => {
-		saveStyle();
-	}, 3000);
+    clearTimeout(autoSaveTimeout);
+    autoSaveTimeout = setTimeout(() => {
+        saveStyle();
+    }, 3000);
 }
 
 onMount(() => {
-	const unsubscribe = intent.subscribe(scheduleAutoSave);
+    const unsubscribe = intent.subscribe(scheduleAutoSave);
 
-	return () => {
-		clearTimeout(autoSaveTimeout);
-		unsubscribe();
-	};
+    return () => {
+        clearTimeout(autoSaveTimeout);
+        unsubscribe();
+    };
 });
 
-const _progress = $derived.by(() => {
-	if (!currentDecision) {
-		return 0;
-	}
+const progress = $derived.by(() => {
+    if (!currentDecision) {
+        return 0;
+    }
 
-	const totalSteps = Math.max(
-		progressBaseline,
-		currentDecision.missing_fields.length,
-		1,
-	);
-	const completedSteps = totalSteps - currentDecision.missing_fields.length;
+    const totalSteps = Math.max(
+        progressBaseline,
+        currentDecision.missing_fields.length,
+        1,
+    );
+    const completedSteps = totalSteps - currentDecision.missing_fields.length;
 
-	return Math.max(
-		0,
-		Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
-	);
+    return Math.max(
+        0,
+        Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
+    );
 });
-const _isComplete = $derived(currentDecision && !currentDecision.question);
+const isComplete = $derived(currentDecision && !currentDecision.question);
 </script>
 
 <div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -150,7 +148,7 @@ const _isComplete = $derived(currentDecision && !currentDecision.question);
                     </div>
                 </div>
 
-                <DecisionWizard on:decision={handleDecision} />
+                <DecisionWizard onDecision={handleDecision} />
             </div>
         </aside>
 

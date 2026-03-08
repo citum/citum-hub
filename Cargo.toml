@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "server/crates/api",
     "server/crates/intent-engine",
+    "server/crates/wasm-bridge",
     "server",
 ]
 

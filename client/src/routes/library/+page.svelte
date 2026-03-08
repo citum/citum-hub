@@ -1,51 +1,51 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { goto } from "$app/navigation";
-
+import { auth } from "$lib/stores/auth";
 import type { Style } from "$lib/types/style";
 
-let _styles: Style[] = $state([]);
+let styles: Style[] = $state([]);
 let bookmarks: Style[] = $state([]);
-let _loading = $state(true);
-let _error = $state(null);
+let loading = $state(true);
+let error = $state(null);
 
 onMount(async () => {
-	if (!$auth.user) {
-		goto("/");
-		return;
-	}
+    if (!$auth.user) {
+        goto("/");
+        return;
+    }
 
-	try {
-		const [stylesRes, bookmarksRes] = await Promise.all([
-			fetch("/api/styles", {
-				headers: { Authorization: `Bearer ${$auth.token}` },
-			}),
-			fetch("/api/bookmarks", {
-				headers: { Authorization: `Bearer ${$auth.token}` },
-			}),
-		]);
+    try {
+        const [stylesRes, bookmarksRes] = await Promise.all([
+            fetch("/api/styles", {
+                headers: { Authorization: `Bearer ${$auth.token}` },
+            }),
+            fetch("/api/bookmarks", {
+                headers: { Authorization: `Bearer ${$auth.token}` },
+            }),
+        ]);
 
-		if (stylesRes.ok && bookmarksRes.ok) {
-			_styles = await stylesRes.json();
-			bookmarks = await bookmarksRes.json();
-		} else {
-			_error = "Failed to load library data";
-		}
-	} catch (_e) {
-		_error = "Network error";
-	} finally {
-		_loading = false;
-	}
+        if (stylesRes.ok && bookmarksRes.ok) {
+            styles = await stylesRes.json();
+            bookmarks = await bookmarksRes.json();
+        } else {
+            error = "Failed to load library data";
+        }
+    } catch (_e) {
+        error = "Network error";
+    } finally {
+        loading = false;
+    }
 });
 
-async function _handleRemoveBookmark(id: string) {
-	const res = await fetch(`/api/styles/${id}/bookmark`, {
-		method: "DELETE",
-		headers: { Authorization: `Bearer ${$auth.token}` },
-	});
-	if (res.ok) {
-		bookmarks = bookmarks.filter((b) => b.id !== id);
-	}
+async function handleRemoveBookmark(id: string) {
+    const res = await fetch(`/api/styles/${id}/bookmark`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${$auth.token}` },
+    });
+    if (res.ok) {
+        bookmarks = bookmarks.filter((b) => b.id !== id);
+    }
 }
 </script>
 
@@ -127,7 +127,7 @@ async function _handleRemoveBookmark(id: string) {
                             <div>
                                 <h3 class="text-lg font-bold text-slate-900 mb-2">{style.title}</h3>
                                 <p class="text-sm text-slate-500 mb-4">
-                                    By {style.user_id === $auth.user.id ? 'You' : 'Community'}
+                                    By {style.user_id === $auth.user?.id ? 'You' : 'Community'}
                                 </p>
                             </div>
                             <div class="flex gap-2 mt-4">
