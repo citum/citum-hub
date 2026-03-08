@@ -85,3 +85,7 @@ CITUM_URL=http://localhost:9000
    ```
 
    The app will be available at `http://localhost:5173`.
+
+## License
+
+This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0-or-later) - see the [LICENSE](LICENSE) file for details.
