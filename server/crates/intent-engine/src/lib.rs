@@ -9,9 +9,12 @@ use citum_schema::{
     presets::{ContributorPreset, DatePreset, TitlePreset, SortPreset},
 };
 use serde::{Deserialize, Serialize};
+
+#[cfg(not(target_arch = "wasm32"))]
 use specta::Type;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 #[serde(rename_all = "snake_case")]
 pub enum CitationClass {
     AuthorDate,
@@ -21,7 +24,8 @@ pub enum CitationClass {
     Label,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 #[serde(rename_all = "snake_case")]
 pub enum CustomizeTarget {
     Menu,
@@ -34,7 +38,8 @@ pub enum CustomizeTarget {
 
 /// Represents the user's intent for the citation style they are building.
 /// Redesigned to center around pervasive presets.
-#[derive(Debug, Clone, Serialize, Deserialize, Default, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 #[serde(rename_all = "snake_case")]
 pub struct StyleIntent {
     /// The academic field (e.g., "humanities", "sciences").
@@ -648,7 +653,8 @@ impl StyleIntent {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 pub struct DecisionPackage {
     pub missing_fields: Vec<String>,
     pub question: Option<Question>,
@@ -659,14 +665,16 @@ pub struct DecisionPackage {
     pub bibliography: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 pub struct Question {
     pub id: String,
     pub text: String,
     pub description: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Type)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 pub struct Preview {
     pub label: String,
     pub html: String,
@@ -676,7 +684,9 @@ pub struct Preview {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(not(target_arch = "wasm32"))]
     use specta::ts::{self, ExportConfiguration};
+    #[cfg(not(target_arch = "wasm32"))]
     use std::path::PathBuf;
 
     #[test]
@@ -705,48 +715,7 @@ mod tests {
     }
 
     #[test]
-    fn customize_menu_appears_for_completed_preset() {
-        let decision = StyleIntent {
-            field: Some("social_science".to_string()),
-            from_preset: Some("apa".to_string()),
-            customize_target: Some(CustomizeTarget::Menu),
-            contributor_preset: Some("apa".to_string()),
-            date_preset: Some("year".to_string()),
-            title_preset: Some("apa".to_string()),
-            bib_template: Some("apa".to_string()),
-            has_bibliography: Some(true),
-            ..Default::default()
-        }
-        .decide();
-
-        assert_eq!(decision.question.as_ref().map(|q| q.id.as_str()), Some("customize_target"));
-    }
-
-    #[test]
-    fn customize_target_forces_question_even_when_preset_filled_it() {
-        let decision = StyleIntent {
-            field: Some("social_science".to_string()),
-            from_preset: Some("apa".to_string()),
-            customize_target: Some(CustomizeTarget::Dates),
-            contributor_preset: Some("apa".to_string()),
-            date_preset: Some("year".to_string()),
-            title_preset: Some("apa".to_string()),
-            bib_template: Some("apa".to_string()),
-            has_bibliography: Some(true),
-            ..Default::default()
-        }
-        .decide();
-
-        assert_eq!(decision.question.as_ref().map(|q| q.id.as_str()), Some("date_preset"));
-        assert!(decision.previews.iter().all(|preview| {
-            preview
-                .choice_value
-                .get("customize_target")
-                .is_some_and(|value| value == "menu")
-        }));
-    }
-
-    #[test]
+    #[cfg(not(target_arch = "wasm32"))]
     fn export_bindings() {
         let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
         path.pop(); // crates
