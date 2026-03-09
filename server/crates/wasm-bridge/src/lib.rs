@@ -47,7 +47,7 @@ fn parse_references(refs_json: &str) -> Result<IndexMap<String, Reference>, Stri
 }
 
 #[wasm_bindgen]
-pub fn render_citation(style_yaml: &str, refs_json: &str, citation_json: &str) -> Result<String, JsValue> {
+pub fn render_citation(style_yaml: &str, refs_json: &str, citation_json: &str, mode: Option<String>) -> Result<String, JsValue> {
     let mut style: Style = serde_yaml_ng::from_str(style_yaml)
         .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
 
@@ -56,8 +56,14 @@ pub fn render_citation(style_yaml: &str, refs_json: &str, citation_json: &str) -
     let references = parse_references(refs_json)
         .map_err(|e| JsValue::from_str(&format!("References parse error: {}", e)))?;
 
-    let citation: Citation = serde_json::from_str(citation_json)
+    let mut citation: Citation = serde_json::from_str(citation_json)
         .map_err(|e| JsValue::from_str(&format!("Citation parse error: {}", e)))?;
+
+    if let Some(m) = mode {
+        if let Ok(m_enum) = serde_json::from_str::<citum_schema::citation::CitationMode>(&format!("\"{}\"", m)) {
+            citation.mode = m_enum;
+        }
+    }
 
     let processor = Processor::new(style, references);
     
@@ -103,7 +109,7 @@ pub fn generate_style(intent_json: &str) -> Result<String, JsValue> {
 }
 
 #[wasm_bindgen]
-pub fn render_intent_citation(intent_json: &str, refs_json: &str, citation_json: &str) -> Result<String, JsValue> {
+pub fn render_intent_citation(intent_json: &str, refs_json: &str, citation_json: &str, mode: Option<String>) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
         .map_err(|e| JsValue::from_str(&format!("Intent parse error: {}", e)))?;
     
@@ -113,11 +119,62 @@ pub fn render_intent_citation(intent_json: &str, refs_json: &str, citation_json:
     let references = parse_references(refs_json)
         .map_err(|e| JsValue::from_str(&format!("References parse error: {}", e)))?;
 
-    let citation: Citation = serde_json::from_str(citation_json)
+    let mut citation: Citation = serde_json::from_str(citation_json)
         .map_err(|e| JsValue::from_str(&format!("Citation parse error: {}", e)))?;
+
+    if let Some(m) = mode {
+        if let Ok(m_enum) = serde_json::from_str::<citum_schema::citation::CitationMode>(&format!("\"{}\"", m)) {
+            citation.mode = m_enum;
+        }
+    }
 
     let processor = Processor::new(style, references);
     
     processor.process_citation_with_format::<HtmlRenderer>(&citation)
         .map_err(|e| JsValue::from_str(&format!("Rendering error: {}", e)))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    use citum_schema::citation::CitationMode;
+
+    #[test]
+    fn test_apa_7th_citation_modes() {
+        let path = "/Users/brucedarcus/Code/citum/citum-core/styles/apa-7th.yaml";
+        let yaml = fs::read_to_string(path).expect("apa-7th.yaml should exist");
+        
+        let refs_json = r#"{
+            "ref1": {
+                "class": "monograph",
+                "type": "book",
+                "title": "Test Book",
+                "author": { "family": "Smith", "given": "John" },
+                "issued": "2020"
+            }
+        }"#;
+
+        let cite_json = r#"{
+            "items": [{ "id": "ref1" }]
+        }"#;
+
+        let mut paren_cite: Citation = serde_json::from_str(cite_json).unwrap();
+        paren_cite.mode = CitationMode::NonIntegral;
+        let paren_cite_json = serde_json::to_string(&paren_cite).unwrap();
+
+        let mut narrative_cite: Citation = serde_json::from_str(cite_json).unwrap();
+        narrative_cite.mode = CitationMode::Integral;
+        let narrative_cite_json = serde_json::to_string(&narrative_cite).unwrap();
+
+        println!("Rendering Parenthetical...");
+        let paren_res = render_citation(&yaml, refs_json, &paren_cite_json).unwrap();
+        println!("Parenthetical: {}", paren_res);
+
+        println!("Rendering Narrative...");
+        let narrative_res = render_citation(&yaml, refs_json, &narrative_cite_json).unwrap();
+        println!("Narrative: {}", narrative_res);
+
+        assert_ne!(paren_res, narrative_res, "Parenthetical and Narrative renderings should be different!");
+    }
 }
