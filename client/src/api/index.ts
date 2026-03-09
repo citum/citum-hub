@@ -142,7 +142,8 @@ app.post("/v1/decide", async (c) => {
         
         // Try generating main previews
         try {
-            decision.in_text_parenthetical = render_intent_citation(intentStr, refsStr, citeStr);
+            decision.in_text_parenthetical = render_intent_citation(intentStr, refsStr, citeStr, "NonIntegral");
+            decision.in_text_narrative = render_intent_citation(intentStr, refsStr, citeStr, "Integral");
             const style_yaml = generate_style(intentStr);
             decision.bibliography = render_bibliography(style_yaml, refsStr);
         } catch (previewError) {
@@ -155,7 +156,7 @@ app.post("/v1/decide", async (c) => {
             for (let preview of decision.previews) {
                 try {
                     const previewIntent = { ...intent, ...preview.choice_value };
-                    preview.html = render_intent_citation(JSON.stringify(previewIntent), refsStr, citeStr);
+                    preview.html = render_intent_citation(JSON.stringify(previewIntent), refsStr, citeStr, "NonIntegral");
                 } catch (e) {
                     preview.html = ""; 
                 }
@@ -173,6 +174,7 @@ app.post("/v1/preview", async (c) => {
     try {
         const body = await c.req.json();
         const style_yaml = body.style_yaml || body.citum;
+        const mode = body.mode || "NonIntegral";
         
         let fixtureType = "expanded";
         if (body.intent?.class) fixtureType = body.intent.class;
@@ -186,11 +188,11 @@ app.post("/v1/preview", async (c) => {
         
         try {
             if (style_yaml && typeof style_yaml === 'string' && style_yaml.trim().length > 0) {
-                html = render_citation(style_yaml, refsStr, citeStr);
+                html = render_citation(style_yaml, refsStr, citeStr, mode);
                 bib = render_bibliography(style_yaml, refsStr);
             } else if (body.intent || (body.field || body.class)) {
                 const intentStr = JSON.stringify(body.intent || body);
-                html = render_intent_citation(intentStr, refsStr, citeStr);
+                html = render_intent_citation(intentStr, refsStr, citeStr, mode);
                 const generated_style = generate_style(intentStr);
                 bib = render_bibliography(generated_style, refsStr);
             }

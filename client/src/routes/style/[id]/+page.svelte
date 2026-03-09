@@ -42,28 +42,34 @@ async function generatePreviews() {
     previewLoading = true;
 
     try {
-        // Ensure we send style_yaml as a string property
-        const payload = style.citum 
+        const basePayload = style.citum 
             ? { style_yaml: style.citum } 
             : { intent: style.intent };
 
-        const res = await fetch("/api/v1/preview", {
+        // Fetch parenthetical (default)
+        const resParen = await fetch("/api/v1/preview", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+            body: JSON.stringify({ ...basePayload, mode: "NonIntegral" }),
         });
 
-        if (res.ok) {
-            const data = await res.json();
+        // Fetch narrative
+        const resNarrative = await fetch("/api/v1/preview", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...basePayload, mode: "Integral" }),
+        });
+
+        if (resParen.ok && resNarrative.ok) {
+            const dataParen = await resParen.json();
+            const dataNarrative = await resNarrative.json();
+            
             previewSet = {
-                in_text_parenthetical: data.in_text_parenthetical,
-                in_text_narrative: data.in_text_narrative || null,
-                note: data.note || null,
-                bibliography: data.bibliography || null,
+                in_text_parenthetical: dataParen.in_text_parenthetical,
+                in_text_narrative: dataNarrative.in_text_parenthetical, // endpoint returns result in parenthetical field for single item
+                note: dataParen.note || null,
+                bibliography: dataParen.bibliography || null,
             };
-        } else {
-            const errData = await res.json();
-            console.error("Preview API error:", errData);
         }
     } catch (e) {
         console.error("Failed to generate previews", e);
