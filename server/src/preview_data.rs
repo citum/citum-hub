@@ -19,6 +19,121 @@ use citum_schema::reference::{
     },
 };
 
+// ── factories ──────────────────────────────────────────────────────────
+
+fn empty_monograph(id: &str, r#type: MonographType, title: Title) -> Monograph {
+    Monograph {
+        id: Some(id.to_string()),
+        r#type,
+        title,
+        author: None,
+        editor: None,
+        translator: None,
+        issued: EdtfString::default(),
+        publisher: None,
+        url: None,
+        accessed: None,
+        language: None,
+        field_languages: Default::default(),
+        note: None,
+        isbn: None,
+        doi: None,
+        edition: None,
+        report_number: None,
+        collection_number: None,
+        genre: None,
+        medium: None,
+        keywords: None,
+        original_date: None,
+        original_title: None,
+        ads_bibcode: None,
+        archive: None,
+        archive_location: None,
+        container_title: None,
+        recipient: None,
+        interviewer: None,
+    }
+}
+
+fn empty_serial(title: Title, r#type: SerialType) -> Serial {
+    Serial {
+        r#type,
+        title,
+        short_title: None,
+        editor: None,
+        publisher: None,
+        issn: None,
+    }
+}
+
+fn empty_serial_component(id: &str, r#type: SerialComponentType, title: Option<Title>, parent: Parent<Serial>) -> SerialComponent {
+    SerialComponent {
+        id: Some(id.to_string()),
+        r#type,
+        title,
+        author: None,
+        translator: None,
+        issued: EdtfString::default(),
+        parent,
+        url: None,
+        accessed: None,
+        language: None,
+        field_languages: Default::default(),
+        note: None,
+        doi: None,
+        pages: None,
+        volume: None,
+        issue: None,
+        genre: None,
+        medium: None,
+        keywords: None,
+        ads_bibcode: None,
+    }
+}
+
+fn empty_collection(r#type: CollectionType, title: Option<Title>) -> Collection {
+    Collection {
+        id: None,
+        r#type,
+        title,
+        short_title: None,
+        editor: None,
+        translator: None,
+        issued: EdtfString::default(),
+        publisher: None,
+        collection_number: None,
+        url: None,
+        accessed: None,
+        language: None,
+        field_languages: Default::default(),
+        note: None,
+        isbn: None,
+        keywords: None,
+    }
+}
+
+fn empty_collection_component(id: &str, r#type: MonographComponentType, title: Option<Title>, parent: Parent<Collection>) -> CollectionComponent {
+    CollectionComponent {
+        id: Some(id.to_string()),
+        r#type,
+        title,
+        author: None,
+        translator: None,
+        issued: EdtfString::default(),
+        parent,
+        pages: None,
+        url: None,
+        accessed: None,
+        language: None,
+        field_languages: Default::default(),
+        note: None,
+        doi: None,
+        genre: None,
+        medium: None,
+        keywords: None,
+    }
+}
+
 // ── helpers ────────────────────────────────────────────────────────────
 
 fn name(family: &str, given: &str) -> Contributor {
@@ -57,34 +172,12 @@ fn book(
     book_title: &str,
     publisher: Option<Contributor>,
 ) -> (String, Reference) {
-    (
-        id.to_string(),
-        Reference::Monograph(Box::new(Monograph {
-            id: Some(id.to_string()),
-            r#type: MonographType::Book,
-            title: title(book_title),
-            author: Some(author),
-            editor: None,
-            translator: None,
-            issued: edtf(year),
-            publisher,
-            url: None,
-            accessed: None,
-            language: None,
-            field_languages: Default::default(),
-            note: None,
-            isbn: None,
-            doi: None,
-            edition: None,
-            report_number: None,
-            collection_number: None,
-            genre: None,
-            medium: None,
-            keywords: None,
-            original_date: None,
-            original_title: None,
-        })),
-    )
+    let mut monograph = empty_monograph(id, MonographType::Book, title(book_title));
+    monograph.author = Some(author);
+    monograph.issued = edtf(year);
+    monograph.publisher = publisher;
+    
+    (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
 
 fn article(
@@ -98,36 +191,17 @@ fn article(
     pages: Option<&str>,
     doi: Option<&str>,
 ) -> (String, Reference) {
-    (
-        id.to_string(),
-        Reference::SerialComponent(Box::new(SerialComponent {
-            id: Some(id.to_string()),
-            r#type: SerialComponentType::Article,
-            title: Some(title(art_title)),
-            author: Some(author),
-            translator: None,
-            issued: edtf(year),
-            parent: Parent::Embedded(Serial {
-                r#type: SerialType::AcademicJournal,
-                title: title(journal),
-                editor: None,
-                publisher: None,
-                issn: None,
-            }),
-            url: None,
-            accessed: None,
-            language: None,
-            field_languages: Default::default(),
-            note: None,
-            doi: doi.map(|d| d.to_string()),
-            pages: pages.map(|p| p.to_string()),
-            volume: volume.map(|v| NumOrStr::Str(v.to_string())),
-            issue: issue.map(|i| NumOrStr::Str(i.to_string())),
-            genre: None,
-            medium: None,
-            keywords: None,
-        })),
-    )
+    let parent = Parent::Embedded(empty_serial(title(journal), SerialType::AcademicJournal));
+    let mut component = empty_serial_component(id, SerialComponentType::Article, Some(title(art_title)), parent);
+    
+    component.author = Some(author);
+    component.issued = edtf(year);
+    component.doi = doi.map(|d| d.to_string());
+    component.pages = pages.map(|p| p.to_string());
+    component.volume = volume.map(|v| NumOrStr::Str(v.to_string()));
+    component.issue = issue.map(|i| NumOrStr::Str(i.to_string()));
+    
+    (id.to_string(), Reference::SerialComponent(Box::new(component)))
 }
 
 fn chapter(
@@ -140,44 +214,19 @@ fn chapter(
     pages: Option<&str>,
     publisher: Option<Contributor>,
 ) -> (String, Reference) {
-    (
-        id.to_string(),
-        Reference::CollectionComponent(Box::new(CollectionComponent {
-            id: Some(id.to_string()),
-            r#type: MonographComponentType::Chapter,
-            title: Some(title(ch_title)),
-            author: Some(author),
-            translator: None,
-            issued: edtf(year),
-            parent: Parent::Embedded(Collection {
-                id: None,
-                r#type: CollectionType::EditedBook,
-                title: Some(title(coll_title)),
-                editor: editors,
-                translator: None,
-                issued: edtf(year),
-                publisher,
-                collection_number: None,
-                url: None,
-                accessed: None,
-                language: None,
-                field_languages: Default::default(),
-                note: None,
-                isbn: None,
-                keywords: None,
-            }),
-            pages: pages.map(|p| NumOrStr::Str(p.to_string())),
-            url: None,
-            accessed: None,
-            language: None,
-            field_languages: Default::default(),
-            note: None,
-            doi: None,
-            genre: None,
-            medium: None,
-            keywords: None,
-        })),
-    )
+    let mut coll = empty_collection(CollectionType::EditedBook, Some(title(coll_title)));
+    coll.editor = editors;
+    coll.issued = edtf(year);
+    coll.publisher = publisher;
+    
+    let parent = Parent::Embedded(coll);
+    let mut component = empty_collection_component(id, MonographComponentType::Chapter, Some(title(ch_title)), parent);
+    
+    component.author = Some(author);
+    component.issued = edtf(year);
+    component.pages = pages.map(|p| NumOrStr::Str(p.to_string()));
+    
+    (id.to_string(), Reference::CollectionComponent(Box::new(component)))
 }
 
 fn report(
@@ -187,34 +236,12 @@ fn report(
     report_title: &str,
     publisher: Option<Contributor>,
 ) -> (String, Reference) {
-    (
-        id.to_string(),
-        Reference::Monograph(Box::new(Monograph {
-            id: Some(id.to_string()),
-            r#type: MonographType::Report,
-            title: title(report_title),
-            author: Some(author),
-            editor: None,
-            translator: None,
-            issued: edtf(year),
-            publisher,
-            url: None,
-            accessed: None,
-            language: None,
-            field_languages: Default::default(),
-            note: None,
-            isbn: None,
-            doi: None,
-            edition: None,
-            report_number: None,
-            collection_number: None,
-            genre: None,
-            medium: None,
-            keywords: None,
-            original_date: None,
-            original_title: None,
-        })),
-    )
+    let mut monograph = empty_monograph(id, MonographType::Report, title(report_title));
+    monograph.author = Some(author);
+    monograph.issued = edtf(year);
+    monograph.publisher = publisher;
+    
+    (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
 
 // ── Humanities ─────────────────────────────────────────────────────────
@@ -549,5 +576,3 @@ pub fn refs_for_field(field: Option<&str>) -> Bibliography {
         _ => default_refs(),
     }
 }
-
-

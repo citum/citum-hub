@@ -14,6 +14,7 @@ use std::sync::Arc;
 use std::collections::HashMap;
 use serde_json::{Value, json};
 use citum_schema::Style;
+use citum_schema::citation::{CitationLocator, LocatorSegment, LocatorType, LocatorValue};
 use citum_engine::{Processor, Reference, Bibliography, Citation, CitationItem};
 use citum_engine::render::html::Html;
 use serde::{Deserialize, Serialize};
@@ -195,7 +196,10 @@ fn generate_preview_set(intent: &StyleIntent, references: &HashMap<String, Refer
     let items_2: Vec<CitationItem> = cite_ids_2.iter().map(|id| {
         CitationItem { 
             id: id.clone(), 
-            locator: Some("15-18".to_string()),
+            locator: Some(CitationLocator::Single(LocatorSegment {
+                label: LocatorType::Page,
+                value: LocatorValue::Text("15-18".to_string()),
+            })),
             ..Default::default() 
         }
     }).collect();

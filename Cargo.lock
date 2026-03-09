@@ -294,7 +294,7 @@ dependencies = [
 [[package]]
 name = "citum-edtf"
 version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#59787a40f6abbf61e6135ebee34fbb5b5eb54cd9"
+source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
 dependencies = [
  "serde",
  "winnow",
@@ -303,7 +303,7 @@ dependencies = [
 [[package]]
 name = "citum-engine"
 version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#59787a40f6abbf61e6135ebee34fbb5b5eb54cd9"
+source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
 dependencies = [
  "biblatex",
  "ciborium",
@@ -325,7 +325,7 @@ dependencies = [
 [[package]]
 name = "citum-schema"
 version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#59787a40f6abbf61e6135ebee34fbb5b5eb54cd9"
+source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
 dependencies = [
  "ciborium",
  "citum-edtf",
@@ -436,7 +436,7 @@ dependencies = [
 [[package]]
 name = "csl-legacy"
 version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#59787a40f6abbf61e6135ebee34fbb5b5eb54cd9"
+source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
 dependencies = [
  "indexmap 2.13.0",
  "roxmltree",
@@ -2705,6 +2705,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml",
+ "serde_yaml_ng",
  "specta",
  "sqlx",
  "tokio",

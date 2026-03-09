@@ -24,7 +24,7 @@ use uuid::Uuid;
 use chrono::{DateTime, Utc};
 use dotenvy::dotenv;
 use oauth2::{AuthorizationCode, TokenResponse};
-use serde_yaml::{Mapping as YamlMapping, Value as YamlValue};
+use serde_yaml_ng;
 use auth::User;
 
 mod auth;
@@ -54,9 +54,8 @@ pub struct StyleRow {
 
 fn process_style_metadata(mut row: StyleRow) -> StyleRow {
     row.citum = resolve_synced_public_style_yaml(&row);
-    row.citum = normalize_legacy_style_yaml(&row.citum);
 
-    match serde_yaml::from_str::<Style>(&row.citum) {
+    match serde_yaml_ng::from_str::<Style>(&row.citum) {
         Ok(style) => {
             row.description = style.info.description.clone();
             row.fields = style.info.fields.clone();
@@ -163,7 +162,7 @@ fn collect_local_public_styles(root: &FsPath, dir: &FsPath, styles: &mut Vec<Loc
             continue;
         };
 
-        let title = serde_yaml::from_str::<Style>(&citum)
+        let title = serde_yaml_ng::from_str::<Style>(&citum)
             .ok()
             .and_then(|style| style.info.title)
             .unwrap_or_else(|| {
@@ -244,160 +243,6 @@ async fn sync_local_public_style_rows(db: &Pool<Postgres>) -> Option<Vec<StyleRo
     Some(rows)
 }
 
-fn normalize_legacy_style_yaml(raw: &str) -> String {
-    let Ok(mut value) = serde_yaml::from_str::<YamlValue>(raw) else {
-        return raw.to_string();
-    };
-
-    if !normalize_legacy_contributor_substitute(&mut value) {
-        return raw.to_string();
-    }
-
-    serde_yaml::to_string(&value).unwrap_or_else(|_| raw.to_string())
-}
-
-fn normalize_legacy_contributor_substitute(value: &mut YamlValue) -> bool {
-    match value {
-        YamlValue::Mapping(map) => {
-            let mut changed = move_legacy_contributor_substitute(map);
-            changed |= normalize_legacy_contributor_et_al(map);
-            changed |= remove_legacy_date_fields(map);
-            changed |= normalize_legacy_bibliography_separator(map);
-
-            for child in map.values_mut() {
-                changed |= normalize_legacy_contributor_substitute(child);
-            }
-
-            changed
-        }
-        YamlValue::Sequence(seq) => seq
-            .iter_mut()
-            .any(normalize_legacy_contributor_substitute),
-        _ => false,
-    }
-}
-
-fn move_legacy_contributor_substitute(map: &mut YamlMapping) -> bool {
-    let contributors_key = YamlValue::String("contributors".to_string());
-    let substitute_key = YamlValue::String("substitute".to_string());
-    let template_key = YamlValue::String("template".to_string());
-
-    let Some(YamlValue::Mapping(contributors)) = map.get_mut(&contributors_key) else {
-        return false;
-    };
-
-    let Some(legacy_substitute) = contributors.remove(&substitute_key) else {
-        return false;
-    };
-
-    if !map.contains_key(&substitute_key) {
-        let normalized_substitute = match legacy_substitute {
-            YamlValue::Sequence(_) => {
-                let mut explicit = YamlMapping::new();
-                explicit.insert(template_key, legacy_substitute);
-                YamlValue::Mapping(explicit)
-            }
-            other => other,
-        };
-
-        map.insert(substitute_key, normalized_substitute);
-    }
-
-    true
-}
-
-fn normalize_legacy_contributor_et_al(map: &mut YamlMapping) -> bool {
-    let contributors_key = YamlValue::String("contributors".to_string());
-    let et_al_key = YamlValue::String("et-al".to_string());
-    let shorten_key = YamlValue::String("shorten".to_string());
-
-    let Some(YamlValue::Mapping(contributors)) = map.get_mut(&contributors_key) else {
-        return false;
-    };
-
-    let Some(legacy_et_al) = contributors.remove(&et_al_key) else {
-        return false;
-    };
-
-    if !contributors.contains_key(&shorten_key) {
-        contributors.insert(shorten_key, legacy_et_al);
-    }
-
-    true
-}
-
-fn remove_legacy_date_fields(map: &mut YamlMapping) -> bool {
-    let dates_key = YamlValue::String("dates".to_string());
-    let form_key = YamlValue::String("form".to_string());
-    let substitute_key = YamlValue::String("substitute".to_string());
-
-    let Some(YamlValue::Mapping(dates)) = map.get_mut(&dates_key) else {
-        return false;
-    };
-
-    let removed_form = dates.remove(&form_key).is_some();
-    let removed_substitute = dates.remove(&substitute_key).is_some();
-
-    removed_form || removed_substitute
-}
-
-fn normalize_legacy_bibliography_separator(map: &mut YamlMapping) -> bool {
-    let bibliography_key = YamlValue::String("bibliography".to_string());
-    let options_key = YamlValue::String("options".to_string());
-    let separator_key = YamlValue::String("separator".to_string());
-
-    let has_suffix_heavy_template = map
-        .get(&bibliography_key)
-        .and_then(template_contains_multiple_period_suffixes)
-        .unwrap_or(false);
-
-    if !has_suffix_heavy_template {
-        return false;
-    }
-
-    let Some(YamlValue::Mapping(options)) = map.get_mut(&options_key) else {
-        return false;
-    };
-
-    let Some(YamlValue::Mapping(bibliography_options)) = options.get_mut(&bibliography_key) else {
-        return false;
-    };
-
-    if bibliography_options.contains_key(&separator_key) {
-        return false;
-    }
-
-    bibliography_options.insert(separator_key, YamlValue::String(" ".to_string()));
-    true
-}
-
-fn template_contains_multiple_period_suffixes(value: &YamlValue) -> Option<bool> {
-    let YamlValue::Mapping(bibliography) = value else {
-        return None;
-    };
-
-    let template_key = YamlValue::String("template".to_string());
-    let YamlValue::Sequence(template) = bibliography.get(&template_key)? else {
-        return None;
-    };
-
-    let suffix_count = template
-        .iter()
-        .filter(|component| mapping_has_period_suffix(component))
-        .count();
-
-    Some(suffix_count >= 2)
-}
-
-fn mapping_has_period_suffix(value: &YamlValue) -> bool {
-    let YamlValue::Mapping(component) = value else {
-        return false;
-    };
-
-    let suffix_key = YamlValue::String("suffix".to_string());
-    matches!(component.get(&suffix_key), Some(YamlValue::String(suffix)) if suffix == ".")
-}
-
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PreviewSet {
     pub in_text_parenthetical: Option<String>,
@@ -410,7 +255,7 @@ pub struct PreviewSet {
 #[serde(untagged)]
 enum PreviewRequestPayload {
     Style(Box<Style>),
-    Citum { citum: String },
+    Citum { citum: String, mode: Option<String> },
     Intent(StyleIntent),
 }
 
@@ -518,14 +363,14 @@ async fn github_callback(
 async fn preview_set_handler(
     Json(payload): Json<PreviewRequestPayload>
 ) -> impl IntoResponse {
-    let (style, class, field) = match payload {
+    let (style, class, field, request_mode) = match payload {
         PreviewRequestPayload::Style(style) => {
             use citum_schema::options::Processing;
             let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
                 Some(Processing::Note) => "note",
                 _ => "in_text",
             };
-            (*style, class.to_string(), None)
+            (*style, class.to_string(), None, None)
         },
         PreviewRequestPayload::Intent(intent) => {
             let class = match intent.class {
@@ -534,20 +379,43 @@ async fn preview_set_handler(
                 None => "in_text",
             };
             let field = intent.field.clone();
-            (intent.to_style(), class.to_string(), field)
+            (intent.to_style(), class.to_string(), field, None)
         }
-        PreviewRequestPayload::Citum { citum } => {
-            let style = serde_yaml::from_str::<Style>(&normalize_legacy_style_yaml(&citum))
+        PreviewRequestPayload::Citum { citum, mode } => {
+            let style = serde_yaml_ng::from_str::<Style>(&citum)
                 .unwrap_or_else(|_| Style::default());
             let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
                 Some(citum_schema::options::Processing::Note) => "note",
                 _ => "in_text",
             };
-            (style, class.to_string(), None)
+            (style, class.to_string(), None, mode)
         }
     };
     
-    Json(generate_preview_set_internal(&style, &class, field.as_deref()))
+    let mut set = generate_preview_set_internal(&style, &class, field.as_deref());
+    
+    // If a specific mode was requested, override the set behavior
+    if let Some(m) = request_mode {
+        let references = preview_data::refs_for_field(field.as_deref());
+        if !references.is_empty() {
+            let cite_ids: Vec<String> = references.keys().cloned().collect();
+            let processor = Processor::new(style, references);
+            let citation = Citation {
+                id: Some("custom-preview".to_string()),
+                items: vec![CitationItem { id: cite_ids[0].clone(), ..Default::default() }],
+                mode: match m.as_str() {
+                    "Integral" => CitationMode::Integral,
+                    _ => CitationMode::NonIntegral,
+                },
+                ..Default::default()
+            };
+            if let Ok(res) = processor.process_citation_with_format::<HtmlRenderer>(&citation) {
+                set.in_text_parenthetical = Some(res);
+            }
+        }
+    }
+
+    Json(set)
 }
 
 fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>) -> PreviewSet {
@@ -812,7 +680,7 @@ async fn create_style(
 ) -> Json<StyleRow> {
     let style_obj = payload.to_style();
     let title = style_obj.info.title.clone().unwrap_or_else(|| "Untitled Style".to_string());
-    let citum = serde_yaml::to_string(&style_obj).unwrap_or_default();
+    let citum = serde_yaml_ng::to_string(&style_obj).unwrap_or_default();
     let intent_val = serde_json::to_value(&payload).unwrap();
 
     let style = sqlx::query_as::<_, StyleRow>(
@@ -837,7 +705,7 @@ async fn update_style(
 ) -> Json<StyleRow> {
     let style_obj = payload.to_style();
     let title = style_obj.info.title.clone().unwrap_or_else(|| "Untitled Style".to_string());
-    let citum = serde_yaml::to_string(&style_obj).unwrap_or_default();
+    let citum = serde_yaml_ng::to_string(&style_obj).unwrap_or_default();
     let intent_val = serde_json::to_value(&payload).unwrap();
     let is_public = true;
 
@@ -1006,142 +874,6 @@ mod tests {
     }
 
     #[test]
-    fn normalizes_legacy_contributor_substitute_lists() {
-        let raw = r#"
-info:
-  title: Legacy style
-options:
-  contributors:
-    initialize-with: ". "
-    substitute:
-      - editor
-      - translator
-"#;
-
-        let normalized = normalize_legacy_style_yaml(raw);
-        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
-
-        let options = style.options.expect("style should include options");
-        let substitute = options.substitute.expect("substitute should be hoisted");
-        let serialized = serde_yaml::to_string(&substitute).expect("substitute should serialize");
-
-        assert!(serialized.contains("editor"));
-        assert!(serialized.contains("translator"));
-        assert!(!normalized.contains("contributors:\n    substitute:"));
-    }
-
-    #[test]
-    fn normalizes_legacy_contributor_et_al_blocks() {
-        let raw = r#"
-info:
-  title: Legacy style
-options:
-  contributors:
-    et-al:
-      min: 10
-      use-first: 7
-"#;
-
-        let normalized = normalize_legacy_style_yaml(raw);
-        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
-
-        let contributors = style
-            .options
-            .expect("style should include options")
-            .contributors
-            .expect("contributors should remain present");
-        let serialized =
-            serde_yaml::to_string(&contributors).expect("contributors should serialize");
-
-        assert!(serialized.contains("shorten:"));
-        assert!(serialized.contains("min: 10"));
-        assert!(serialized.contains("use-first: 7"));
-        assert!(!normalized.contains("et-al:"));
-    }
-
-    #[test]
-    fn preserves_existing_substitute_when_dropping_legacy_field() {
-        let raw = r#"
-info:
-  title: Legacy style
-options:
-  substitute:
-    template:
-      - title
-  contributors:
-    initialize-with: ". "
-    substitute:
-      - editor
-"#;
-
-        let normalized = normalize_legacy_style_yaml(raw);
-        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
-
-        let substitute = style
-            .options
-            .expect("style should include options")
-            .substitute
-            .expect("existing substitute should remain");
-        let serialized = serde_yaml::to_string(&substitute).expect("substitute should serialize");
-
-        assert!(serialized.contains("title"));
-        assert!(!normalized.contains("contributors:\n    substitute:"));
-    }
-
-    #[test]
-    fn removes_legacy_date_fields() {
-        let raw = r#"
-info:
-  title: Legacy style
-options:
-  dates:
-    form: numeric
-    month: long
-    substitute:
-      - term: no-date
-        form: short
-"#;
-
-        let normalized = normalize_legacy_style_yaml(raw);
-        let style = serde_yaml::from_str::<Style>(&normalized).expect("legacy style should parse");
-
-        let dates = style
-            .options
-            .expect("style should include options")
-            .dates
-            .expect("dates should remain present");
-
-        let serialized = serde_yaml::to_string(&dates).expect("dates should serialize");
-
-        assert!(serialized.contains("month: long"));
-        assert!(!normalized.contains("form: numeric"));
-        assert!(!normalized.contains("substitute:"));
-    }
-
-    #[test]
-    fn adds_space_separator_for_suffix_heavy_legacy_bibliographies() {
-        let raw = r#"
-info:
-  title: Legacy style
-options:
-  bibliography:
-    hanging-indent: true
-bibliography:
-  template:
-    - contributor: author
-      suffix: "."
-    - date: issued
-      suffix: "."
-    - title: primary
-      suffix: "."
-"#;
-
-        let normalized = normalize_legacy_style_yaml(raw);
-
-        assert!(normalized.contains("separator: ' '") || normalized.contains("separator: \" \""));
-    }
-
-    #[test]
     fn synced_public_styles_prefer_local_checkout_yaml() {
         let unique = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -1203,7 +935,7 @@ bibliography:
     fn local_chicago_author_date_preview_does_not_repeat_period_separators() {
         let raw = fs::read_to_string(local_styles_dir().join("chicago-author-date.yaml"))
             .expect("local chicago style should be readable");
-        let style = serde_yaml::from_str::<Style>(&raw).expect("local chicago style should parse");
+        let style = serde_yaml_ng::from_str::<Style>(&raw).expect("local chicago style should parse");
 
         let preview = generate_preview_set_internal(&style, "in_text", None);
         let bibliography = preview
@@ -1217,40 +949,6 @@ bibliography:
         assert!(
             !bibliography.contains(". ."),
             "bibliography should not contain repeated sentence separators: {bibliography}"
-        );
-    }
-
-    #[test]
-    fn raw_citum_preview_payload_preserves_canonical_chicago_rendering() {
-        let raw = fs::read_to_string(local_styles_dir().join("chicago-author-date.yaml"))
-            .expect("local chicago style should be readable");
-
-        let payload = serde_json::from_value::<PreviewRequestPayload>(json!({
-            "citum": raw
-        }))
-        .expect("raw citum payload should deserialize");
-
-        let (style, class) = match payload {
-            PreviewRequestPayload::Citum { citum } => {
-                let style = serde_yaml::from_str::<Style>(&normalize_legacy_style_yaml(&citum))
-                    .expect("raw citum should parse as style");
-                let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
-                    Some(citum_schema::options::Processing::Note) => "note",
-                    _ => "in_text",
-                };
-                (style, class)
-            }
-            _ => panic!("expected raw citum preview payload"),
-        };
-
-        let preview = generate_preview_set_internal(&style, class, None);
-        let bibliography = preview
-            .bibliography
-            .expect("expected bibliography preview for raw citum payload");
-
-        assert!(
-            !bibliography.contains(" . ") && !bibliography.contains(". ."),
-            "raw citum preview should not add repeated periods: {bibliography}"
         );
     }
 }
