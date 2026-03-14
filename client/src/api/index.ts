@@ -42,8 +42,8 @@ async function getFixtureData(type: string = "expanded") {
 
 	try {
 		const raw = await file(filePath).json();
-		const refs: Record<string, any> = {};
-		const citationItems: any[] = [];
+		const refs: Record<string, unknown> = {};
+		const citationItems: unknown[] = [];
 
 		const entries = Array.isArray(raw)
 			? raw
@@ -51,10 +51,11 @@ async function getFixtureData(type: string = "expanded") {
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		entries.slice(0, 5).forEach((ref: any) => {
-			if (ref && ref.id) {
-				refs[ref.id] = ref;
-				citationItems.push({ id: ref.id });
+		entries.slice(0, 5).forEach((ref: unknown) => {
+			if (ref && typeof ref === 'object' && 'id' in ref) {
+				const typedRef = ref as Record<string, unknown>;
+				refs[String(typedRef.id)] = ref;
+				citationItems.push({ id: typedRef.id });
 			}
 		});
 
@@ -72,10 +73,10 @@ async function getFixtureData(type: string = "expanded") {
 }
 
 // --- Middleware: Auth ---
-const authMiddleware = async (c: any, next: () => Promise<void>) => {
-	const authHeader = c.req.header("Authorization");
+const authMiddleware = async (c: unknown, next: () => Promise<void>) => {
+	const authHeader = (c as Record<string, unknown>).req.header("Authorization");
 	if (!authHeader?.startsWith("Bearer ")) {
-		c.set("user", null);
+		(c as Record<string, unknown>).set("user", null);
 		await next();
 		return;
 	}
@@ -83,9 +84,9 @@ const authMiddleware = async (c: any, next: () => Promise<void>) => {
 	const token = authHeader.split(" ")[1];
 	try {
 		const { payload } = await jwtVerify(token, JWT_SECRET);
-		c.set("user", { id: payload.sub, role: payload.role });
-	} catch (e) {
-		c.set("user", null);
+		(c as Record<string, unknown>).set("user", { id: payload.sub, role: payload.role });
+	} catch {
+		(c as Record<string, unknown>).set("user", null);
 	}
 	await next();
 };
@@ -96,7 +97,7 @@ app.get("/hub", async (c) => {
 	try {
 		const styles = await sql`SELECT * FROM styles WHERE is_public = true ORDER BY updated_at DESC`;
 		return c.json(styles);
-	} catch (e) {
+	} catch {
 		return c.json({ error: "Failed to fetch public styles" }, 500);
 	}
 });
@@ -109,7 +110,7 @@ app.get("/styles", authMiddleware, async (c) => {
 		const styles =
 			await sql`SELECT * FROM styles WHERE user_id = ${userId} ORDER BY updated_at DESC`;
 		return c.json(styles);
-	} catch (e) {
+	} catch {
 		return c.json({ error: "Database error" }, 500);
 	}
 });
@@ -124,7 +125,7 @@ app.get("/styles/:id", authMiddleware, async (c) => {
 			return c.json({ error: "Unauthorized" }, 401);
 		}
 		return c.json(style);
-	} catch (e) {
+	} catch {
 		return c.json({ error: "Database error" }, 500);
 	}
 });
@@ -176,7 +177,7 @@ app.post("/v1/decide", async (c) => {
 						citeStr,
 						"NonIntegral"
 					);
-				} catch (e) {
+				} catch {
 					preview.html = "";
 				}
 			}
@@ -298,27 +299,27 @@ app.get("/auth/github/callback", async (c) => {
 // --- Websocket Integration ---
 const server = {
 	port: 3002,
-	fetch(req: Request, server: any) {
+	fetch(req: Request, server: unknown) {
 		const url = new URL(req.url);
 		if (url.pathname === "/ws/preview") {
-			const upgraded = server.upgrade(req);
+			const upgraded = (server as Record<string, unknown>).upgrade(req);
 			if (upgraded) return;
 			return new Response("Upgrade failed", { status: 500 });
 		}
 		return app.fetch(req, server);
 	},
 	websocket: {
-		message(ws: any, message: string) {
+		message(ws: unknown, message: string) {
 			try {
-				const data = JSON.parse(message);
-				ws.send(
+				JSON.parse(message);
+				(ws as Record<string, unknown>).send(
 					JSON.stringify({
 						type: "preview_result",
 						html: "WS preview not yet fixture-linked",
 					})
 				);
 			} catch (e) {
-				ws.send(JSON.stringify({ type: "error", message: String(e) }));
+				(ws as Record<string, unknown>).send(JSON.stringify({ type: "error", message: String(e) }));
 			}
 		},
 	},

@@ -8,7 +8,7 @@ export interface User {
 }
 
 function createAuthStore() {
-	const { subscribe, set, _update } = writable<{
+	const { subscribe, set } = writable<{
 		token: string | null;
 		user: User | null;
 	}>({

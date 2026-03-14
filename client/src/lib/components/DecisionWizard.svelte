@@ -150,7 +150,7 @@
 			</div>
 
 			<div class="grid grid-cols-1 gap-4">
-				{#each decisionPackage.previews as choice, i}
+				{#each decisionPackage.previews as choice}
 					<button
 						onclick={() => handleChoice(choice.choice_value)}
 						class="p-4 rounded-xl border border-slate-200 text-left hover:border-primary hover:bg-blue-50/30 transition-all group overflow-hidden relative"
@@ -172,6 +172,7 @@
 								<div
 									class="p-3 bg-slate-50 rounded-lg border border-slate-100 text-[11px] font-serif text-slate-600 group-hover:bg-white transition-colors"
 								>
+									<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 									{@html choice.html}
 								</div>
 							{/if}

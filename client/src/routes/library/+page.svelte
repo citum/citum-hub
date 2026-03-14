@@ -31,7 +31,7 @@
 			} else {
 				error = "Failed to load library data";
 			}
-		} catch (_e) {
+		} catch {
 			error = "Network error";
 		} finally {
 			loading = false;
