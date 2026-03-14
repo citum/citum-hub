@@ -4,7 +4,7 @@
  * Displays raw HTML content from the backend in a styled container.
  */
 interface Props {
-    html: string | null;
+	html: string | null;
 }
 
 let { html }: Props = $props();

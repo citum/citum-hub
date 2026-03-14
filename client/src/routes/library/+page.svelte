@@ -10,42 +10,42 @@ let loading = $state(true);
 let error = $state(null);
 
 onMount(async () => {
-    if (!$auth.user) {
-        goto("/");
-        return;
-    }
+	if (!$auth.user) {
+		goto("/");
+		return;
+	}
 
-    try {
-        const [stylesRes, bookmarksRes] = await Promise.all([
-            fetch("/api/styles", {
-                headers: { Authorization: `Bearer ${$auth.token}` },
-            }),
-            fetch("/api/bookmarks", {
-                headers: { Authorization: `Bearer ${$auth.token}` },
-            }),
-        ]);
+	try {
+		const [stylesRes, bookmarksRes] = await Promise.all([
+			fetch("/api/styles", {
+				headers: { Authorization: `Bearer ${$auth.token}` },
+			}),
+			fetch("/api/bookmarks", {
+				headers: { Authorization: `Bearer ${$auth.token}` },
+			}),
+		]);
 
-        if (stylesRes.ok && bookmarksRes.ok) {
-            styles = await stylesRes.json();
-            bookmarks = await bookmarksRes.json();
-        } else {
-            error = "Failed to load library data";
-        }
-    } catch (_e) {
-        error = "Network error";
-    } finally {
-        loading = false;
-    }
+		if (stylesRes.ok && bookmarksRes.ok) {
+			styles = await stylesRes.json();
+			bookmarks = await bookmarksRes.json();
+		} else {
+			error = "Failed to load library data";
+		}
+	} catch (_e) {
+		error = "Network error";
+	} finally {
+		loading = false;
+	}
 });
 
 async function handleRemoveBookmark(id: string) {
-    const res = await fetch(`/api/styles/${id}/bookmark`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${$auth.token}` },
-    });
-    if (res.ok) {
-        bookmarks = bookmarks.filter((b) => b.id !== id);
-    }
+	const res = await fetch(`/api/styles/${id}/bookmark`, {
+		method: "DELETE",
+		headers: { Authorization: `Bearer ${$auth.token}` },
+	});
+	if (res.ok) {
+		bookmarks = bookmarks.filter((b) => b.id !== id);
+	}
 }
 </script>
 

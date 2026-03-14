@@ -1,16 +1,16 @@
 <script lang="ts">
 import "../index.css";
-import { auth } from "$lib/stores/auth";
 import favicon from "$lib/assets/favicon.svg";
+import { auth } from "$lib/stores/auth";
 
 let { children } = $props();
 
 function handleLogin() {
-    window.location.href = "/api/auth/github";
+	window.location.href = "/api/auth/github";
 }
 
 function handleLogout() {
-    auth.logout();
+	auth.logout();
 }
 </script>
 

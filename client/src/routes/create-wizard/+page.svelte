@@ -1,11 +1,11 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { get } from "svelte/store";
+import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
+import DecisionWizard from "$lib/components/DecisionWizard.svelte";
 import { auth } from "$lib/stores/auth";
 import { intent } from "$lib/stores/intent";
 import type { DecisionPackage } from "$lib/types/bindings";
-import DecisionWizard from "$lib/components/DecisionWizard.svelte";
-import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
 
 let currentDecision: DecisionPackage | null = $state(null);
 let progressBaseline = $state(0);
@@ -13,90 +13,89 @@ let isSaving = $state(false);
 let saveMessage = $state("");
 
 function handleDecision(decision: DecisionPackage | null) {
-    currentDecision = decision;
+	currentDecision = decision;
 
-    if (!decision) {
-        progressBaseline = 0;
-        return;
-    }
+	if (!decision) {
+		progressBaseline = 0;
+		return;
+	}
 
-    progressBaseline = Math.max(
-        progressBaseline,
-        decision.missing_fields.length,
-    );
+	progressBaseline = Math.max(progressBaseline, decision.missing_fields.length);
 }
 
 async function saveStyle() {
-    if (!$auth.user) return;
+	if (!$auth.user) return;
 
-    isSaving = true;
-    try {
-        const res = await fetch("/api/styles", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${$auth.token}`,
-            },
-            body: JSON.stringify({
-                title: "My Custom Style",
-                intent: $intent,
-                citum: "",
-            }),
-        });
+	isSaving = true;
+	try {
+		const res = await fetch("/api/styles", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${$auth.token}`,
+			},
+			body: JSON.stringify({
+				title: "My Custom Style",
+				intent: $intent,
+				citum: "",
+			}),
+		});
 
-        if (res.ok) {
-            saveMessage = "Saved!";
-            setTimeout(() => { saveMessage = ""; }, 2000);
-        }
-    } catch (e) {
-        console.error("Auto-save failed", e);
-    } finally {
-        isSaving = false;
-    }
+		if (res.ok) {
+			saveMessage = "Saved!";
+			setTimeout(() => {
+				saveMessage = "";
+			}, 2000);
+		}
+	} catch (e) {
+		console.error("Auto-save failed", e);
+	} finally {
+		isSaving = false;
+	}
 }
 
 let autoSaveTimeout: ReturnType<typeof setTimeout> | undefined;
 
 function scheduleAutoSave(currentIntent: typeof $intent) {
-    const authState = get(auth);
-    if (
-        !authState.user ||
-        !Object.values(currentIntent).some((v) => v !== null)
-    ) {
-        return;
-    }
+	const authState = get(auth);
+	if (
+		!authState.user ||
+		!Object.values(currentIntent).some((v) => v !== null)
+	) {
+		return;
+	}
 
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(() => {
-        saveStyle();
-    }, 3000);
+	clearTimeout(autoSaveTimeout);
+	autoSaveTimeout = setTimeout(() => {
+		saveStyle();
+	}, 3000);
 }
 
 onMount(() => {
-    const unsubscribe = intent.subscribe(scheduleAutoSave);
+	const unsubscribe = intent.subscribe(scheduleAutoSave);
 
-    return () => {
-        clearTimeout(autoSaveTimeout);
-        unsubscribe();
-    };
+	return () => {
+		clearTimeout(autoSaveTimeout);
+		unsubscribe();
+	};
 });
 
 const progress = $derived.by(() => {
-    if (!currentDecision) {
-        return 0;
-    }
+	if (!currentDecision) {
+		return 0;
+	}
 
-    const totalSteps = Math.max(
-        progressBaseline,
-        currentDecision.missing_fields.length,
-        1,
-    );
-    const completedSteps = totalSteps - currentDecision.missing_fields.length;
+	const totalSteps = Math.max(
+		progressBaseline,
+		currentDecision.missing_fields.length,
+		1,
+	);
+	const completedSteps = totalSteps - currentDecision.missing_fields.length;
 
-    return Math.max(
-        0,
-        Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
-    );
+	return Math.max(
+		0,
+		Math.min(100, Math.round((completedSteps / totalSteps) * 100)),
+	);
 });
 const isComplete = $derived(currentDecision && !currentDecision.question);
 </script>

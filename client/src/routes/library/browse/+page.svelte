@@ -9,24 +9,24 @@ let loading = $state(true);
 let error = $state(null);
 
 const filteredStyles = $derived(
-        publicStyles.filter((s) =>
-                s.title.toLowerCase().includes(searchQuery.toLowerCase()),
-        ),
+	publicStyles.filter((s) =>
+		s.title.toLowerCase().includes(searchQuery.toLowerCase()),
+	),
 );
 
 onMount(async () => {
-        try {
-                const res = await fetch("/api/hub");
-                if (res.ok) {
-                        publicStyles = await res.json();
-                } else {
-                        error = "Failed to load hub styles";
-                }
-        } catch (_e) {
-                error = "Network error";
-        } finally {
-                loading = false;
-        }
+	try {
+		const res = await fetch("/api/hub");
+		if (res.ok) {
+			publicStyles = await res.json();
+		} else {
+			error = "Failed to load hub styles";
+		}
+	} catch (_e) {
+		error = "Network error";
+	} finally {
+		loading = false;
+	}
 });
 </script>
 

@@ -5,7 +5,9 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3002";
 
 export const GET: RequestHandler = async ({ fetch, request, url }) => {
 	try {
-		const headers: Record<string, string> = { "Content-Type": "application/json" };
+		const headers: Record<string, string> = {
+			"Content-Type": "application/json",
+		};
 		const authHeader = request.headers.get("Authorization");
 		if (authHeader) headers["Authorization"] = authHeader;
 
