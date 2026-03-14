@@ -4,7 +4,7 @@ import { createInitialIntent, intent, resetIntent } from "$lib/stores/intent";
 import type { DecisionPackage, StyleIntent } from "$lib/types/bindings";
 
 let { onDecision } = $props<{
-    onDecision: (decision: DecisionPackage | null) => void;
+	onDecision: (decision: DecisionPackage | null) => void;
 }>();
 
 let loading = $state(false);
@@ -15,113 +15,113 @@ let hasMounted = false;
 let lastIntentKey = "";
 
 async function fetchDecision(currentIntent: StyleIntent) {
-    const requestId = ++requestSequence;
-    loading = true;
-    error = null;
-    try {
-        const res = await fetch("/api/v1/decide", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(currentIntent),
-        });
-        if (res.ok) {
-            const data = await res.json();
-            if (requestId !== requestSequence) return;
-            decisionPackage = data;
-            onDecision(data);
-        } else {
-            if (requestId !== requestSequence) return;
-            error = `Error: ${res.statusText}`;
-        }
-    } catch (e) {
-        if (requestId !== requestSequence) return;
-        error = String(e);
-    } finally {
-        if (requestId === requestSequence) {
-            loading = false;
-        }
-    }
+	const requestId = ++requestSequence;
+	loading = true;
+	error = null;
+	try {
+		const res = await fetch("/api/v1/decide", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(currentIntent),
+		});
+		if (res.ok) {
+			const data = await res.json();
+			if (requestId !== requestSequence) return;
+			decisionPackage = data;
+			onDecision(data);
+		} else {
+			if (requestId !== requestSequence) return;
+			error = `Error: ${res.statusText}`;
+		}
+	} catch (e) {
+		if (requestId !== requestSequence) return;
+		error = String(e);
+	} finally {
+		if (requestId === requestSequence) {
+			loading = false;
+		}
+	}
 }
 
 function syncDecision(currentIntent: StyleIntent) {
-    const nextIntentKey = JSON.stringify(currentIntent);
-    if (nextIntentKey === lastIntentKey) return;
-    lastIntentKey = nextIntentKey;
-    fetchDecision(currentIntent);
+	const nextIntentKey = JSON.stringify(currentIntent);
+	if (nextIntentKey === lastIntentKey) return;
+	lastIntentKey = nextIntentKey;
+	fetchDecision(currentIntent);
 }
 
 onMount(() => {
-    hasMounted = true;
-    syncDecision($intent);
+	hasMounted = true;
+	syncDecision($intent);
 });
 
 $effect(() => {
-    const currentIntent = $intent;
-    if (!hasMounted) return;
-    syncDecision(currentIntent);
+	const currentIntent = $intent;
+	if (!hasMounted) return;
+	syncDecision(currentIntent);
 });
 
 function handleChoice(choice: Partial<StyleIntent>) {
-    intent.update((prev) => ({ ...prev, ...choice }));
+	intent.update((prev) => ({ ...prev, ...choice }));
 }
 
 function doReset() {
-    resetIntent();
-    lastIntentKey = "";
-    decisionPackage = null;
-    onDecision(null);
-    syncDecision(createInitialIntent());
+	resetIntent();
+	lastIntentKey = "";
+	decisionPackage = null;
+	onDecision(null);
+	syncDecision(createInitialIntent());
 }
 
 function doCustomize() {
-    intent.update((prev) => ({ ...prev, customize_target: "menu" }));
+	intent.update((prev) => ({ ...prev, customize_target: "menu" }));
 }
 
 function shouldShowChoicePreview() {
-    return !["field", "customize_target"].includes(
-        decisionPackage?.question?.id ?? "",
-    );
+	return !["field", "customize_target"].includes(
+		decisionPackage?.question?.id ?? "",
+	);
 }
 
 function canCustomizeCurrentStyle() {
-    const hasPresetBackedChoices = Boolean(
-        $intent.from_preset ||
-            $intent.contributor_preset ||
-            $intent.date_preset ||
-            $intent.title_preset ||
-            $intent.bib_template,
-    );
+	const hasPresetBackedChoices = Boolean(
+		$intent.from_preset ||
+			$intent.contributor_preset ||
+			$intent.date_preset ||
+			$intent.title_preset ||
+			$intent.bib_template,
+	);
 
-    return (
-        hasPresetBackedChoices &&
-        !["field", "class", "customize_target"].includes(
-            decisionPackage?.question?.id ?? "",
-        )
-    );
+	return (
+		hasPresetBackedChoices &&
+		!["field", "class", "customize_target"].includes(
+			decisionPackage?.question?.id ?? "",
+		)
+	);
 }
 
 async function downloadCitum() {
-    try {
-        const res = await fetch("/api/v1/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify($intent),
-        });
-        if (res.ok) {
-            const blob = await res.blob();
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "custom-style.yaml";
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-        } else {
-            alert("Failed to generate Citum");
-        }
-    } catch (e) {
-        alert(`Error: ${String(e)}`);
-    }
+	try {
+		const res = await fetch("/api/v1/generate", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify($intent),
+		});
+		if (res.ok) {
+			const blob = await res.blob();
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = "custom-style.yaml";
+			document.body.appendChild(a);
+			a.click();
+			a.remove();
+		} else {
+			alert("Failed to generate Citum");
+		}
+	} catch (e) {
+		alert(`Error: ${String(e)}`);
+	}
 }
 </script>
 

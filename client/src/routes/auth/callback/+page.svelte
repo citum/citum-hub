@@ -5,11 +5,11 @@ import { page } from "$app/state";
 import { auth } from "$lib/stores/auth";
 
 onMount(() => {
-    const token = page.url.searchParams.get("token");
-    if (token) {
-        auth.login(token);
-    }
-    goto("/");
+	const token = page.url.searchParams.get("token");
+	if (token) {
+		auth.login(token);
+	}
+	goto("/");
 });
 </script>
 

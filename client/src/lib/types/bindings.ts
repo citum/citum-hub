@@ -5,13 +5,43 @@
  * Represents the user's intent for the citation style they are building.
  * Redesigned to center around pervasive presets.
  */
-export type StyleIntent = { field: string | null; class: CitationClass | null; from_preset: string | null; customize_target: CustomizeTarget | null; contributor_preset: string | null; date_preset: string | null; title_preset: string | null; sort_preset: string | null; bib_template: string | null; has_bibliography: boolean | null };
+export type StyleIntent = {
+	field: string | null;
+	class: CitationClass | null;
+	from_preset: string | null;
+	customize_target: CustomizeTarget | null;
+	contributor_preset: string | null;
+	date_preset: string | null;
+	title_preset: string | null;
+	sort_preset: string | null;
+	bib_template: string | null;
+	has_bibliography: boolean | null;
+};
 
-export type CitationClass = "author_date" | "footnote" | "endnote" | "numeric" | "label";
+export type CitationClass =
+	| "author_date"
+	| "footnote"
+	| "endnote"
+	| "numeric"
+	| "label";
 
-export type CustomizeTarget = "menu" | "contributors" | "dates" | "titles" | "bibliography" | "bibliography_usage";
+export type CustomizeTarget =
+	| "menu"
+	| "contributors"
+	| "dates"
+	| "titles"
+	| "bibliography"
+	| "bibliography_usage";
 
-export type DecisionPackage = { missing_fields: string[]; question: Question | null; previews: Preview[]; in_text_parenthetical: string | null; in_text_narrative: string | null; note: string | null; bibliography: string | null };
+export type DecisionPackage = {
+	missing_fields: string[];
+	question: Question | null;
+	previews: Preview[];
+	in_text_parenthetical: string | null;
+	in_text_narrative: string | null;
+	note: string | null;
+	bibliography: string | null;
+};
 
 export type Question = { id: string; text: string; description: string | null };
 

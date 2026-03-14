@@ -2,20 +2,20 @@
 import LivePreview from "./LivePreview.svelte";
 
 interface PreviewSet {
-    in_text_parenthetical: string | null;
-    in_text_narrative: string | null;
-    note: string | null;
-    bibliography: string | null;
+	in_text_parenthetical: string | null;
+	in_text_narrative: string | null;
+	note: string | null;
+	bibliography: string | null;
 }
 
 let {
-    previewSet,
-    title = "Comprehensive Preview",
-    subtitle = "Review how this style handles common citation scenarios across your document.",
+	previewSet,
+	title = "Comprehensive Preview",
+	subtitle = "Review how this style handles common citation scenarios across your document.",
 } = $props<{
-    previewSet: PreviewSet | null;
-    title?: string;
-    subtitle?: string;
+	previewSet: PreviewSet | null;
+	title?: string;
+	subtitle?: string;
 }>();
 </script>
 
