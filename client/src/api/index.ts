@@ -20,7 +20,7 @@ const CITUM_CORE_PATH =
 console.log("[Setup] CITUM_CORE_PATH:", CITUM_CORE_PATH);
 
 const JWT_SECRET = new TextEncoder().encode(
-	process.env.JWT_SECRET || "default_secret_for_development",
+	process.env.JWT_SECRET || "default_secret_for_development"
 );
 
 /**
@@ -65,7 +65,7 @@ async function getFixtureData(type: string = "expanded") {
 	} catch (e) {
 		console.error(
 			`[Fixture] Failed to load ${fileName} from ${filePath}. Previews will be empty.`,
-			e,
+			e
 		);
 		return { references: {}, citation: { items: [], mode: "non-integral" } };
 	}
@@ -94,8 +94,7 @@ const authMiddleware = async (c: any, next: () => Promise<void>) => {
 
 app.get("/hub", async (c) => {
 	try {
-		const styles =
-			await sql`SELECT * FROM styles WHERE is_public = true ORDER BY updated_at DESC`;
+		const styles = await sql`SELECT * FROM styles WHERE is_public = true ORDER BY updated_at DESC`;
 		return c.json(styles);
 	} catch (e) {
 		return c.json({ error: "Failed to fetch public styles" }, 500);
@@ -143,10 +142,7 @@ app.post("/v1/decide", async (c) => {
 			decision = JSON.parse(resultJson);
 		} catch (wasmError) {
 			console.error("[Decide] WASM core failed:", wasmError);
-			return c.json(
-				{ error: "Intent evaluation failed", details: String(wasmError) },
-				500,
-			);
+			return c.json({ error: "Intent evaluation failed", details: String(wasmError) }, 500);
 		}
 
 		const fixture = await getFixtureData(intent.class || intent.field);
@@ -159,14 +155,9 @@ app.post("/v1/decide", async (c) => {
 				intentStr,
 				refsStr,
 				citeStr,
-				"NonIntegral",
+				"NonIntegral"
 			);
-			decision.in_text_narrative = render_intent_citation(
-				intentStr,
-				refsStr,
-				citeStr,
-				"Integral",
-			);
+			decision.in_text_narrative = render_intent_citation(intentStr, refsStr, citeStr, "Integral");
 			const style_yaml = generate_style(intentStr);
 			decision.bibliography = render_bibliography(style_yaml, refsStr);
 		} catch (previewError) {
@@ -183,7 +174,7 @@ app.post("/v1/decide", async (c) => {
 						JSON.stringify(previewIntent),
 						refsStr,
 						citeStr,
-						"NonIntegral",
+						"NonIntegral"
 					);
 				} catch (e) {
 					preview.html = "";
@@ -194,10 +185,7 @@ app.post("/v1/decide", async (c) => {
 		return c.json(decision);
 	} catch (e) {
 		console.error("[Decide] Fatal Handler Error:", e);
-		return c.json(
-			{ error: "Internal Server Error during decision processing" },
-			500,
-		);
+		return c.json({ error: "Internal Server Error during decision processing" }, 500);
 	}
 });
 
@@ -219,11 +207,7 @@ app.post("/v1/preview", async (c) => {
 			bib = "";
 
 		try {
-			if (
-				style_yaml &&
-				typeof style_yaml === "string" &&
-				style_yaml.trim().length > 0
-			) {
+			if (style_yaml && typeof style_yaml === "string" && style_yaml.trim().length > 0) {
 				html = render_citation(style_yaml, refsStr, citeStr, mode);
 				bib = render_bibliography(style_yaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
@@ -245,10 +229,7 @@ app.post("/v1/preview", async (c) => {
 		});
 	} catch (e) {
 		console.error("[Preview] Fatal Handler Error:", e);
-		return c.json(
-			{ error: "Internal Server Error during preview generation" },
-			500,
-		);
+		return c.json({ error: "Internal Server Error during preview generation" }, 500);
 	}
 });
 
@@ -310,7 +291,7 @@ app.get("/auth/github/callback", async (c) => {
 		.sign(JWT_SECRET);
 
 	return c.redirect(
-		`${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/callback?token=${jwt}`,
+		`${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/callback?token=${jwt}`
 	);
 });
 
@@ -334,7 +315,7 @@ const server = {
 					JSON.stringify({
 						type: "preview_result",
 						html: "WS preview not yet fixture-linked",
-					}),
+					})
 				);
 			} catch (e) {
 				ws.send(JSON.stringify({ type: "error", message: String(e) }));

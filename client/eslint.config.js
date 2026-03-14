@@ -1,23 +1,29 @@
 import js from "@eslint/js";
-import { defineConfig, globalIgnores } from "eslint/config";
-import reactHooks from "eslint-plugin-react-hooks";
-import reactRefresh from "eslint-plugin-react-refresh";
+import svelte from "eslint-plugin-svelte";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 
-export default defineConfig([
-	globalIgnores(["dist"]),
+export default tseslint.config(
+	js.configs.recommended,
+	...tseslint.configs.recommended,
+	...svelte.configs["flat/recommended"],
 	{
-		files: ["**/*.{ts,tsx}"],
-		extends: [
-			js.configs.recommended,
-			tseslint.configs.recommended,
-			reactHooks.configs.flat.recommended,
-			reactRefresh.configs.vite,
-		],
 		languageOptions: {
-			ecmaVersion: 2020,
-			globals: globals.browser,
+			globals: {
+				...globals.browser,
+				...globals.node,
+			},
 		},
 	},
-]);
+	{
+		files: ["**/*.svelte"],
+		languageOptions: {
+			parserOptions: {
+				parser: tseslint.parser,
+			},
+		},
+	},
+	{
+		ignores: ["build/", ".svelte-kit/", "dist/", "node_modules/"],
+	}
+);

@@ -13,9 +13,7 @@ function createAuthStore() {
 		user: User | null;
 	}>({
 		token: browser ? localStorage.getItem("auth_token") : null,
-		user: browser
-			? JSON.parse(localStorage.getItem("auth_user") || "null")
-			: null,
+		user: browser ? JSON.parse(localStorage.getItem("auth_user") || "null") : null,
 	});
 
 	return {

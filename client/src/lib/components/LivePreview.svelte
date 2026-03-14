@@ -1,57 +1,57 @@
 <script lang="ts">
-/**
- * LivePreview component
- * Displays raw HTML content from the backend in a styled container.
- */
-interface Props {
-	html: string | null;
-}
+	/**
+	 * LivePreview component
+	 * Displays raw HTML content from the backend in a styled container.
+	 */
+	interface Props {
+		html: string | null;
+	}
 
-let { html }: Props = $props();
+	let { html }: Props = $props();
 </script>
 
 <div class="live-preview-content">
-    {#if html}
-        {@html html}
-    {:else}
-        <div class="empty-state">
-            <p>Select options to see how your citations will look.</p>
-        </div>
-    {/if}
+	{#if html}
+		{@html html}
+	{:else}
+		<div class="empty-state">
+			<p>Select options to see how your citations will look.</p>
+		</div>
+	{/if}
 </div>
 
 <style>
-    .live-preview-content {
-        line-height: 1.6;
-    }
+	.live-preview-content {
+		line-height: 1.6;
+	}
 
-    .empty-state {
-        color: #64748b;
-        font-style: italic;
-        font-size: 0.9rem;
-    }
+	.empty-state {
+		color: #64748b;
+		font-style: italic;
+		font-size: 0.9rem;
+	}
 
-    /* Citum Engine Styling */
-    :global(.csln-bibliography) {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
+	/* Citum Engine Styling */
+	:global(.csln-bibliography) {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
 
-    :global(.csln-entry) {
-        margin-bottom: 0.25rem;
-    }
+	:global(.csln-entry) {
+		margin-bottom: 0.25rem;
+	}
 
-    :global(.csln-citation) {
-        cursor: help;
-        border-bottom: 1px dotted rgba(0,0,0,0.1);
-    }
+	:global(.csln-citation) {
+		cursor: help;
+		border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
+	}
 
-    /* Style the italics/bold even if the engine returns them as tags */
-    :global(.live-preview-content i) {
-        font-style: italic;
-    }
-    :global(.live-preview-content b) {
-        font-weight: bold;
-    }
+	/* Style the italics/bold even if the engine returns them as tags */
+	:global(.live-preview-content i) {
+		font-style: italic;
+	}
+	:global(.live-preview-content b) {
+		font-weight: bold;
+	}
 </style>
