@@ -30,7 +30,7 @@
 			} else {
 				error = "Style not found or private";
 			}
-		} catch (_e) {
+		} catch {
 			error = "Network error";
 		} finally {
 			loading = false;

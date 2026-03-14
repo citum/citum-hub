@@ -20,7 +20,7 @@
 			} else {
 				error = "Failed to load hub styles";
 			}
-		} catch (_e) {
+		} catch {
 			error = "Network error";
 		} finally {
 			loading = false;
@@ -51,6 +51,7 @@
 
 	{#if loading}
 		<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+			<!-- eslint-disable-next-line @typescript-eslint/no-unused-vars -->
 			{#each Array(6) as _}
 				<div class="h-64 bg-slate-100 animate-pulse rounded-3xl"></div>
 			{/each}

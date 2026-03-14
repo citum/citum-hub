@@ -12,6 +12,7 @@
 
 <div class="live-preview-content">
 	{#if html}
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 		{@html html}
 	{:else}
 		<div class="empty-state">
