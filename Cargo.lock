@@ -293,8 +293,8 @@ dependencies = [
 
 [[package]]
 name = "citum-edtf"
-version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
+version = "0.11.0"
+source = "git+https://github.com/citum/citum-core?branch=main#443fcc62801f4518f09f65b21cda02493f19076a"
 dependencies = [
  "serde",
  "winnow",
@@ -302,8 +302,8 @@ dependencies = [
 
 [[package]]
 name = "citum-engine"
-version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
+version = "0.11.0"
+source = "git+https://github.com/citum/citum-core?branch=main#443fcc62801f4518f09f65b21cda02493f19076a"
 dependencies = [
  "biblatex",
  "ciborium",
@@ -324,8 +324,25 @@ dependencies = [
 
 [[package]]
 name = "citum-schema"
-version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
+version = "0.11.0"
+source = "git+https://github.com/citum/citum-core?branch=main#443fcc62801f4518f09f65b21cda02493f19076a"
+dependencies = [
+ "citum-schema-data",
+ "citum-schema-style",
+]
+
+[[package]]
+name = "citum-schema-data"
+version = "0.11.0"
+source = "git+https://github.com/citum/citum-core?branch=main#443fcc62801f4518f09f65b21cda02493f19076a"
+dependencies = [
+ "citum-schema-style",
+]
+
+[[package]]
+name = "citum-schema-style"
+version = "0.11.0"
+source = "git+https://github.com/citum/citum-core?branch=main#443fcc62801f4518f09f65b21cda02493f19076a"
 dependencies = [
  "ciborium",
  "citum-edtf",
@@ -435,8 +452,8 @@ dependencies = [
 
 [[package]]
 name = "csl-legacy"
-version = "0.8.0"
-source = "git+https://github.com/citum/citum-core?branch=main#b6f8d21798e0d22e03bd1d0e3a7b7481993e3bd6"
+version = "0.11.0"
+source = "git+https://github.com/citum/citum-core?branch=main#443fcc62801f4518f09f65b21cda02493f19076a"
 dependencies = [
  "indexmap 2.13.0",
  "roxmltree",

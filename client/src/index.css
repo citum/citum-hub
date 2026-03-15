@@ -71,3 +71,39 @@ body {
 	line-height: 1.6;
 	margin-bottom: 1rem;
 }
+
+/* Wizard v2: Interactive preview hover/selection */
+.csln-interactive {
+	cursor: pointer;
+	border-radius: 2px;
+	transition: all 0.15s ease;
+}
+
+.csln-interactive:hover {
+	outline: 2px solid rgba(19, 91, 236, 0.3);
+	outline-offset: 1px;
+	background: rgba(19, 91, 236, 0.05);
+}
+
+.csln-selected {
+	outline: 2px solid #135bec;
+	outline-offset: 1px;
+	background: rgba(19, 91, 236, 0.1);
+}
+
+/* Wizard v2: Preview tooltip */
+.csln-tooltip {
+	position: absolute;
+	background: #0d121b;
+	color: white;
+	font-family: var(--font-display);
+	font-size: 0.7rem;
+	font-weight: 500;
+	padding: 2px 8px;
+	border-radius: 4px;
+	pointer-events: none;
+	white-space: nowrap;
+	z-index: 50;
+	transform: translateY(-100%) translateX(-50%);
+	margin-top: -4px;
+}

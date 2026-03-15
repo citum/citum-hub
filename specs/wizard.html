@@ -1,0 +1,1860 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <title>STYLE_WIZARD_V2</title>
+  <style>
+    /* Default styles provided by pandoc.
+    ** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+    */
+    html {
+      color: #1a1a1a;
+      background-color: #fdfdfd;
+    }
+    body {
+      margin: 0 auto;
+      max-width: 36em;
+      padding-left: 50px;
+      padding-right: 50px;
+      padding-top: 50px;
+      padding-bottom: 50px;
+      hyphens: auto;
+      overflow-wrap: break-word;
+      text-rendering: optimizeLegibility;
+      font-kerning: normal;
+    }
+    @media (max-width: 600px) {
+      body {
+        font-size: 0.9em;
+        padding: 12px;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+    }
+    @media print {
+      html {
+        background-color: white;
+      }
+      body {
+        background-color: transparent;
+        color: black;
+        font-size: 12pt;
+      }
+      p, h2, h3 {
+        orphans: 3;
+        widows: 3;
+      }
+      h2, h3, h4 {
+        page-break-after: avoid;
+      }
+    }
+    p {
+      margin: 1em 0;
+    }
+    a {
+      color: #1a1a1a;
+    }
+    a:visited {
+      color: #1a1a1a;
+    }
+    img {
+      max-width: 100%;
+    }
+    svg {
+      height: auto;
+      max-width: 100%;
+    }
+    h1, h2, h3, h4, h5, h6 {
+      margin-top: 1.4em;
+    }
+    h5, h6 {
+      font-size: 1em;
+      font-style: italic;
+    }
+    h6 {
+      font-weight: normal;
+    }
+    ol, ul {
+      padding-left: 1.7em;
+      margin-top: 1em;
+    }
+    li > ol, li > ul {
+      margin-top: 0;
+    }
+    blockquote {
+      margin: 1em 0 1em 1.7em;
+      padding-left: 1em;
+      border-left: 2px solid #e6e6e6;
+      color: #606060;
+    }
+    code {
+      font-family: Menlo, Monaco, Consolas, 'Lucida Console', monospace;
+      font-size: 85%;
+      margin: 0;
+      hyphens: manual;
+    }
+    pre {
+      margin: 1em 0;
+      overflow: auto;
+    }
+    pre code {
+      padding: 0;
+      overflow: visible;
+      overflow-wrap: normal;
+    }
+    .sourceCode {
+     background-color: transparent;
+     overflow: visible;
+    }
+    hr {
+      border: none;
+      border-top: 1px solid #1a1a1a;
+      height: 1px;
+      margin: 1em 0;
+    }
+    table {
+      margin: 1em 0;
+      border-collapse: collapse;
+      width: 100%;
+      overflow-x: auto;
+      display: block;
+      font-variant-numeric: lining-nums tabular-nums;
+    }
+    table caption {
+      margin-bottom: 0.75em;
+    }
+    tbody {
+      margin-top: 0.5em;
+      border-top: 1px solid #1a1a1a;
+      border-bottom: 1px solid #1a1a1a;
+    }
+    th {
+      border-top: 1px solid #1a1a1a;
+      padding: 0.25em 0.5em 0.25em 0.5em;
+    }
+    td {
+      padding: 0.125em 0.5em 0.25em 0.5em;
+    }
+    header {
+      margin-bottom: 4em;
+      text-align: center;
+    }
+    #TOC li {
+      list-style: none;
+    }
+    #TOC ul {
+      padding-left: 1.3em;
+    }
+    #TOC > ul {
+      padding-left: 0;
+    }
+    #TOC a:not(:hover) {
+      text-decoration: none;
+    }
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+    /* CSS for syntax highlighting */
+    html { -webkit-text-size-adjust: 100%; }
+    pre > code.sourceCode { white-space: pre; position: relative; }
+    pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+    pre > code.sourceCode > span:empty { height: 1.2em; }
+    .sourceCode { overflow: visible; }
+    code.sourceCode > span { color: inherit; text-decoration: inherit; }
+    div.sourceCode { margin: 1em 0; }
+    pre.sourceCode { margin: 0; }
+    @media screen {
+    div.sourceCode { overflow: auto; }
+    }
+    @media print {
+    pre > code.sourceCode { white-space: pre-wrap; }
+    pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+    }
+    pre.numberSource code
+      { counter-reset: source-line 0; }
+    pre.numberSource code > span
+      { position: relative; left: -4em; counter-increment: source-line; }
+    pre.numberSource code > span > a:first-child::before
+      { content: counter(source-line);
+        position: relative; left: -1em; text-align: right; vertical-align: baseline;
+        border: none; display: inline-block;
+        -webkit-touch-callout: none; -webkit-user-select: none;
+        -khtml-user-select: none; -moz-user-select: none;
+        -ms-user-select: none; user-select: none;
+        padding: 0 4px; width: 4em;
+        color: #aaaaaa;
+      }
+    pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa;  padding-left: 4px; }
+    div.sourceCode
+      {   }
+    @media screen {
+    pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+    }
+    code span.al { color: #ff0000; font-weight: bold; } /* Alert */
+    code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } /* Annotation */
+    code span.at { color: #7d9029; } /* Attribute */
+    code span.bn { color: #40a070; } /* BaseN */
+    code span.bu { color: #008000; } /* BuiltIn */
+    code span.cf { color: #007020; font-weight: bold; } /* ControlFlow */
+    code span.ch { color: #4070a0; } /* Char */
+    code span.cn { color: #880000; } /* Constant */
+    code span.co { color: #60a0b0; font-style: italic; } /* Comment */
+    code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } /* CommentVar */
+    code span.do { color: #ba2121; font-style: italic; } /* Documentation */
+    code span.dt { color: #902000; } /* DataType */
+    code span.dv { color: #40a070; } /* DecVal */
+    code span.er { color: #ff0000; font-weight: bold; } /* Error */
+    code span.ex { } /* Extension */
+    code span.fl { color: #40a070; } /* Float */
+    code span.fu { color: #06287e; } /* Function */
+    code span.im { color: #008000; font-weight: bold; } /* Import */
+    code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } /* Information */
+    code span.kw { color: #007020; font-weight: bold; } /* Keyword */
+    code span.op { color: #666666; } /* Operator */
+    code span.ot { color: #007020; } /* Other */
+    code span.pp { color: #bc7a00; } /* Preprocessor */
+    code span.sc { color: #4070a0; } /* SpecialChar */
+    code span.ss { color: #bb6688; } /* SpecialString */
+    code span.st { color: #4070a0; } /* String */
+    code span.va { color: #19177c; } /* Variable */
+    code span.vs { color: #4070a0; } /* VerbatimString */
+    code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warning */
+  </style>
+</head>
+<body>
+<h1 id="style-wizard-v2-design-specification">Style Wizard v2: Design
+Specification</h1>
+<p><strong>Status:</strong> Draft <strong>Audience:</strong>
+Implementing agents and human reviewers <strong>Supersedes:</strong>
+<code>WIZARD_UX_SPEC.md</code> (v1 spec retained for reference)
+<strong>Stack:</strong> SvelteKit 5 (Svelte 5 runes), TypeScript,
+Tailwind CSS 4, citum-engine WASM</p>
+<hr />
+<h2 id="problem-statement">1. Problem Statement</h2>
+<p>The current wizard is a linear decision tree: ~10 multiple-choice
+questions produce a style via a Rust <code>intent-engine</code>. It
+works, but has fundamental limitations:</p>
+<ol type="1">
+<li><p><strong>Blind decisions.</strong> Users choose “APA contributor
+preset” or “Harvard date format” without knowing what those words mean.
+Preview exists but is disconnected from the choices — it updates as a
+side-effect, not as the decision surface itself.</p></li>
+<li><p><strong>Coarse granularity.</strong> The intent model bundles
+formatting into presets. Users who want “APA names but Chicago dates”
+cannot express that; they must pick one preset and accept the
+package.</p></li>
+<li><p><strong>No direct manipulation.</strong> Users cannot click on a
+rendered author name and change its formatting. The visual output is
+read-only decoration, not the editing surface.</p></li>
+<li><p><strong>Low ceiling.</strong> The wizard produces preset-derived
+styles. There is no path from “almost right” to “exactly right” without
+leaving the wizard and editing raw YAML.</p></li>
+<li><p><strong>SQI-unaware.</strong> Nothing in the UX encourages preset
+reuse, template sharing, or type-override discipline — the factors that
+drive high SQI scores.</p></li>
+</ol>
+<h3 id="what-v1-got-right">What v1 Got Right</h3>
+<ul>
+<li>Field-first branching (discipline → style family → options)</li>
+<li>Live preview concept (backend renders HTML)</li>
+<li>Completion detection (<code>question === null</code>)</li>
+<li>Branch-aware preview filtering</li>
+</ul>
+<p>These survive into v2. The architecture changes; the core insight
+does not.</p>
+<hr />
+<h2 id="design-philosophy">2. Design Philosophy</h2>
+<h3 id="preview-is-the-interface">2.1 Preview Is the Interface</h3>
+<p>Every decision the user makes is visible in a live rendered preview
+<em>before</em> they commit to it. The preview is not a side panel — it
+is the primary interaction surface in Phase 2. Users point at what they
+want to change, and the system reveals options.</p>
+<h3 id="presets-first-overrides-on-demand">2.2 Presets First, Overrides
+on Demand</h3>
+<p>The wizard always starts from a preset. Customizations are layered on
+top, not built from scratch. This produces naturally high SQI scores
+because:</p>
+<ul>
+<li>Preset usage score starts high (25% of SQI)</li>
+<li>Concision stays high (no redundant components)</li>
+<li>Type-coverage inherits from the preset’s breadth</li>
+<li>Fallback robustness comes from the preset’s base template</li>
+</ul>
+<p>The wizard should make it <em>easier</em> to use a preset than to
+deviate from one.</p>
+<h3 id="progressive-disclosure">2.3 Progressive Disclosure</h3>
+<p>Three tiers of complexity, each accessible from the previous:</p>
+<table>
+<colgroup>
+<col style="width: 16%" />
+<col style="width: 16%" />
+<col style="width: 36%" />
+<col style="width: 30%" />
+</colgroup>
+<thead>
+<tr>
+<th>Tier</th>
+<th>User</th>
+<th>Interaction</th>
+<th>Decisions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Quick Start</strong></td>
+<td>General user</td>
+<td>Guided questions with visual choices</td>
+<td>5-7</td>
+</tr>
+<tr>
+<td><strong>Visual Customizer</strong></td>
+<td>Intermediate</td>
+<td>Click rendered output to edit properties</td>
+<td>Unlimited</td>
+</tr>
+<tr>
+<td><strong>Advanced Editor</strong></td>
+<td>Expert</td>
+<td>Type-specific templates, raw YAML</td>
+<td>Full schema</td>
+</tr>
+</tbody>
+</table>
+<p>A general user can stop after Quick Start and have a working,
+high-SQI style. An expert can drill through all three tiers without
+switching tools.</p>
+<h3 id="show-dont-describe">2.4 Show, Don’t Describe</h3>
+<p>Where the v1 wizard says “APA contributor preset”, v2 shows:</p>
+<pre><code>Smith, J. A., &amp; Jones, B. C.    ← this one
+Smith, John A., and Betty C. Jones
+J. A. Smith and B. C. Jones</code></pre>
+<p>Every choice is a rendered example, never an abstract label. The user
+picks what looks right, not what sounds right.</p>
+<hr />
+<h2 id="architecture-overview">3. Architecture Overview</h2>
+<pre><code>┌─────────────────────────────────────────────────────┐
+│                    SvelteKit App                     │
+│                                                      │
+│  ┌──────────┐   ┌──────────────┐   ┌──────────────┐ │
+│  │  Quick    │──▶│   Visual     │──▶│  Advanced    │ │
+│  │  Start    │   │  Customizer  │   │  Editor      │ │
+│  │  (Guide)  │◀──│  (Direct)    │◀──│  (YAML)      │ │
+│  └──────────┘   └──────────────┘   └──────────────┘ │
+│       │                │                    │         │
+│       ▼                ▼                    ▼         │
+│  ┌──────────────────────────────────────────────┐    │
+│  │           WizardStore (Svelte 5 runes)        │    │
+│  │                                                │    │
+│  │  styleYaml ←→ parsedStyle ←→ wizardState      │    │
+│  └──────────────────────────────────────────────┘    │
+│                        │                              │
+│                        ▼                              │
+│  ┌──────────────────────────────────────────────┐    │
+│  │          WASM Bridge (citum-engine)            │    │
+│  │                                                │    │
+│  │  renderCitation(yaml, refs) → html             │    │
+│  │  renderBibliography(yaml, refs) → html         │    │
+│  │  validateStyle(yaml) → errors[]                │    │
+│  └──────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────┘</code></pre>
+<h3 id="key-architectural-decisions">Key Architectural Decisions</h3>
+<ol type="1">
+<li><p><strong>Client-side WASM rendering.</strong> The v1 wizard
+round-trips to the Axum server for every preview. v2 renders entirely in
+the browser via the citum-engine WASM bridge. This eliminates network
+latency and enables instant (&lt;50ms) preview updates as the user
+adjusts settings.</p></li>
+<li><p><strong>Single source of truth.</strong> The
+<code>WizardStore</code> holds the style as a parsed Citum
+<code>Style</code> object (mirroring the Rust struct via
+Specta-generated TypeScript types). All three tiers read from and write
+to this same object. The YAML serialization is derived, not
+primary.</p></li>
+<li><p><strong>No intent-engine dependency.</strong> The v1
+<code>StyleIntent</code> → <code>DecisionPackage</code> pipeline is
+replaced by direct style object manipulation. Presets are loaded
+client-side from embedded JSON (generated from the Rust
+<code>TemplatePreset</code> enum at build time). The intent-engine
+server endpoints (<code>/api/v1/decide</code>,
+<code>/api/v1/generate</code>) are retained for backward compatibility
+but are not used by the v2 wizard.</p></li>
+</ol>
+<hr />
+<h2 id="phase-1-quick-start">4. Phase 1: Quick Start</h2>
+<h3 id="purpose">Purpose</h3>
+<p>Get the user from zero to a working style in under 2 minutes with 5-7
+guided decisions. Every decision uses rendered examples as choices, not
+text labels.</p>
+<h3 id="flow">Flow</h3>
+<pre><code>[1. Field]  →  [2. Style Family]  →  [3. Starting Preset]
+                                            │
+                              ┌─────────────┼─────────────┐
+                              ▼             ▼             ▼
+                       [4. Names]    [5. Dates]    [6. Titles]
+                              │             │             │
+                              └─────────────┼─────────────┘
+                                            ▼
+                                    [7. Review &amp; Name]</code></pre>
+<p>Steps 4-6 are shown simultaneously as a “Refine Your Style” screen
+(not sequential steps) — see Step 4-6 below.</p>
+<hr />
+<h3 id="step-1-field-selector">Step 1: Field Selector</h3>
+<p><strong>Question:</strong> “What’s your area?”</p>
+<p><strong>Presentation:</strong> Large cards with icons, 2×3 grid on
+desktop, single column on mobile.</p>
+<table>
+<thead>
+<tr>
+<th>Card</th>
+<th>Subtitle</th>
+<th>Icon</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sciences</td>
+<td>Physics, Chemistry, Biology, Engineering</td>
+<td>🔬</td>
+</tr>
+<tr>
+<td>Medicine &amp; Health</td>
+<td>Clinical, Nursing, Public Health</td>
+<td>🏥</td>
+</tr>
+<tr>
+<td>Social Sciences</td>
+<td>Psychology, Sociology, Economics, Education</td>
+<td>📊</td>
+</tr>
+<tr>
+<td>Humanities</td>
+<td>History, Literature, Philosophy, Languages</td>
+<td>📚</td>
+</tr>
+<tr>
+<td>Law</td>
+<td>Legal scholarship, Case law</td>
+<td>⚖️</td>
+</tr>
+<tr>
+<td>Other / Interdisciplinary</td>
+<td>Cross-field, general use</td>
+<td>🌐</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Behavior:</strong> - Selecting a card immediately advances to
+Step 2. - No preview shown (too early). - No back button (entry point).
+- The selection sets <code>wizardState.field</code> and infers a default
+style family.</p>
+<p><strong>Field → Default Family Mapping:</strong></p>
+<table>
+<colgroup>
+<col style="width: 21%" />
+<col style="width: 45%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Field</th>
+<th>Default Family</th>
+<th>Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sciences</td>
+<td>Numeric</td>
+<td>Most science journals use numbered references</td>
+</tr>
+<tr>
+<td>Medicine &amp; Health</td>
+<td>Numeric</td>
+<td>Vancouver is the dominant medical style</td>
+</tr>
+<tr>
+<td>Social Sciences</td>
+<td>Author-Date</td>
+<td>APA is the dominant social science style</td>
+</tr>
+<tr>
+<td>Humanities</td>
+<td>Note</td>
+<td>Chicago Notes is the dominant humanities style</td>
+</tr>
+<tr>
+<td>Law</td>
+<td>Note</td>
+<td>Legal citation is footnote-based</td>
+</tr>
+<tr>
+<td>Other</td>
+<td>Author-Date</td>
+<td>Most broadly useful default</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h3 id="step-2-style-family">Step 2: Style Family</h3>
+<p><strong>Question:</strong> “How should citations appear in your
+text?”</p>
+<p><strong>Presentation:</strong> 3 large panels, each showing a
+rendered paragraph with citations highlighted. The user’s field-default
+is pre-selected with a subtle highlight border.</p>
+<h4 id="panel-author-date">Panel: Author-Date</h4>
+<pre><code>According to Smith (2024), the results were significant. Several studies
+confirm this finding (Jones &amp; Lee, 2023; Chen et al., 2022).</code></pre>
+<p>Caption: “Author names and years appear in the text”</p>
+<h4 id="panel-numeric">Panel: Numeric</h4>
+<pre><code>According to Smith [1], the results were significant. Several studies
+confirm this finding [2, 3].</code></pre>
+<p>Caption: “Numbers in brackets refer to a numbered list”</p>
+<h4 id="panel-note">Panel: Note</h4>
+<pre><code>According to Smith,¹ the results were significant. Several studies
+confirm this finding.²
+─────
+1. John Smith, The Study of Things (Oxford: Oxford University Press,
+   2024), 42.
+2. See especially Jones and Lee, &quot;Further Analysis,&quot; Journal of
+   Studies 15 (2023): 100–115.</code></pre>
+<p>Caption: “Superscript numbers link to footnotes or endnotes”</p>
+<p><strong>Behavior:</strong> - The field-default panel has a
+“Recommended for [field]” badge. - User can select any family regardless
+of field recommendation. - Selection sets
+<code>wizardState.family</code> and advances to Step 3. - Back button
+returns to Step 1.</p>
+<hr />
+<h3 id="step-3-starting-preset">Step 3: Starting Preset</h3>
+<p><strong>Question:</strong> “Pick the closest match to start from”</p>
+<p><strong>Presentation:</strong> A gallery of 3-5 preset cards
+(filtered by the selected family). Each card shows a mini bibliography
+(3 entries: article, book, chapter) rendered via WASM.</p>
+<h4 id="author-date-presets">Author-Date Presets</h4>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr>
+<th>Preset</th>
+<th>Key Visual Traits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>APA</strong></td>
+<td><code>Smith, J. A. (2024). Title. Journal, 12(3), 45.</code> — year
+in parens after author, italic journal</td>
+</tr>
+<tr>
+<td><strong>Chicago Author-Date</strong></td>
+<td><code>Smith, John A. 2024. "Title." Journal 12 (3): 45.</code> —
+year after author no parens, quoted article titles</td>
+</tr>
+<tr>
+<td><strong>Harvard</strong></td>
+<td><code>Smith, J.A. (2024) Title. Journal, 12(3), pp.45-67.</code> —
+minimal punctuation, <code>pp.</code> prefix</td>
+</tr>
+<tr>
+<td><strong>Elsevier</strong></td>
+<td><code>J.A. Smith, Title, Journal 12 (2024) 45-67.</code> —
+given-first, compact</td>
+</tr>
+</tbody>
+</table>
+<h4 id="numeric-presets">Numeric Presets</h4>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr>
+<th>Preset</th>
+<th>Key Visual Traits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Vancouver</strong></td>
+<td><code>1. Smith JA, Jones BC. Title. Journal. 2024;12(3):45-67.</code>
+— initials no dots, semicolon date</td>
+</tr>
+<tr>
+<td><strong>IEEE</strong></td>
+<td><code>[1] J. A. Smith and B. C. Jones, "Title," Journal, vol. 12, no. 3, pp. 45-67, 2024.</code>
+— given-first, quoted titles</td>
+</tr>
+<tr>
+<td><strong>Nature</strong></td>
+<td><code>1. Smith, J. A. &amp; Jones, B. C. Title. Journal 12, 45-67 (2024).</code>
+— ampersand, year in parens at end</td>
+</tr>
+<tr>
+<td><strong>ACS</strong></td>
+<td><code>(1) Smith, J. A.; Jones, B. C. Title. Journal 2024, 12 (3), 45-67.</code>
+— semicolon between authors</td>
+</tr>
+</tbody>
+</table>
+<h4 id="note-presets">Note Presets</h4>
+<table>
+<colgroup>
+<col style="width: 29%" />
+<col style="width: 70%" />
+</colgroup>
+<thead>
+<tr>
+<th>Preset</th>
+<th>Key Visual Traits</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Chicago Notes</strong></td>
+<td><code>1. John A. Smith, Title of Book (Place: Publisher, 2024), 42.</code>
+— full names, comma-separated</td>
+</tr>
+<tr>
+<td><strong>Turabian</strong></td>
+<td>Similar to Chicago Notes with minor variations</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Behavior:</strong> - Each card is a fully rendered
+bibliography preview (3 diverse reference types). - User clicks a card
+to select it. - Selection loads the preset into the
+<code>parsedStyle</code>, setting <code>options.contributors</code>,
+<code>options.dates</code>, <code>options.titles</code>, and
+<code>citation</code>/<code>bibliography</code> <code>use_preset</code>.
+- Advances to Steps 4-6 (refinement screen). - Back button returns to
+Step 2.</p>
+<hr />
+<h3 id="steps-4-6-refine-your-style-single-screen">Steps 4-6: Refine
+Your Style (Single Screen)</h3>
+<p><strong>Layout:</strong> Split screen. - <strong>Left (60%):</strong>
+Live preview showing rendered citations + bibliography (5-6 diverse
+reference types). Updated in real-time via WASM as user changes
+settings. - <strong>Right (40%):</strong> Three collapsible sections,
+all visible at once.</p>
+<p><strong>Question:</strong> “Fine-tune the details (or skip to
+finish)”</p>
+<p>Each section shows the current setting with a rendered example and a
+dropdown or button group to change it. Changing a setting instantly
+updates the left preview.</p>
+<h4 id="section-names">Section: Names</h4>
+<p>Shows current name rendering with options:</p>
+<pre><code>┌─ Names ──────────────────────────────────────────┐
+│                                                    │
+│  Current: Smith, J. A., &amp; Jones, B. C.             │
+│                                                    │
+│  Name order    [Family-first ▾]                    │
+│                 ├ Family-first    Smith, J. A.      │
+│                 ├ Given-first     J. A. Smith       │
+│                 └ Full names      John A. Smith     │
+│                                                    │
+│  And/ampersand  [Symbol (&amp;) ▾]                     │
+│                  ├ Symbol (&amp;)                       │
+│                  ├ Word (and)                       │
+│                  └ None (comma only)                │
+│                                                    │
+│  Et al. after   [3 authors ▾]                      │
+│                  ├ 1 author                         │
+│                  ├ 2 authors                        │
+│                  ├ 3 authors                        │
+│                  ├ 6 authors                        │
+│                  └ Show all                         │
+│                                                    │
+│  Initials       [Abbreviated (J. A.) ▾]            │
+│                  ├ Abbreviated (J. A.)              │
+│                  ├ Compact (JA)                     │
+│                  └ Full (John Andrew)               │
+│                                                    │
+└────────────────────────────────────────────────────┘</code></pre>
+<p>Each dropdown selection maps to specific fields in the style’s
+<code>options.contributors</code> preset or override:</p>
+<table>
+<colgroup>
+<col style="width: 36%" />
+<col style="width: 36%" />
+<col style="width: 26%" />
+</colgroup>
+<thead>
+<tr>
+<th>UI Control</th>
+<th>Style Path</th>
+<th>Values</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name order</td>
+<td><code>options.contributors.form</code></td>
+<td><code>short</code> (family-first) / <code>long</code>
+(given-first)</td>
+</tr>
+<tr>
+<td>And/ampersand</td>
+<td><code>options.contributors.and</code></td>
+<td><code>symbol</code> / <code>text</code> / none</td>
+</tr>
+<tr>
+<td>Et al. after</td>
+<td><code>options.contributors.shorten.min</code></td>
+<td>1-20</td>
+</tr>
+<tr>
+<td>Initials</td>
+<td><code>options.contributors.initialize-with</code></td>
+<td><code>". "</code> / <code>""</code> / omit</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Preset deviation tracking:</strong> When the user changes a
+value that differs from the loaded preset, the wizard tracks the
+deviation. If all values still match a known preset,
+<code>options.contributors</code> stays as the preset name (high SQI).
+If any value deviates, the wizard expands to an explicit configuration
+(lower SQI but accurate).</p>
+<h4 id="section-dates">Section: Dates</h4>
+<pre><code>┌─ Dates ──────────────────────────────────────────┐
+│                                                    │
+│  Current: (2024)                                   │
+│                                                    │
+│  Format        [Year only ▾]                       │
+│                 ├ Year only         (2024)          │
+│                 ├ Month and year    (January 2024)  │
+│                 ├ Full date         (15 Jan 2024)   │
+│                 └ Numeric           (2024-01-15)    │
+│                                                    │
+│  Position      [After author ▾]                    │
+│                 ├ After author                      │
+│                 └ End of entry                      │
+│                                                    │
+└────────────────────────────────────────────────────┘</code></pre>
+<h4 id="section-titles">Section: Titles</h4>
+<pre><code>┌─ Titles ─────────────────────────────────────────┐
+│                                                    │
+│  Current: The role of memory in learning           │
+│                                                    │
+│  Article titles  [Sentence case ▾]                 │
+│                   ├ Sentence case                   │
+│                   ├ Title Case                      │
+│                   └ As entered                      │
+│                                                    │
+│  Article style   [No decoration ▾]                 │
+│                   ├ No decoration                   │
+│                   ├ &quot;In quotes&quot;                     │
+│                   └ Italic                          │
+│                                                    │
+│  Book titles     [Italic ▾]                        │
+│                   ├ Italic                          │
+│                   └ No decoration                   │
+│                                                    │
+└────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Behavior:</strong> - All three sections are expanded by
+default. User can collapse any section. - A “Skip — use defaults” button
+at the bottom advances directly to Step 7. - Changes update the live
+preview within 50ms (WASM rendering). - Back button returns to Step 3
+(preset gallery).</p>
+<hr />
+<h3 id="step-7-review-name">Step 7: Review &amp; Name</h3>
+<p><strong>Layout:</strong> Full-width preview with a name input above
+and action buttons below.</p>
+<pre><code>┌────────────────────────────────────────────────────┐
+│  Name your style                                    │
+│  ┌──────────────────────────────────────────────┐   │
+│  │ My Department Style                           │   │
+│  └──────────────────────────────────────────────┘   │
+│  Auto-suggested: &quot;APA Author-Date (Modified)&quot;       │
+│                                                      │
+│  ┌──────────────────────────────────────────────┐   │
+│  │              FINAL PREVIEW                    │   │
+│  │                                                │   │
+│  │  In-text (parenthetical):                     │   │
+│  │  (Smith &amp; Jones, 2024; Chen et al., 2023)     │   │
+│  │                                                │   │
+│  │  In-text (narrative):                         │   │
+│  │  Smith and Jones (2024) argue that...         │   │
+│  │                                                │   │
+│  │  Bibliography:                                │   │
+│  │  Chen, L., Kim, S., &amp; Park, J. (2023).        │   │
+│  │      Title of the article. Journal of          │   │
+│  │      Examples, 15(2), 100–115.                 │   │
+│  │      https://doi.org/10.1234/example           │   │
+│  │  Smith, J. A., &amp; Jones, B. C. (2024). ...     │   │
+│  │                                                │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  ┌────────────┐  ┌───────────────┐  ┌───────────┐  │
+│  │ ◉ Download  │  │ ✎ Customize   │  │ ↺ Start   │  │
+│  │   YAML      │  │   Further     │  │   Over    │  │
+│  └────────────┘  └───────────────┘  └───────────┘  │
+│                                                      │
+│  ┌────────────────────────────────────────────┐      │
+│  │ 💾 Save to Library (sign in with GitHub)    │      │
+│  └────────────────────────────────────────────┘      │
+│                                                      │
+└────────────────────────────────────────────────────┘</code></pre>
+<p><strong>Name Input:</strong> - Text field, required, max 100
+characters. - Auto-suggestion generated from preset + deviations (e.g.,
+“APA Author-Date” if no changes, “APA with Full Names” if initials were
+changed to full). - Used as the <code>info.title</code> in the generated
+YAML and sanitized for the download filename.</p>
+<p><strong>Actions:</strong> - <strong>Download YAML:</strong> Generates
+the Citum style YAML and triggers a file download. Filename: slugified
+title (e.g., <code>my-department-style.yaml</code>). - <strong>Customize
+Further:</strong> Transitions to Phase 2 (Visual Customizer). -
+<strong>Start Over:</strong> Resets all wizard state, returns to Step 1.
+- <strong>Save to Library:</strong> Requires authentication. Saves the
+style to the user’s PostgreSQL-backed library. If not authenticated,
+shows GitHub OAuth prompt.</p>
+<p><strong>Behavior:</strong> - The preview shows all relevant citation
+modes for the selected family: - Author-date: parenthetical + narrative
++ bibliography - Numeric: in-text numbers + bibliography - Note:
+footnote (full + short) + bibliography (if enabled) - Preview uses 5-6
+diverse reference types (article-journal, book, chapter, report, thesis,
+webpage) drawn from field-specific test data. - Back button returns to
+Steps 4-6 (refinement screen).</p>
+<hr />
+<h2 id="phase-2-visual-customizer">5. Phase 2: Visual Customizer</h2>
+<h3 id="purpose-1">Purpose</h3>
+<p>Direct manipulation of the rendered output. Users click on any
+element in the preview to open a contextual editor for that component.
+This is where “almost right” becomes “exactly right”.</p>
+<h3 id="layout">Layout</h3>
+<pre><code>┌──────────────────────────────────────────────────────────┐
+│  ◀ Back to Quick Start          Visual Customizer         │
+├──────────────────────────────────────────────────────────┤
+│                                                            │
+│  Reference type: [Article ▾] [Book] [Chapter] [Report]     │
+│                                                            │
+│  ┌─────────────────────────────────────────────┐           │
+│  │               LIVE PREVIEW                   │           │
+│  │                                               │           │
+│  │  ╔═══════════════╗                            │           │
+│  │  ║ Smith, J. A.  ║, &amp; Jones, B. C. (2024).   │           │
+│  │  ╚═══════════════╝                            │           │
+│  │  Title of the article. Journal of Examples,   │           │
+│  │  15(2), 100–115.                              │           │
+│  │  https://doi.org/10.1234/example              │           │
+│  │                                               │           │
+│  └─────────────────────────────────────────────┘           │
+│          ↕ Click any element to edit                        │
+│                                                            │
+│  ┌─────────────────────────────────────────────┐           │
+│  │            COMPONENT EDITOR                  │           │
+│  │                                               │           │
+│  │  Editing: Author (first position)             │           │
+│  │                                               │           │
+│  │  Name order     [Family, Given ▾]             │           │
+│  │  Initials       [J. A. ▾]                     │           │
+│  │  And connector  [&amp; ▾]                         │           │
+│  │  Et al. after   [3 ▾]                         │           │
+│  │                                               │           │
+│  │  [Apply to all types]  [Only for articles]    │           │
+│  │                                               │           │
+│  └─────────────────────────────────────────────┘           │
+│                                                            │
+└──────────────────────────────────────────────────────────┘</code></pre>
+<h3 id="interactive-preview">Interactive Preview</h3>
+<p>The WASM renderer must produce HTML with semantic annotations so that
+each rendered element maps back to a template component. The WASM bridge
+should return structured HTML like:</p>
+<div class="sourceCode" id="cb12"><pre
+class="sourceCode html"><code class="sourceCode html"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;contributor&quot;</span><span class="ot"> data-role</span><span class="op">=</span><span class="st">&quot;author&quot;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ot">      data-index</span><span class="op">=</span><span class="st">&quot;0&quot;</span><span class="dt">&gt;</span>Smith, J. A.<span class="dt">&lt;/</span><span class="kw">span</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="dt">&gt;&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-delimiter&quot;</span><span class="dt">&gt;</span>, <span class="dv">&amp;amp;</span> <span class="dt">&lt;/</span><span class="kw">span</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="dt">&gt;&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;contributor&quot;</span><span class="ot"> data-role</span><span class="op">=</span><span class="st">&quot;author&quot;</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="ot">      data-index</span><span class="op">=</span><span class="st">&quot;1&quot;</span><span class="dt">&gt;</span>Jones, B. C.<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;date&quot;</span><span class="ot"> data-field</span><span class="op">=</span><span class="st">&quot;issued&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>  (2024)<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span>.</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;title&quot;</span><span class="ot"> data-field</span><span class="op">=</span><span class="st">&quot;title&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>  Title of the article<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span>.</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;title&quot;</span><span class="ot"> data-field</span><span class="op">=</span><span class="st">&quot;container-title&quot;</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="ot">      style</span><span class="op">=</span><span class="st">&quot;font-style: italic&quot;</span><span class="dt">&gt;</span>Journal of Examples<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> data-field</span><span class="op">=</span><span class="st">&quot;volume&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>  15<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span>(<span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;number&quot;</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a><span class="ot">  data-field</span><span class="op">=</span><span class="st">&quot;issue&quot;</span><span class="dt">&gt;</span>2<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span>),</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a><span class="dt">&lt;</span><span class="kw">span</span><span class="ot"> class</span><span class="op">=</span><span class="st">&quot;citum-component&quot;</span><span class="ot"> data-component</span><span class="op">=</span><span class="st">&quot;number&quot;</span><span class="ot"> data-field</span><span class="op">=</span><span class="st">&quot;page&quot;</span><span class="dt">&gt;</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>  100–115<span class="dt">&lt;/</span><span class="kw">span</span><span class="dt">&gt;</span>.</span></code></pre></div>
+<p><strong>Hover behavior:</strong> - Hovering over a component
+highlights it with a colored outline + tooltip showing the component
+type (“Author”, “Date”, “Title”, “Volume”, “DOI”, etc.). - The cursor
+changes to a pointer to signal clickability.</p>
+<p><strong>Click behavior:</strong> - Clicking a component opens the
+Component Editor panel below the preview. - The clicked element gets a
+persistent highlight (the “selected” state). - The Component Editor
+shows options relevant to that component type.</p>
+<h3 id="component-editor-panels">Component Editor Panels</h3>
+<p>Each template component type has a dedicated editor panel:</p>
+<h4 id="contributor-editor">Contributor Editor</h4>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Control</th>
+<th>Maps To</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name order</td>
+<td><code>form</code></td>
+<td>Family-first, Given-first</td>
+</tr>
+<tr>
+<td>First author inverted</td>
+<td><code>first-author-inverted</code></td>
+<td>Yes (family-first for first, given-first for rest) / No</td>
+</tr>
+<tr>
+<td>Initials</td>
+<td><code>initialize-with</code></td>
+<td><code>". "</code> (J. A.) / <code>""</code> (JA) / omit (full
+names)</td>
+</tr>
+<tr>
+<td>And connector</td>
+<td><code>and</code></td>
+<td><code>symbol</code> (&amp;) / <code>text</code> (and) / omit</td>
+</tr>
+<tr>
+<td>Et al. threshold</td>
+<td><code>shorten.min</code></td>
+<td>Number selector (1-20)</td>
+</tr>
+<tr>
+<td>Et al. display</td>
+<td><code>shorten.use-first</code></td>
+<td>Number selector (1-20)</td>
+</tr>
+<tr>
+<td>Label</td>
+<td><code>label</code></td>
+<td>None / Short (ed.) / Long (editor) / Verb (edited by)</td>
+</tr>
+<tr>
+<td>Font</td>
+<td><code>emph</code>, <code>strong</code>, <code>small-caps</code></td>
+<td>Checkboxes</td>
+</tr>
+</tbody>
+</table>
+<h4 id="date-editor">Date Editor</h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Maps To</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Format</td>
+<td><code>form</code></td>
+<td>Year / Month-Year / Full / Numeric</td>
+</tr>
+<tr>
+<td>Wrap</td>
+<td><code>wrap</code></td>
+<td>Parentheses / Brackets / None</td>
+</tr>
+<tr>
+<td>Prefix/Suffix</td>
+<td><code>prefix</code>, <code>suffix</code></td>
+<td>Text input</td>
+</tr>
+<tr>
+<td>Font</td>
+<td><code>emph</code>, <code>strong</code></td>
+<td>Checkboxes</td>
+</tr>
+</tbody>
+</table>
+<h4 id="title-editor">Title Editor</h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Maps To</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Case</td>
+<td><code>text-case</code></td>
+<td>Sentence / Title / As-Is / Lowercase</td>
+</tr>
+<tr>
+<td>Style</td>
+<td><code>emph</code>, <code>quote</code></td>
+<td>Italic / Quoted / Plain</td>
+</tr>
+<tr>
+<td>Prefix/Suffix</td>
+<td><code>prefix</code>, <code>suffix</code></td>
+<td>Text input</td>
+</tr>
+</tbody>
+</table>
+<h4 id="number-editor-volume-issue-pages-edition">Number Editor (Volume,
+Issue, Pages, Edition)</h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Maps To</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wrap</td>
+<td><code>wrap</code></td>
+<td>Parentheses / Brackets / None</td>
+</tr>
+<tr>
+<td>Prefix</td>
+<td><code>prefix</code></td>
+<td>Text input (e.g., “vol. ”, “pp. ”)</td>
+</tr>
+<tr>
+<td>Suffix</td>
+<td><code>suffix</code></td>
+<td>Text input</td>
+</tr>
+<tr>
+<td>Font</td>
+<td><code>strong</code>, <code>emph</code></td>
+<td>Checkboxes</td>
+</tr>
+</tbody>
+</table>
+<h4 id="variable-editor-publisher-url-doi-etc.">Variable Editor
+(Publisher, URL, DOI, etc.)</h4>
+<table>
+<thead>
+<tr>
+<th>Control</th>
+<th>Maps To</th>
+<th>Options</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Show/Hide</td>
+<td><code>suppress</code></td>
+<td>Toggle</td>
+</tr>
+<tr>
+<td>Prefix</td>
+<td><code>prefix</code></td>
+<td>Text input</td>
+</tr>
+<tr>
+<td>Suffix</td>
+<td><code>suffix</code></td>
+<td>Text input</td>
+</tr>
+<tr>
+<td>Font</td>
+<td><code>emph</code>, <code>strong</code></td>
+<td>Checkboxes</td>
+</tr>
+<tr>
+<td>Link</td>
+<td>(DOI/URL only)</td>
+<td>Render as hyperlink toggle</td>
+</tr>
+</tbody>
+</table>
+<h3 id="type-specific-overrides">Type-Specific Overrides</h3>
+<p>The reference type selector tabs above the preview let the user
+switch between rendered examples of different reference types (article,
+book, chapter, report, thesis, webpage).</p>
+<p>When the user edits a component while viewing a specific type, the
+wizard asks:</p>
+<pre><code>┌────────────────────────────────────────────┐
+│  Apply this change to:                      │
+│                                              │
+│  ◉ All reference types (recommended)        │
+│  ○ Only Article Journal                      │
+│                                              │
+│  [Apply]                                     │
+└────────────────────────────────────────────┘</code></pre>
+<ul>
+<li><strong>“All types”</strong> modifies the base template component →
+high concision SQI.</li>
+<li><strong>“Only [type]”</strong> creates a type-override entry in
+<code>bibliography.type-templates</code> → lower concision but necessary
+for type-specific formatting.</li>
+</ul>
+<p>The default is always “All types” to nudge toward high SQI.
+Type-specific overrides are clearly marked in the preview with a small
+badge: <code>[article only]</code>.</p>
+<h3 id="adding-and-removing-components">Adding and Removing
+Components</h3>
+<p>Beyond editing existing components, users may need to add or remove
+elements:</p>
+<p><strong>Remove:</strong> Right-clicking (or long-pressing on mobile)
+a component shows a context menu with “Hide this element” (sets
+<code>suppress: true</code>). Suppressed components show as
+faded/strikethrough in the preview and can be re-enabled.</p>
+<p><strong>Add:</strong> A “+” button at the end of the bibliography
+entry opens a component picker:</p>
+<pre><code>┌─ Add Component ──────────────┐
+│                                │
+│  ◉ Field       [DOI ▾]        │
+│  ○ Text        [________]     │
+│  ○ Localized   [retrieved ▾]  │
+│                                │
+│  [Add after: Page numbers ▾]   │
+│  [Insert]                      │
+└────────────────────────────────┘</code></pre>
+<p>This adds a new <code>TemplateVariable</code>,
+<code>TemplateNumber</code>, or <code>TemplateTerm</code> to the
+template at the specified position.</p>
+<h3 id="delimiter-editing">Delimiter Editing</h3>
+<p>Delimiters between components (periods, commas, spaces) are shown as
+subtle markers between components. Clicking a delimiter opens a small
+inline editor:</p>
+<pre><code>  Smith, J. A.  [ . ]  Title of the article
+                  ↑ click to change delimiter</code></pre>
+<p>Options: <code>.</code> (period-space), <code>,</code> (comma-space),
+<code>;</code> (semicolon-space), <code></code> (space only), or custom
+text input. This maps to the <code>suffix</code> of the preceding
+component or <code>prefix</code> of the following component, depending
+on which produces cleaner YAML.</p>
+<hr />
+<h2 id="phase-3-advanced-editor">6. Phase 3: Advanced Editor</h2>
+<h3 id="purpose-2">Purpose</h3>
+<p>Full access to the style schema for expert users. Accessible via an
+“Advanced” toggle in the Visual Customizer.</p>
+<h3 id="features">Features</h3>
+<h4 id="type-template-manager">6.1 Type-Template Manager</h4>
+<p>A dedicated view for managing type-specific bibliography
+templates:</p>
+<pre><code>┌─ Type Templates ─────────────────────────────────────────┐
+│                                                            │
+│  Base template (all types)           [Edit visually]       │
+│  ├─ article-journal                  [Override] [Remove]   │
+│  ├─ book                             [Override] [Remove]   │
+│  ├─ chapter                          ← uses base template  │
+│  ├─ report                           [Override] [Remove]   │
+│  ├─ thesis                           ← uses base template  │
+│  └─ webpage                          ← uses base template  │
+│                                                            │
+│  Types using the base template are grayed out.             │
+│  &quot;Override&quot; creates a copy of the base template for that   │
+│  type, which can then be customized independently.         │
+│                                                            │
+└──────────────────────────────────────────────────────────┘</code></pre>
+<p>This gives experts visibility into the override structure and its SQI
+implications. A sidebar indicator shows: “Concision score: 87 — fewer
+overrides = higher score.”</p>
+<h4 id="options-panel">6.2 Options Panel</h4>
+<p>Global formatting options not covered by the visual customizer:</p>
+<table>
+<thead>
+<tr>
+<th>Option</th>
+<th>Control</th>
+<th>Maps To</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Page range format</td>
+<td>Dropdown</td>
+<td><code>options.page-range-format</code></td>
+</tr>
+<tr>
+<td>Punctuation in quotes</td>
+<td>Toggle</td>
+<td><code>options.punctuation-in-quote</code></td>
+</tr>
+<tr>
+<td>Hanging indent</td>
+<td>Toggle</td>
+<td><code>options.bibliography.hanging-indent</code></td>
+</tr>
+<tr>
+<td>Entry spacing</td>
+<td>Number input</td>
+<td><code>options.bibliography.entry-spacing</code></td>
+</tr>
+<tr>
+<td>Subsequent citation</td>
+<td>Dropdown</td>
+<td><code>citation.subsequent</code> template</td>
+</tr>
+<tr>
+<td>Ibid handling</td>
+<td>Toggle + options</td>
+<td><code>citation.ibid</code></td>
+</tr>
+<tr>
+<td>Sort order</td>
+<td>Dropdown</td>
+<td><code>bibliography.sort</code></td>
+</tr>
+<tr>
+<td>Substitute rules</td>
+<td>Multi-select</td>
+<td><code>options.substitute</code></td>
+</tr>
+</tbody>
+</table>
+<h4 id="yaml-editor">6.3 YAML Editor</h4>
+<p>A syntax-highlighted YAML editor (CodeMirror or Monaco) with:</p>
+<ul>
+<li><strong>Live validation:</strong> Red underlines on invalid YAML or
+schema violations, powered by the WASM bridge’s
+<code>validateStyle()</code> function.</li>
+<li><strong>Live preview:</strong> The left panel continues to show
+rendered output, updating as the user types (debounced at 300ms).</li>
+<li><strong>Schema autocomplete:</strong> Suggestions based on the Citum
+JSON Schema (generated from Rust types via
+<code>cargo run --bin citum -- schema</code>).</li>
+<li><strong>Bidirectional sync:</strong> Changes in the YAML editor
+update the Visual Customizer state, and vice versa. The user can switch
+freely between visual and code views.</li>
+</ul>
+<hr />
+<h2 id="preview-system">7. Preview System</h2>
+<h3 id="reference-data">7.1 Reference Data</h3>
+<p>The preview uses field-specific reference sets that stress-test
+diverse formatting scenarios. Each set contains 6-8 references
+covering:</p>
+<table>
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 39%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Type</th>
+<th>Why Included</th>
+<th>Stress Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>article-journal</code></td>
+<td>Most common</td>
+<td>Volume, issue, pages, DOI</td>
+</tr>
+<tr>
+<td><code>book</code></td>
+<td>Second most common</td>
+<td>Publisher, place, edition</td>
+</tr>
+<tr>
+<td><code>chapter</code></td>
+<td>Tests container relationships</td>
+<td>Editor, book title, pages</td>
+</tr>
+<tr>
+<td><code>report</code></td>
+<td>Institutional author</td>
+<td>Organization names, report numbers</td>
+</tr>
+<tr>
+<td><code>thesis</code></td>
+<td>University context</td>
+<td>Degree type, institution</td>
+</tr>
+<tr>
+<td><code>webpage</code></td>
+<td>Digital-only</td>
+<td>URL, access date, no volume/pages</td>
+</tr>
+<tr>
+<td><code>paper-conference</code></td>
+<td>Event context</td>
+<td>Conference name, proceedings</td>
+</tr>
+<tr>
+<td><code>article-magazine</code></td>
+<td>(optional)</td>
+<td>Popular press, no DOI</td>
+</tr>
+</tbody>
+</table>
+<p>References should include edge cases: multi-author (for et al.),
+institutional author (for literal names), translated works (for
+translator handling), and entries with missing fields (for
+fallback/substitute behavior).</p>
+<p>The existing <code>preview_data.rs</code> field-specific sets should
+be serialized as JSON and bundled with the WASM module for client-side
+use.</p>
+<h3 id="rendering-pipeline">7.2 Rendering Pipeline</h3>
+<pre><code>User changes setting
+        │
+        ▼
+WizardStore updates parsedStyle
+        │
+        ▼
+serializeToYaml(parsedStyle) → yaml string
+        │
+        ▼
+wasmBridge.renderBibliography(yaml, refs) → annotated HTML
+wasmBridge.renderCitation(yaml, refs, mode) → annotated HTML
+        │
+        ▼
+Preview component receives HTML, renders with interactive overlays</code></pre>
+<p><strong>Performance target:</strong> &lt;50ms from setting change to
+preview update. The WASM bridge should be pre-initialized at page load.
+The serialization step should be incremental (only re-serialize changed
+sections).</p>
+<h3 id="annotated-rendering-mode">7.3 Annotated Rendering Mode</h3>
+<p>The WASM bridge needs a new rendering mode
+(<code>annotated: true</code>) that wraps each output token in a
+<code>&lt;span&gt;</code> with <code>data-component</code> attributes
+identifying the source template component. This is required for the
+click-to-edit feature in Phase 2.</p>
+<p>The annotated mode is used only in the wizard; the standard rendering
+mode (for published styles) remains unchanged.</p>
+<hr />
+<h2 id="sqi-aware-design">8. SQI-Aware Design</h2>
+<p>The wizard should actively guide users toward high-SQI styles. This
+is not about scoring — users never see “SQI” — but about designing
+interactions that naturally produce maintainable, clean styles.</p>
+<h3 id="preset-preservation">8.1 Preset Preservation</h3>
+<p>When the user’s settings match a known preset, the YAML output uses
+the preset name rather than expanding to explicit configuration:</p>
+<div class="sourceCode" id="cb18"><pre
+class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># High SQI (preset match)</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span><span class="kw">:</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">contributors</span><span class="kw">:</span><span class="at"> apa</span></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Lower SQI (expanded — same behavior, harder to maintain)</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a><span class="fu">options</span><span class="kw">:</span></span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">contributors</span><span class="kw">:</span></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">form</span><span class="kw">:</span><span class="at"> short</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">and</span><span class="kw">:</span><span class="at"> symbol</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">initialize-with</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;. &quot;</span></span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">shorten</span><span class="kw">:</span></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">min</span><span class="kw">:</span><span class="at"> </span><span class="dv">3</span></span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">use-first</span><span class="kw">:</span><span class="at"> </span><span class="dv">1</span></span></code></pre></div>
+<p>The wizard tracks preset deviation and only expands when necessary. A
+subtle indicator could show: “Based on APA preset” or “Custom
+configuration” — this helps users understand they’re building on a
+standard.</p>
+<h3 id="type-override-discipline">8.2 Type-Override Discipline</h3>
+<p>The “Apply to all types” default in the Component Editor nudges users
+toward fewer type-overrides (higher concision score). Type-overrides are
+still easy to create, but the default is always the base template.</p>
+<h3 id="template-reuse-use_preset">8.3 Template Reuse (use_preset)</h3>
+<p>When a user’s bibliography template exactly matches a known embedded
+template (APA, Chicago, Vancouver, IEEE, Harvard), the YAML uses
+<code>use_preset: apa</code> instead of inlining the full template. The
+wizard automatically detects this.</p>
+<h3 id="sqi-dashboard-advanced-only">8.4 SQI Dashboard (Advanced
+Only)</h3>
+<p>In the Advanced Editor, an optional SQI panel shows the four
+subscores with brief explanations:</p>
+<pre><code>┌─ Style Quality ──────────────────────────────────┐
+│                                                    │
+│  Overall                          ████████░░  85   │
+│                                                    │
+│  Type Coverage         30%        ██████████  95   │
+│  Fallback Robustness   20%        ████████░░  82   │
+│  Concision             25%        ███████░░░  78   │
+│  Preset Usage          25%        ████████░░  84   │
+│                                                    │
+│  Tip: Use the APA contributor preset instead of    │
+│  custom settings to improve your concision score.  │
+│                                                    │
+└────────────────────────────────────────────────────┘</code></pre>
+<p>This is strictly opt-in (Advanced tier) and never shown to general
+users.</p>
+<hr />
+<h2 id="data-model">9. Data Model</h2>
+<h3 id="wizardstate">9.1 WizardState</h3>
+<p>The central store uses Svelte 5 runes (<code>$state</code>,
+<code>$derived</code>):</p>
+<div class="sourceCode" id="cb20"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> WizardState {</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Phase 1 tracking</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>  phase<span class="op">:</span> <span class="st">&#39;quick-start&#39;</span> <span class="op">|</span> <span class="st">&#39;visual-customizer&#39;</span> <span class="op">|</span> <span class="st">&#39;advanced&#39;</span><span class="op">;</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>  quickStartStep<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> <span class="co">// 1-7</span></span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>  field<span class="op">:</span> CitationField <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>  family<span class="op">:</span> <span class="st">&#39;author-date&#39;</span> <span class="op">|</span> <span class="st">&#39;numeric&#39;</span> <span class="op">|</span> <span class="st">&#39;note&#39;</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>  presetName<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span> <span class="co">// &#39;apa&#39;, &#39;chicago-ad&#39;, &#39;vancouver&#39;, etc.</span></span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>  <span class="co">// The style being built (single source of truth)</span></span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>  style<span class="op">:</span> Style<span class="op">;</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Deviation tracking for SQI optimization</span></span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>  contributorPresetMatch<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span> <span class="co">// null = custom</span></span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>  datePresetMatch<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>  titlePresetMatch<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>  templatePresetMatch<span class="op">:</span> <span class="dt">string</span> <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>  <span class="co">// UI state</span></span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>  selectedComponent<span class="op">:</span> ComponentSelection <span class="op">|</span> <span class="dt">null</span><span class="op">;</span></span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>  activeReferenceType<span class="op">:</span> <span class="dt">string</span><span class="op">;</span> <span class="co">// &#39;article-journal&#39;, &#39;book&#39;, etc.</span></span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>  styleName<span class="op">:</span> <span class="dt">string</span><span class="op">;</span></span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>  <span class="co">// Undo history</span></span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>  history<span class="op">:</span> Style[]<span class="op">;</span></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>  historyIndex<span class="op">:</span> <span class="dt">number</span><span class="op">;</span></span>
+<span id="cb20-26"><a href="#cb20-26" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb20-27"><a href="#cb20-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-28"><a href="#cb20-28" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> ComponentSelection {</span>
+<span id="cb20-29"><a href="#cb20-29" aria-hidden="true" tabindex="-1"></a>  componentType<span class="op">:</span> <span class="st">&#39;contributor&#39;</span> <span class="op">|</span> <span class="st">&#39;date&#39;</span> <span class="op">|</span> <span class="st">&#39;title&#39;</span> <span class="op">|</span> <span class="st">&#39;number&#39;</span> <span class="op">|</span> <span class="st">&#39;variable&#39;</span> <span class="op">|</span> <span class="st">&#39;term&#39;</span><span class="op">;</span></span>
+<span id="cb20-30"><a href="#cb20-30" aria-hidden="true" tabindex="-1"></a>  index<span class="op">:</span> <span class="dt">number</span><span class="op">;</span> <span class="co">// position in template</span></span>
+<span id="cb20-31"><a href="#cb20-31" aria-hidden="true" tabindex="-1"></a>  scope<span class="op">:</span> <span class="st">&#39;base&#39;</span> <span class="op">|</span> <span class="dt">string</span><span class="op">;</span> <span class="co">// &#39;base&#39; or type name for type-override</span></span>
+<span id="cb20-32"><a href="#cb20-32" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<h3 id="style-yaml-serialization">9.2 Style ↔︎ YAML Serialization</h3>
+<p>The <code>Style</code> TypeScript type is generated from the Rust
+<code>Style</code> struct via Specta at build time. Serialization to
+YAML uses a custom serializer that:</p>
+<ol type="1">
+<li>Replaces expanded configs with preset names when they match</li>
+<li>Omits default values (e.g., <code>version: "0.8.0"</code> is always
+included but other defaults are elided)</li>
+<li>Orders keys in the canonical order: <code>version</code>,
+<code>info</code>, <code>options</code>, <code>citation</code>,
+<code>bibliography</code></li>
+</ol>
+<h3 id="preset-registry">9.3 Preset Registry</h3>
+<p>All presets are bundled as a JSON registry at build time:</p>
+<div class="sourceCode" id="cb21"><pre
+class="sourceCode typescript"><code class="sourceCode typescript"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">interface</span> PresetRegistry {</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>  contributors<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> ContributorConfig<span class="op">&gt;;</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  dates<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> DateConfig<span class="op">&gt;;</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>  titles<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> TitleConfig<span class="op">&gt;;</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>  templates<span class="op">:</span> <span class="bu">Record</span><span class="op">&lt;</span><span class="dt">string</span><span class="op">,</span> {</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>    citation<span class="op">:</span> Template<span class="op">;</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>    bibliography<span class="op">:</span> Template<span class="op">;</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>  }<span class="op">&gt;;</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div>
+<p>Generated from the Rust <code>TemplatePreset</code> and options
+preset enums. This enables client-side preset matching without server
+round-trips.</p>
+<hr />
+<h2 id="component-architecture">10. Component Architecture</h2>
+<h3 id="route-structure">10.1 Route Structure</h3>
+<pre><code>/create/                   → Redirects to /create/field
+/create/field              → Step 1: Field selector
+/create/family             → Step 2: Style family
+/create/preset             → Step 3: Preset gallery
+/create/refine             → Steps 4-6: Refinement
+/create/review             → Step 7: Review &amp; name
+/create/customize          → Phase 2: Visual customizer
+/create/advanced           → Phase 3: Advanced editor</code></pre>
+<p>Each route is a SvelteKit page that reads from and writes to the
+shared <code>WizardStore</code>. URL-based routing enables deep linking
+and browser back/forward.</p>
+<h3 id="component-tree">10.2 Component Tree</h3>
+<pre><code>+layout.svelte
+├── WizardHeader.svelte          # Progress, back button, phase indicator
+├── +page.svelte (per route)
+│   ├── FieldSelector.svelte     # Step 1
+│   ├── FamilySelector.svelte    # Step 2
+│   ├── PresetGallery.svelte     # Step 3
+│   ├── RefinementPanel.svelte   # Steps 4-6
+│   │   ├── NameOptions.svelte
+│   │   ├── DateOptions.svelte
+│   │   └── TitleOptions.svelte
+│   ├── ReviewScreen.svelte      # Step 7
+│   ├── VisualCustomizer.svelte  # Phase 2
+│   │   ├── InteractivePreview.svelte
+│   │   ├── ComponentEditor.svelte
+│   │   │   ├── ContributorEditor.svelte
+│   │   │   ├── DateEditor.svelte
+│   │   │   ├── TitleEditor.svelte
+│   │   │   ├── NumberEditor.svelte
+│   │   │   └── VariableEditor.svelte
+│   │   ├── TypeSelector.svelte
+│   │   └── ComponentAdder.svelte
+│   └── AdvancedEditor.svelte    # Phase 3
+│       ├── TypeTemplateManager.svelte
+│       ├── OptionsPanel.svelte
+│       ├── YamlEditor.svelte
+│       └── SqiDashboard.svelte
+└── PreviewPane.svelte           # Shared live preview (WASM-rendered)</code></pre>
+<h3 id="shared-components">10.3 Shared Components</h3>
+<ul>
+<li><strong>PreviewPane.svelte</strong>: Renders citations and
+bibliography via WASM. Accepts <code>annotated: boolean</code> prop to
+enable click-to-edit overlays. Used across all phases.</li>
+<li><strong>WizardHeader.svelte</strong>: Shows phase indicator (Quick
+Start / Customize / Advanced), back button, and breadcrumb trail (e.g.,
+“Sciences &gt; Numeric &gt; Vancouver”).</li>
+</ul>
+<hr />
+<h2 id="wasm-bridge-requirements">11. WASM Bridge Requirements</h2>
+<p>The existing <code>wasm-bridge</code> crate needs these additions for
+v2:</p>
+<h3 id="new-functions">New Functions</h3>
+<div class="sourceCode" id="cb24"><pre
+class="sourceCode rust"><code class="sourceCode rust"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co">/// Render bibliography with component annotations for click-to-edit</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> render_bibliography_annotated(</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    style_yaml<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    refs_json<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> JsValue<span class="op">&gt;;</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a><span class="co">/// Render citation with component annotations</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> render_citation_annotated(</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    style_yaml<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span></span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>    refs_json<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>    mode<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span><span class="op">,</span> <span class="co">// &quot;integral&quot;, &quot;non-integral&quot;</span></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> JsValue<span class="op">&gt;;</span></span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a><span class="co">/// Validate a style YAML and return structured errors</span></span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> validate_style(style_yaml<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> JsValue<span class="op">&gt;;</span></span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns JSON: { valid: boolean, errors: [{path: string, message: string}] }</span></span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a><span class="co">/// Check if a contributor config matches a known preset</span></span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> match_contributor_preset(config_json<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Option</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">&gt;;</span></span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a><span class="co">// Returns preset name or null</span></span>
+<span id="cb24-25"><a href="#cb24-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-26"><a href="#cb24-26" aria-hidden="true" tabindex="-1"></a><span class="co">/// Serialize a Style object to YAML with preset optimization</span></span>
+<span id="cb24-27"><a href="#cb24-27" aria-hidden="true" tabindex="-1"></a><span class="at">#[</span>wasm_bindgen<span class="at">]</span></span>
+<span id="cb24-28"><a href="#cb24-28" aria-hidden="true" tabindex="-1"></a><span class="kw">pub</span> <span class="kw">fn</span> style_to_yaml(style_json<span class="op">:</span> <span class="op">&amp;</span><span class="dt">str</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">String</span><span class="op">,</span> JsValue<span class="op">&gt;;</span></span></code></pre></div>
+<h3 id="annotated-rendering">Annotated Rendering</h3>
+<p>The annotated rendering mode requires changes to the citum-engine
+renderer. Each rendered token must carry metadata identifying its source
+template component. The engine should emit structured output that the
+WASM bridge formats as annotated HTML.</p>
+<p>This is the single largest implementation task and should be built
+incrementally: 1. First: annotate top-level components (contributor
+block, date, title, etc.) 2. Then: annotate within-component elements
+(individual author names, initials) 3. Finally: annotate delimiters and
+punctuation</p>
+<hr />
+<h2 id="navigation-state">12. Navigation &amp; State</h2>
+<h3 id="url-state">12.1 URL State</h3>
+<p>The wizard phase and step are encoded in the URL path (see 10.1).
+This enables: - Browser back/forward navigation - Deep linking to any
+wizard step - Page refresh without state loss (WizardStore persists to
+<code>sessionStorage</code>)</p>
+<h3 id="undoredo">12.2 Undo/Redo</h3>
+<p>The WizardStore maintains a history stack of <code>Style</code>
+snapshots: - Every user action that modifies the style pushes a
+snapshot. - Ctrl+Z / Cmd+Z pops the stack (undo). - Ctrl+Shift+Z /
+Cmd+Shift+Z re-applies (redo). - History is capped at 50 entries to
+limit memory usage.</p>
+<h3 id="progress-indicator">12.3 Progress Indicator</h3>
+<p>Phase 1 uses a step-based progress bar: - Total steps = 7 (fixed,
+regardless of branch). - Current step = the route’s step number. - Back
+navigation updates the progress bar accurately (no missing_fields
+drift).</p>
+<p>Phase 2 and 3 do not show a progress bar (there is no linear path to
+“complete”). Instead, the header shows the current phase name.</p>
+<h3 id="session-persistence">12.4 Session Persistence</h3>
+<p><code>WizardStore</code> serializes to <code>sessionStorage</code> on
+every state change. If the user refreshes or navigates away and returns,
+the wizard resumes where they left off. A “Start Over” action clears
+<code>sessionStorage</code>.</p>
+<hr />
+<h2 id="mobile-responsive-design">13. Mobile &amp; Responsive
+Design</h2>
+<h3 id="layout-breakpoints">Layout Breakpoints</h3>
+<table>
+<colgroup>
+<col style="width: 57%" />
+<col style="width: 42%" />
+</colgroup>
+<thead>
+<tr>
+<th>Breakpoint</th>
+<th>Layout</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Desktop (≥1024px)</td>
+<td>Side-by-side: options left, preview right</td>
+</tr>
+<tr>
+<td>Tablet (768-1023px)</td>
+<td>Stacked: preview above, options below</td>
+</tr>
+<tr>
+<td>Mobile (&lt;768px)</td>
+<td>Single column: options only, preview in collapsible drawer</td>
+</tr>
+</tbody>
+</table>
+<h3 id="mobile-specific-adaptations">Mobile-Specific Adaptations</h3>
+<ul>
+<li><strong>Step 1 (Field):</strong> Cards stack 1-column.</li>
+<li><strong>Steps 4-6 (Refine):</strong> Sections stack vertically;
+preview available via a floating “Preview” button that opens a bottom
+sheet.</li>
+<li><strong>Phase 2 (Visual Customizer):</strong> The interactive
+preview becomes a scrollable top section; the component editor is a
+bottom sheet that slides up on tap.</li>
+<li><strong>Phase 3 (YAML Editor):</strong> Full-screen with a toggle
+button for preview.</li>
+</ul>
+<h3 id="touch-interactions">Touch Interactions</h3>
+<ul>
+<li><strong>Tap</strong> replaces click for component selection.</li>
+<li><strong>Long press</strong> replaces right-click for context menus
+(remove component, etc.).</li>
+<li><strong>Swipe left/right</strong> navigates between reference type
+tabs.</li>
+</ul>
+<hr />
+<h2 id="accessibility">14. Accessibility</h2>
+<ul>
+<li>All interactive elements have <code>aria-label</code>
+attributes.</li>
+<li>Component editor panels use <code>role="dialog"</code> with focus
+trapping.</li>
+<li>The preview area has <code>aria-live="polite"</code> so screen
+readers announce updates.</li>
+<li>Keyboard navigation: Tab cycles through components in the preview;
+Enter opens the editor; Escape closes it.</li>
+<li>Color is never the sole indicator of state (selected, error, etc.) —
+icons and text labels are always present.</li>
+<li>All dropdowns are native <code>&lt;select&gt;</code> elements or use
+a custom component with proper ARIA roles (<code>listbox</code>,
+<code>option</code>).</li>
+</ul>
+<hr />
+<h2 id="error-handling">15. Error Handling</h2>
+<table>
+<colgroup>
+<col style="width: 35%" />
+<col style="width: 65%" />
+</colgroup>
+<thead>
+<tr>
+<th>Error</th>
+<th>UI Response</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>WASM fails to load</td>
+<td>Show error banner with “Reload” button; disable preview</td>
+</tr>
+<tr>
+<td>YAML validation fails</td>
+<td>Red underline on invalid field; tooltip with error message</td>
+</tr>
+<tr>
+<td>Preset not found</td>
+<td>Fall back to explicit configuration; log warning</td>
+</tr>
+<tr>
+<td>Render throws</td>
+<td>Show last valid preview with “Preview outdated” banner</td>
+</tr>
+<tr>
+<td>Network error (save)</td>
+<td>Retry button; offline indicator; queue save for later</td>
+</tr>
+<tr>
+<td>Session storage full</td>
+<td>Warn user; offer to clear old wizard sessions</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="migration-from-v1">16. Migration from v1</h2>
+<h3 id="backward-compatibility">Backward Compatibility</h3>
+<ul>
+<li>The v1 API endpoints (<code>/api/v1/decide</code>,
+<code>/api/v1/generate</code>, <code>/api/v1/preview</code>) remain
+functional. Existing saved styles with <code>intent</code> data continue
+to work.</li>
+<li>The v1 wizard route (<code>/create-wizard</code>) redirects to
+<code>/create/field</code> with a banner: “We’ve redesigned the style
+builder!”</li>
+<li>Existing styles saved with the v1 wizard can be loaded into the v2
+Visual Customizer via their stored YAML (not their <code>intent</code>
+object).</li>
+</ul>
+<h3 id="data-migration">Data Migration</h3>
+<p>Styles stored in PostgreSQL with <code>intent</code> JSON are not
+modified. The v2 wizard reads and writes <code>citum</code> (YAML)
+directly, ignoring the <code>intent</code> column. A future migration
+can backfill <code>citum</code> for styles that only have
+<code>intent</code>.</p>
+<hr />
+<h2 id="acceptance-criteria">17. Acceptance Criteria</h2>
+<p>An implementation is complete when:</p>
+<h3 id="phase-1-quick-start-1">Phase 1: Quick Start</h3>
+<ol type="1">
+<li>Field selector shows 6 discipline cards; selection advances to
+family step.</li>
+<li>Family selector shows 3 panels with rendered paragraph examples;
+field-default is highlighted with a recommendation badge.</li>
+<li>Preset gallery shows 3-5 cards per family, each with a WASM-rendered
+mini bibliography of 3 reference types.</li>
+<li>Refinement screen shows Names, Dates, Titles sections simultaneously
+with dropdown controls; changes update the live preview within
+50ms.</li>
+<li>Review screen shows a name input (required, validated), full
+preview, and Download/Customize/Start Over/Save actions.</li>
+<li>Download produces valid Citum YAML that passes
+<code>validateStyle()</code>.</li>
+<li>All preset-matching settings use preset names in the generated
+YAML.</li>
+<li>Back navigation works on all steps; state is preserved.</li>
+<li>Progress bar shows accurate step position (no backward jumps).</li>
+<li>Total time from start to download ≤ 2 minutes for a user accepting
+defaults.</li>
+</ol>
+<h3 id="phase-2-visual-customizer-1">Phase 2: Visual Customizer</h3>
+<ol start="11" type="1">
+<li>Hovering over rendered components highlights them with a colored
+outline.</li>
+<li>Clicking a component opens the correct editor panel with current
+values.</li>
+<li>Changes in the editor panel update the preview within 50ms.</li>
+<li>Reference type tabs switch the preview between article, book,
+chapter, etc.</li>
+<li>“Apply to all types” vs. “Only for [type]” creates appropriate YAML
+structure.</li>
+<li>Components can be suppressed (hidden) and re-enabled.</li>
+<li>New components can be added at any position in the template.</li>
+<li>Delimiter editing works for punctuation between components.</li>
+<li>Undo/Redo works for all edits (Ctrl+Z / Ctrl+Shift+Z).</li>
+</ol>
+<h3 id="phase-3-advanced-editor-1">Phase 3: Advanced Editor</h3>
+<ol start="20" type="1">
+<li>Type-template manager shows override structure clearly.</li>
+<li>Options panel exposes all <code>Config</code> settings not covered
+by Phase 2.</li>
+<li>YAML editor has syntax highlighting, validation, and live
+preview.</li>
+<li>Bidirectional sync between visual and YAML views works without data
+loss.</li>
+<li>SQI dashboard shows four subscores with actionable improvement
+tips.</li>
+</ol>
+<h3 id="cross-cutting">Cross-Cutting</h3>
+<ol start="25" type="1">
+<li>WASM bridge loads and renders on Chrome, Firefox, Safari, and
+Edge.</li>
+<li>Mobile layout is usable on 375px-wide screens (no horizontal
+scroll).</li>
+<li>Session persistence: refresh preserves all wizard state.</li>
+<li>Accessible: keyboard-navigable, screen-reader-compatible.</li>
+<li>Generated styles from the wizard score SQI ≥ 75 when using a preset
+base.</li>
+</ol>
+<hr />
+<h2 id="implementation-priority">18. Implementation Priority</h2>
+<h3 id="wave-1-quick-start-mvp">Wave 1: Quick Start MVP</h3>
+<ul>
+<li>Steps 1-3 (field → family → preset) with WASM preview</li>
+<li>Step 7 (review &amp; download) with name input</li>
+<li>Skip steps 4-6 (refinement) — go straight from preset to review</li>
+<li>WASM bridge: <code>render_bibliography</code>,
+<code>render_citation</code>, <code>validate_style</code></li>
+</ul>
+<h3 id="wave-2-refinement-visual-basics">Wave 2: Refinement &amp; Visual
+Basics</h3>
+<ul>
+<li>Steps 4-6 (names, dates, titles refinement controls)</li>
+<li>Phase 2 basic: annotated rendering, click-to-select (highlight
+only)</li>
+<li>Component Editor for contributor, date, title types</li>
+</ul>
+<h3 id="wave-3-full-visual-customizer">Wave 3: Full Visual
+Customizer</h3>
+<ul>
+<li>Component Editor for all types (number, variable, term)</li>
+<li>Type-specific override UI with “all types” / “only [type]”
+prompt</li>
+<li>Add/remove components</li>
+<li>Delimiter editing</li>
+<li>Undo/redo</li>
+</ul>
+<h3 id="wave-4-advanced-editor">Wave 4: Advanced Editor</h3>
+<ul>
+<li>Type-template manager</li>
+<li>Options panel</li>
+<li>YAML editor with bidirectional sync</li>
+<li>SQI dashboard</li>
+</ul>
+<hr />
+<h2 id="open-questions">19. Open Questions</h2>
+<ol type="1">
+<li><p><strong>Annotated rendering scope.</strong> How deep should
+annotations go? Annotating top-level components (author block, date,
+title) is straightforward. Annotating <em>within</em> an author block
+(each individual name, the “et al.” text, the “&amp;” connector)
+requires the engine to emit much finer-grained markup. Start with
+top-level and iterate.</p></li>
+<li><p><strong>Preset registry freshness.</strong> If new presets are
+added to citum-core, the client-side registry needs rebuilding. Should
+this be a build-time step (static JSON) or a runtime fetch from the
+server? Build-time is simpler and avoids network dependency; runtime
+allows updates without redeploying the frontend.</p></li>
+<li><p><strong>Save-to-library granularity.</strong> Should the wizard
+save the <code>WizardState</code> (allowing re-entry into the wizard) or
+only the generated YAML? Saving <code>WizardState</code> enables “Resume
+editing in wizard” but adds storage complexity. Saving only YAML is
+simpler but means re-editing requires the Visual Customizer (no wizard
+re-entry). Given that only wizard-created styles need round-trip
+support, saving <code>WizardState</code> alongside the YAML is
+recommended.</p></li>
+<li><p><strong>Citation template editing.</strong> The Visual Customizer
+spec focuses on bibliography editing. Citation templates (especially
+author-date with integral/non-integral modes) need their own editing
+surface. The same click-to-edit pattern applies, but the rendered
+context is different (inline citations vs. bibliography entries). This
+should be designed in Wave 3.</p></li>
+</ol>
+<hr />
+<h2 id="references">20. References</h2>
+<ul>
+<li><code>WIZARD_UX_SPEC.md</code> — v1 spec (branching flow, acceptance
+criteria, audit findings)</li>
+<li><code>STYLE_EDITOR_VISION.md</code> — Platform-level
+Find/Tweak/Build strategy</li>
+<li><code>citum-core/docs/reference/SQI.md</code> — SQI scoring
+system</li>
+<li><code>citum-core/docs/architecture/DESIGN_PRINCIPLES.md</code> —
+Style design philosophy</li>
+<li><code>citum-core/crates/citum-schema-style/src/presets.rs</code> —
+Preset definitions</li>
+<li><code>citum-core/crates/citum-schema-style/src/template.rs</code> —
+Template component types</li>
+<li><code>server/crates/wasm-bridge/</code> — Existing WASM bridge (to
+be extended)</li>
+<li><code>server/crates/intent-engine/</code> — v1 decision engine
+(retained, not used by v2)</li>
+</ul>
+</body>
+</html>
