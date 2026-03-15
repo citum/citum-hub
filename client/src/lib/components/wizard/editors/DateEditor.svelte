@@ -32,9 +32,10 @@
 
 <div class="space-y-4 p-6">
 	<div>
-		<h3 class="font-semibold text-text-main mb-4">Date Formatting</h3>
+		<h3 class="font-semibold text-text-main mb-4">Date Display</h3>
 		<p class="text-xs text-text-secondary mb-4">
-			Controls how months appear in all dates (issued, accessed, etc.)
+			Affects all dates in your bibliography and citations — publication year, access date, event
+			date, etc.
 		</p>
 		<div class="space-y-4">
 			<div>
@@ -52,6 +53,17 @@
 					<option value="numeric">Numeric (1)</option>
 					<option value="numeric-leading-zeros">Numeric with zero (01)</option>
 				</select>
+				<p class="mt-2 text-xs text-text-secondary italic">
+					{#if monthFormat === "long"}
+						e.g. "Published January 15, 2024" · "Accessed March 3, 2025"
+					{:else if monthFormat === "short"}
+						e.g. "Published Jan. 15, 2024" · "Accessed Mar. 3, 2025"
+					{:else if monthFormat === "numeric"}
+						e.g. "Published 1/15/2024" · "Accessed 3/3/2025"
+					{:else}
+						e.g. "Published 01/15/2024" · "Accessed 03/03/2025"
+					{/if}
+				</p>
 			</div>
 		</div>
 	</div>

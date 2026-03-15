@@ -51,8 +51,8 @@ async function getFixtureData(type: string = "expanded") {
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		entries.slice(0, 5).forEach((ref: unknown, index: number) => {
-			if (ref && typeof ref === 'object' && 'id' in ref) {
+		entries.slice(0, 12).forEach((ref: unknown, index: number) => {
+			if (ref && typeof ref === "object" && "id" in ref) {
 				const typedRef = ref as Record<string, unknown>;
 				refs[String(typedRef.id)] = ref;
 				// Add a page locator to the first item so previews show

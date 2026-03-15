@@ -22,8 +22,13 @@
 			contributors = {};
 		}
 
-		// Merge the change
-		const merged = { ...contributors, [path]: value };
+		// Merge the change, filtering out undefined to avoid null in YAML
+		const merged = { ...contributors } as Record<string, unknown>;
+		if (value === undefined) {
+			delete merged[path];
+		} else {
+			merged[path] = value;
+		}
 		wizardStore.updateStyleField("options.contributors", merged);
 		debouncedFetchPreview();
 	}
@@ -34,15 +39,17 @@
 	}
 
 	function updateTitleCase(caseStyle: string) {
-		let textCase: string;
-		if (caseStyle === "sentence") {
-			textCase = "sentence";
-		} else if (caseStyle === "title") {
-			textCase = "title";
-		} else {
-			textCase = "as-is";
-		}
-		wizardStore.updateStyleField("options.titles", { "text-case": textCase });
+		const opts = wizardStore.getOptions();
+		let titles =
+			opts?.titles && typeof opts.titles === "object"
+				? (opts.titles as Record<string, unknown>)
+				: {};
+		const currentDefault =
+			titles.default && typeof titles.default === "object"
+				? (titles.default as Record<string, unknown>)
+				: {};
+		const merged = { ...titles, default: { ...currentDefault, "text-case": caseStyle } };
+		wizardStore.updateStyleField("options.titles", merged);
 		debouncedFetchPreview();
 	}
 

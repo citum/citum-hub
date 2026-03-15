@@ -119,10 +119,19 @@ export interface DateConfig {
 	month?: string;
 }
 
-export interface TitleConfig {
+export interface TitleRendering {
 	"text-case"?: string;
 	emph?: boolean;
 	quote?: boolean;
+	strong?: boolean;
+	"small-caps"?: boolean;
+}
+
+export interface TitleConfig {
+	default?: TitleRendering;
+	component?: TitleRendering;
+	monograph?: TitleRendering;
+	periodical?: TitleRendering;
 }
 
 export interface PresetInfo {

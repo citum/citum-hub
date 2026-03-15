@@ -39,7 +39,11 @@
 
 	function updateEtAlAfter(minValue: number) {
 		if (minValue < 1 || minValue > 20) return;
-		onUpdateContributors("shorten", { min: minValue });
+		const useFirst =
+			currentOptions?.contributors && typeof currentOptions.contributors === "object"
+				? (currentOptions.contributors.shorten?.["use-first"] ?? 1)
+				: 1;
+		onUpdateContributors("shorten", { min: minValue, "use-first": useFirst });
 	}
 
 	function updateInitials(style: string) {
@@ -95,7 +99,9 @@
 
 	const getTitleCaseValue = () => {
 		if (currentOptions?.titles && typeof currentOptions.titles === "object") {
-			return currentOptions.titles["text-case"] || "sentence";
+			const titles = currentOptions.titles as Record<string, unknown>;
+			const defaultRendering = titles.default as Record<string, unknown> | undefined;
+			return (defaultRendering?.["text-case"] as string) || "sentence";
 		}
 		return "sentence";
 	};
@@ -189,7 +195,7 @@
 			onclick={() => toggleSection("dates")}
 			class="flex w-full items-center justify-between px-6 py-4 hover:bg-background-light transition-colors"
 		>
-			<h2 class="font-semibold text-text-main">Dates</h2>
+			<h2 class="font-semibold text-text-main">Date Display</h2>
 			<span
 				class="material-symbols-outlined transition-transform duration-200"
 				class:rotate-180={expandedSections.dates}
@@ -201,7 +207,8 @@
 		{#if expandedSections.dates}
 			<div class="space-y-4 border-t border-border-light px-6 py-4">
 				<p class="text-xs text-text-secondary">
-					Controls how months appear in all dates (issued, accessed, etc.)
+					Affects all dates in your bibliography and citations — publication year, access date,
+					event date, etc.
 				</p>
 				<div>
 					<label for="rc-month-format" class="block text-sm font-medium text-text-main mb-2"
@@ -218,6 +225,17 @@
 						<option value="numeric">Numeric (1)</option>
 						<option value="numeric-leading-zeros">Numeric with zero (01)</option>
 					</select>
+					<p class="mt-2 text-xs text-text-secondary italic">
+						{#if getMonthFormatValue() === "long"}
+							e.g. "Published January 15, 2024" · "Accessed March 3, 2025"
+						{:else if getMonthFormatValue() === "short"}
+							e.g. "Published Jan. 15, 2024" · "Accessed Mar. 3, 2025"
+						{:else if getMonthFormatValue() === "numeric"}
+							e.g. "Published 1/15/2024" · "Accessed 3/3/2025"
+						{:else}
+							e.g. "Published 01/15/2024" · "Accessed 03/03/2025"
+						{/if}
+					</p>
 				</div>
 			</div>
 		{/if}

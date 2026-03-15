@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import type { TitleConfig } from "$lib/types/wizard";
 
 	let debounceTimer: number | undefined;
 
@@ -11,25 +10,33 @@
 		}, 300);
 	}
 
-	function getTitleConfig(): TitleConfig {
+	function getDefaultRendering(): Record<string, unknown> {
 		const opts = wizardStore.getOptions();
 		if (opts?.titles && typeof opts.titles === "object") {
-			return opts.titles;
+			const titles = opts.titles as Record<string, unknown>;
+			if (titles.default && typeof titles.default === "object") {
+				return titles.default as Record<string, unknown>;
+			}
 		}
 		return {};
 	}
 
-	function updateTitle(path: keyof TitleConfig, value: unknown) {
-		const current = getTitleConfig();
-		const updated = { ...current, [path]: value };
-		wizardStore.updateStyleField("options.titles", updated);
+	function updateTitleRendering(path: string, value: unknown) {
+		const opts = wizardStore.getOptions();
+		let titles =
+			opts?.titles && typeof opts.titles === "object"
+				? (opts.titles as Record<string, unknown>)
+				: {};
+		const currentDefault = getDefaultRendering();
+		const updatedDefault = { ...currentDefault, [path]: value };
+		wizardStore.updateStyleField("options.titles", { ...titles, default: updatedDefault });
 		debouncedFetchPreview();
 	}
 
-	const config = $derived(getTitleConfig());
-	const textCase = $derived(config["text-case"] ?? "sentence");
-	const isQuoted = $derived(config.quote ?? false);
-	const isEmph = $derived(config.emph ?? false);
+	const rendering = $derived(getDefaultRendering());
+	const textCase = $derived((rendering["text-case"] as string) ?? "sentence");
+	const isQuoted = $derived((rendering.quote as boolean) ?? false);
+	const isEmph = $derived((rendering.emph as boolean) ?? false);
 </script>
 
 <div class="space-y-4 p-6">
@@ -43,7 +50,7 @@
 				<select
 					id="te-case"
 					value={textCase}
-					onchange={(e) => updateTitle("text-case", e.currentTarget.value)}
+					onchange={(e) => updateTitleRendering("text-case", e.currentTarget.value)}
 					class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 				>
 					<option value="sentence">Sentence case</option>
@@ -60,7 +67,7 @@
 							id="te-quoted"
 							type="checkbox"
 							checked={isQuoted}
-							onchange={(e) => updateTitle("quote", e.currentTarget.checked)}
+							onchange={(e) => updateTitleRendering("quote", e.currentTarget.checked)}
 							class="w-4 h-4 rounded border-border-light text-primary focus:ring-primary"
 						/>
 						<span class="text-sm text-text-main">In quotes</span>
@@ -70,7 +77,7 @@
 							id="te-emph"
 							type="checkbox"
 							checked={isEmph}
-							onchange={(e) => updateTitle("emph", e.currentTarget.checked)}
+							onchange={(e) => updateTitleRendering("emph", e.currentTarget.checked)}
 							class="w-4 h-4 rounded border-border-light text-primary focus:ring-primary"
 						/>
 						<span class="text-sm text-text-main">Italic</span>

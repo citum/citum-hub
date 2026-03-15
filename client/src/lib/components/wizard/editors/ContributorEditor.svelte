@@ -21,7 +21,12 @@
 
 	function updateContributor(path: keyof ContributorConfig, value: unknown) {
 		const current = getContributorConfig();
-		const updated = { ...current, [path]: value };
+		const updated = { ...current } as Record<string, unknown>;
+		if (value === undefined) {
+			delete updated[path];
+		} else {
+			updated[path] = value;
+		}
 		wizardStore.updateStyleField("options.contributors", updated);
 		debouncedFetchPreview();
 	}
@@ -29,7 +34,8 @@
 	function updateShorten(minValue: number) {
 		if (minValue < 1 || minValue > 20) return;
 		const current = getContributorConfig();
-		const updated = { ...current, shorten: { min: minValue } };
+		const useFirst = current.shorten?.["use-first"] ?? 1;
+		const updated = { ...current, shorten: { min: minValue, "use-first": useFirst } };
 		wizardStore.updateStyleField("options.contributors", updated);
 		debouncedFetchPreview();
 	}
