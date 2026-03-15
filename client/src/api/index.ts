@@ -51,11 +51,17 @@ async function getFixtureData(type: string = "expanded") {
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		entries.slice(0, 5).forEach((ref: unknown) => {
+		entries.slice(0, 5).forEach((ref: unknown, index: number) => {
 			if (ref && typeof ref === 'object' && 'id' in ref) {
 				const typedRef = ref as Record<string, unknown>;
 				refs[String(typedRef.id)] = ref;
-				citationItems.push({ id: typedRef.id });
+				// Add a page locator to the first item so previews show
+				// how the style formats locators (p. 15, pp. 23–45, etc.)
+				const item: Record<string, unknown> = { id: typedRef.id };
+				if (index === 0) {
+					item.locator = { label: "page", value: "15" };
+				}
+				citationItems.push(item);
 			}
 		});
 

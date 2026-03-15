@@ -35,7 +35,7 @@
 	}
 
 	const config = $derived(getContributorConfig());
-	const nameOrder = $derived(config.form === "long" ? "given-first" : "family-first");
+	const nameOrder = $derived(config["display-as-sort"] === "all" ? "family-first" : "given-first");
 	const andConnector = $derived(config.and === "text" ? "text" : "symbol");
 	const initials = $derived(
 		config["initialize-with"] === ". "
@@ -59,7 +59,10 @@
 					id="ce-name-order"
 					value={nameOrder}
 					onchange={(e) =>
-						updateContributor("form", e.currentTarget.value === "given-first" ? "long" : "short")}
+						updateContributor(
+							"display-as-sort",
+							e.currentTarget.value === "family-first" ? "all" : undefined
+						)}
 					class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 				>
 					<option value="family-first">Family-first (Smith, John)</option>

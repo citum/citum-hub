@@ -21,8 +21,8 @@
 	}
 
 	function updateNameOrder(order: string) {
-		const form = order === "family-first" ? "short" : "long";
-		onUpdateContributors("form", form);
+		const displayAsSort = order === "family-first" ? "all" : undefined;
+		onUpdateContributors("display-as-sort", displayAsSort);
 	}
 
 	function updateAndConnector(connector: string) {
@@ -56,7 +56,9 @@
 
 	const getNameOrderValue = () => {
 		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
-			return currentOptions.contributors.form === "long" ? "given-first" : "family-first";
+			return currentOptions.contributors["display-as-sort"] === "all"
+				? "family-first"
+				: "given-first";
 		}
 		return "family-first";
 	};
@@ -84,11 +86,11 @@
 		return "full";
 	};
 
-	const getDateFormatValue = () => {
+	const getMonthFormatValue = () => {
 		if (currentOptions?.dates && typeof currentOptions.dates === "object") {
-			return currentOptions.dates.form || "year";
+			return currentOptions.dates.month || "long";
 		}
-		return "year";
+		return "long";
 	};
 
 	const getTitleCaseValue = () => {
@@ -198,19 +200,23 @@
 
 		{#if expandedSections.dates}
 			<div class="space-y-4 border-t border-border-light px-6 py-4">
+				<p class="text-xs text-text-secondary">
+					Controls how months appear in all dates (issued, accessed, etc.)
+				</p>
 				<div>
-					<label for="rc-date-format" class="block text-sm font-medium text-text-main mb-2"
-						>Format</label
+					<label for="rc-month-format" class="block text-sm font-medium text-text-main mb-2"
+						>Month Format</label
 					>
 					<select
-						id="rc-date-format"
+						id="rc-month-format"
 						onchange={(e) => onUpdateDates(e.currentTarget.value)}
-						value={getDateFormatValue()}
+						value={getMonthFormatValue()}
 						class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 					>
-						<option value="year">Year only (2024)</option>
-						<option value="year-month">Month and year (March 2024)</option>
-						<option value="full">Full date (March 15, 2024)</option>
+						<option value="long">Full name (January)</option>
+						<option value="short">Abbreviated (Jan.)</option>
+						<option value="numeric">Numeric (1)</option>
+						<option value="numeric-leading-zeros">Numeric with zero (01)</option>
 					</select>
 				</div>
 			</div>

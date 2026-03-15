@@ -28,16 +28,8 @@
 		debouncedFetchPreview();
 	}
 
-	function updateDateFormat(format: string) {
-		let form: string;
-		if (format === "year") {
-			form = "year";
-		} else if (format === "year-month") {
-			form = "year-month";
-		} else {
-			form = "full";
-		}
-		wizardStore.updateStyleField("options.dates", { form });
+	function updateMonthFormat(month: string) {
+		wizardStore.updateStyleField("options.dates", { month });
 		debouncedFetchPreview();
 	}
 
@@ -82,7 +74,7 @@
 				<RefinementControls
 					{currentOptions}
 					onUpdateContributors={updateContributorsField}
-					onUpdateDates={updateDateFormat}
+					onUpdateDates={updateMonthFormat}
 					onUpdateTitles={updateTitleCase}
 				/>
 

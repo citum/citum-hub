@@ -108,15 +108,15 @@ export interface WizardStyleOptions {
 }
 
 export interface ContributorConfig {
-	form?: string;
+	"name-form"?: string;
+	"display-as-sort"?: string;
 	and?: string;
 	"initialize-with"?: string;
 	shorten?: { min?: number; "use-first"?: number };
 }
 
 export interface DateConfig {
-	form?: string;
-	wrap?: string;
+	month?: string;
 }
 
 export interface TitleConfig {
