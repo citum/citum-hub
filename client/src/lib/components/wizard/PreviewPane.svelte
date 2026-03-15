@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 
+	interface Props {
+		activeHighlight?: string | null;
+	}
+
+	const { activeHighlight = null }: Props = $props();
+
 	const showParenthetical = $derived(
 		wizardStore.family === "author-date" || wizardStore.family === "numeric"
 	);
@@ -24,11 +30,20 @@
 		</div>
 	{:else}
 		<div class="space-y-6 p-6">
+			{#if activeHighlight === "contributors"}
+				<div class="flex items-center gap-1.5 px-6 pt-0 pb-0 -mx-6 text-xs text-primary">
+					<span class="material-symbols-outlined text-sm">auto_fix_high</span>
+					Names shown above reflect et al. threshold
+				</div>
+			{/if}
+
 			{#if showParenthetical && wizardStore.previewHtml.parenthetical}
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Parenthetical Citation</h4>
 					<div
-						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+						class={`live-preview-content rounded bg-background-light p-3 font-serif text-text-main transition-all ${
+							activeHighlight === "contributors" ? "ring-2 ring-primary/40 ring-offset-1" : ""
+						}`}
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.parenthetical}
@@ -40,7 +55,9 @@
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Narrative Citation</h4>
 					<div
-						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+						class={`live-preview-content rounded bg-background-light p-3 font-serif text-text-main transition-all ${
+							activeHighlight === "contributors" ? "ring-2 ring-primary/40 ring-offset-1" : ""
+						}`}
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.narrative}
@@ -52,7 +69,9 @@
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Footnote</h4>
 					<div
-						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+						class={`live-preview-content rounded bg-background-light p-3 font-serif text-text-main transition-all ${
+							activeHighlight === "contributors" ? "ring-2 ring-primary/40 ring-offset-1" : ""
+						}`}
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.note}
@@ -64,7 +83,9 @@
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Bibliography</h4>
 					<div
-						class="live-preview-content rounded bg-background-light p-3 font-serif text-sm text-text-main"
+						class={`live-preview-content rounded bg-background-light p-3 font-serif text-sm text-text-main transition-all ${
+							activeHighlight === "contributors" ? "ring-2 ring-primary/40 ring-offset-1" : ""
+						}`}
 					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.bibliography}

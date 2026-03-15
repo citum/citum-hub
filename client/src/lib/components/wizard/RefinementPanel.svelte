@@ -5,6 +5,7 @@
 	import RefinementControls from "./RefinementControls.svelte";
 
 	let debounceTimer: number | undefined;
+	let activeHighlight = $state<string | null>(null);
 
 	function debouncedFetchPreview() {
 		clearTimeout(debounceTimer);
@@ -72,7 +73,7 @@
 			<!-- Left: Preview (on mobile: bottom) -->
 			<div class="order-2 lg:order-1">
 				<div class="sticky top-6">
-					<PreviewPane />
+					<PreviewPane {activeHighlight} />
 				</div>
 			</div>
 
@@ -83,6 +84,9 @@
 					onUpdateContributors={updateContributorsField}
 					onUpdateDates={updateMonthFormat}
 					onUpdateTitles={updateTitleCase}
+					onHighlightChange={(field) => {
+						activeHighlight = field;
+					}}
 				/>
 
 				<!-- Action Buttons -->

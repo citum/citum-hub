@@ -6,9 +6,16 @@
 		onUpdateContributors: (path: string, value: unknown) => void;
 		onUpdateDates: (form: string) => void;
 		onUpdateTitles: (textCase: string) => void;
+		onHighlightChange?: (field: string | null) => void;
 	}
 
-	const { currentOptions, onUpdateContributors, onUpdateDates, onUpdateTitles }: Props = $props();
+	const {
+		currentOptions,
+		onUpdateContributors,
+		onUpdateDates,
+		onUpdateTitles,
+		onHighlightChange,
+	}: Props = $props();
 
 	let expandedSections = $state<Record<string, boolean>>({
 		names: true,
@@ -165,7 +172,10 @@
 						min="1"
 						max="20"
 						value={getEtAlValue()}
+						onpointerdown={() => onHighlightChange?.("contributors")}
+						oninput={() => onHighlightChange?.("contributors")}
 						onchange={(e) => updateEtAlAfter(parseInt(e.currentTarget.value))}
+						onpointerup={() => onHighlightChange?.(null)}
 						class="w-full"
 					/>
 				</div>
