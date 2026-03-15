@@ -1,17 +1,11 @@
 {
   "name": "wasm-bridge",
-  "type": "module",
   "version": "0.1.0",
   "files": [
     "wasm_bridge_bg.wasm",
     "wasm_bridge.js",
-    "wasm_bridge_bg.js",
     "wasm_bridge.d.ts"
   ],
   "main": "wasm_bridge.js",
-  "types": "wasm_bridge.d.ts",
-  "sideEffects": [
-    "./wasm_bridge.js",
-    "./snippets/*"
-  ]
+  "types": "wasm_bridge.d.ts"
 }
