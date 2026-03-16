@@ -44,8 +44,14 @@
 		const a = document.createElement("a");
 		a.href = url;
 		a.download = slugify(styleName || "my-style") + ".yaml";
-		a.click();
-		URL.revokeObjectURL(url);
+
+		document.body.appendChild(a);
+		try {
+			a.click();
+		} finally {
+			document.body.removeChild(a);
+			URL.revokeObjectURL(url);
+		}
 	}
 
 	async function saveToLibrary() {
