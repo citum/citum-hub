@@ -39,10 +39,11 @@ let historyIndex = $state(-1);
 let isLoading = $state(false);
 let error = $state<string | null>(null);
 
-function pushHistory() {
-	if (!styleYaml) return;
+function pushHistory(nextYaml?: string) {
+	const snapshot = nextYaml ?? styleYaml;
+	if (!snapshot) return;
 	// Trim future entries if we undid something
-	history = [...history.slice(0, historyIndex + 1), styleYaml];
+	history = [...history.slice(0, historyIndex + 1), snapshot];
 	historyIndex = history.length - 1;
 	// Cap at 50 entries
 	if (history.length > 50) {
@@ -72,8 +73,6 @@ function updateStyleField(path: string, value: unknown) {
 	const obj = parseStyle();
 	if (!obj) return;
 
-	pushHistory();
-
 	const parts = path.split(".");
 	let current: Record<string, unknown> = obj;
 	for (let i = 0; i < parts.length - 1; i++) {
@@ -83,7 +82,10 @@ function updateStyleField(path: string, value: unknown) {
 		current = current[parts[i]] as Record<string, unknown>;
 	}
 	current[parts[parts.length - 1]] = value;
-	styleYaml = serializeStyle(obj);
+
+	const newYaml = serializeStyle(obj);
+	styleYaml = newYaml;
+	pushHistory(newYaml);
 }
 
 /** Get the options block from the style. */
