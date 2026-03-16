@@ -20,7 +20,7 @@ const CITUM_CORE_PATH =
 console.log("[Setup] CITUM_CORE_PATH:", CITUM_CORE_PATH);
 
 const JWT_SECRET = new TextEncoder().encode(
-	process.env.JWT_SECRET || "default_secret_for_development"
+	process.env.JWT_SECRET || "default_secret_for_development",
 );
 
 /**
@@ -51,11 +51,17 @@ async function getFixtureData(type: string = "expanded") {
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		entries.slice(0, 5).forEach((ref: unknown) => {
-			if (ref && typeof ref === 'object' && 'id' in ref) {
+		entries.slice(0, 12).forEach((ref: unknown, index: number) => {
+			if (ref && typeof ref === "object" && "id" in ref) {
 				const typedRef = ref as Record<string, unknown>;
 				refs[String(typedRef.id)] = ref;
-				citationItems.push({ id: typedRef.id });
+				// Add a page locator to the first item so previews show
+				// how the style formats locators (p. 15, pp. 23–45, etc.)
+				const item: Record<string, unknown> = { id: typedRef.id };
+				if (index === 0) {
+					item.locator = { label: "page", value: "15" };
+				}
+				citationItems.push(item);
 			}
 		});
 
@@ -66,7 +72,7 @@ async function getFixtureData(type: string = "expanded") {
 	} catch (e) {
 		console.error(
 			`[Fixture] Failed to load ${fileName} from ${filePath}. Previews will be empty.`,
-			e
+			e,
 		);
 		return { references: {}, citation: { items: [], mode: "non-integral" } };
 	}
@@ -84,7 +90,10 @@ const authMiddleware = async (c: unknown, next: () => Promise<void>) => {
 	const token = authHeader.split(" ")[1];
 	try {
 		const { payload } = await jwtVerify(token, JWT_SECRET);
-		(c as Record<string, unknown>).set("user", { id: payload.sub, role: payload.role });
+		(c as Record<string, unknown>).set("user", {
+			id: payload.sub,
+			role: payload.role,
+		});
 	} catch {
 		(c as Record<string, unknown>).set("user", null);
 	}
@@ -95,7 +104,8 @@ const authMiddleware = async (c: unknown, next: () => Promise<void>) => {
 
 app.get("/hub", async (c) => {
 	try {
-		const styles = await sql`SELECT * FROM styles WHERE is_public = true ORDER BY updated_at DESC`;
+		const styles =
+			await sql`SELECT * FROM styles WHERE is_public = true ORDER BY updated_at DESC`;
 		return c.json(styles);
 	} catch {
 		return c.json({ error: "Failed to fetch public styles" }, 500);
@@ -143,7 +153,10 @@ app.post("/v1/decide", async (c) => {
 			decision = JSON.parse(resultJson);
 		} catch (wasmError) {
 			console.error("[Decide] WASM core failed:", wasmError);
-			return c.json({ error: "Intent evaluation failed", details: String(wasmError) }, 500);
+			return c.json(
+				{ error: "Intent evaluation failed", details: String(wasmError) },
+				500,
+			);
 		}
 
 		const fixture = await getFixtureData(intent.class || intent.field);
@@ -156,9 +169,14 @@ app.post("/v1/decide", async (c) => {
 				intentStr,
 				refsStr,
 				citeStr,
-				"NonIntegral"
+				"NonIntegral",
 			);
-			decision.in_text_narrative = render_intent_citation(intentStr, refsStr, citeStr, "Integral");
+			decision.in_text_narrative = render_intent_citation(
+				intentStr,
+				refsStr,
+				citeStr,
+				"Integral",
+			);
 			const style_yaml = generate_style(intentStr);
 			decision.bibliography = render_bibliography(style_yaml, refsStr);
 		} catch (previewError) {
@@ -175,7 +193,7 @@ app.post("/v1/decide", async (c) => {
 						JSON.stringify(previewIntent),
 						refsStr,
 						citeStr,
-						"NonIntegral"
+						"NonIntegral",
 					);
 				} catch {
 					preview.html = "";
@@ -186,7 +204,10 @@ app.post("/v1/decide", async (c) => {
 		return c.json(decision);
 	} catch (e) {
 		console.error("[Decide] Fatal Handler Error:", e);
-		return c.json({ error: "Internal Server Error during decision processing" }, 500);
+		return c.json(
+			{ error: "Internal Server Error during decision processing" },
+			500,
+		);
 	}
 });
 
@@ -194,7 +215,6 @@ app.post("/v1/preview", async (c) => {
 	try {
 		const body = await c.req.json();
 		const style_yaml = body.style_yaml || body.citum;
-		const mode = body.mode || "NonIntegral";
 
 		let fixtureType = "expanded";
 		if (body.intent?.class) fixtureType = body.intent.class;
@@ -204,33 +224,73 @@ app.post("/v1/preview", async (c) => {
 		const refsStr = JSON.stringify(fixture.references);
 		const citeStr = JSON.stringify(fixture.citation);
 
-		let html = "",
+		let htmlParenthetical = "",
+			htmlNarrative = "",
 			bib = "";
 
 		try {
-			if (style_yaml && typeof style_yaml === "string" && style_yaml.trim().length > 0) {
-				html = render_citation(style_yaml, refsStr, citeStr, mode);
+			if (
+				style_yaml &&
+				typeof style_yaml === "string" &&
+				style_yaml.trim().length > 0
+			) {
+				htmlParenthetical = render_citation(
+					style_yaml,
+					refsStr,
+					citeStr,
+					"NonIntegral",
+				);
+				htmlNarrative = render_citation(
+					style_yaml,
+					refsStr,
+					citeStr,
+					"Integral",
+				);
 				bib = render_bibliography(style_yaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
 				const intentStr = JSON.stringify(body.intent || body);
-				html = render_intent_citation(intentStr, refsStr, citeStr, mode);
+				htmlParenthetical = render_intent_citation(
+					intentStr,
+					refsStr,
+					citeStr,
+					"NonIntegral",
+				);
+				htmlNarrative = render_intent_citation(
+					intentStr,
+					refsStr,
+					citeStr,
+					"Integral",
+				);
 				const generated_style = generate_style(intentStr);
 				bib = render_bibliography(generated_style, refsStr);
 			}
 		} catch (renderError) {
 			console.error("[Preview] WASM render error:", renderError);
-			html = `<span style="color:red">Preview rendering error: ${renderError}</span>`;
+			const errHtml = `<span style="color:red">Preview rendering error: ${renderError}</span>`;
+			htmlParenthetical = errHtml;
+			htmlNarrative = errHtml;
 		}
 
+		const note =
+			typeof fixtureType === "string" &&
+			(fixtureType === "note" ||
+				fixtureType === "footnote" ||
+				fixtureType === "endnote")
+				? htmlParenthetical
+				: null;
+
 		return c.json({
-			in_text_parenthetical: html,
-			in_text_narrative: html,
-			note: null,
+			in_text_parenthetical: htmlParenthetical,
+			in_text_narrative: htmlNarrative,
+			note,
 			bibliography: bib,
 		});
 	} catch (e) {
 		console.error("[Preview] Fatal Handler Error:", e);
-		return c.json({ error: "Internal Server Error during preview generation" }, 500);
+		return c.json(
+			{ error: "Internal Server Error during preview generation" },
+			500,
+		);
 	}
 });
 
@@ -292,7 +352,7 @@ app.get("/auth/github/callback", async (c) => {
 		.sign(JWT_SECRET);
 
 	return c.redirect(
-		`${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/callback?token=${jwt}`
+		`${process.env.FRONTEND_URL || "http://localhost:3000"}/auth/callback?token=${jwt}`,
 	);
 });
 
@@ -316,10 +376,12 @@ const server = {
 					JSON.stringify({
 						type: "preview_result",
 						html: "WS preview not yet fixture-linked",
-					})
+					}),
 				);
 			} catch (e) {
-				(ws as Record<string, unknown>).send(JSON.stringify({ type: "error", message: String(e) }));
+				(ws as Record<string, unknown>).send(
+					JSON.stringify({ type: "error", message: String(e) }),
+				);
 			}
 		},
 	},

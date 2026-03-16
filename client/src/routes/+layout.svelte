@@ -48,7 +48,7 @@
 				>
 				<a
 					class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-					href="/create-wizard">Wizard</a
+					href="/create">Style Builder</a
 				>
 				{#if $auth.user}
 					<a
@@ -104,7 +104,7 @@
 				<div class="flex flex-col gap-4">
 					<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4>
 					<a class="text-sm text-slate-500 hover:text-primary" href="/library/browse">Browse</a>
-					<a class="text-sm text-slate-500 hover:text-primary" href="/create-wizard">Wizard</a>
+					<a class="text-sm text-slate-500 hover:text-primary" href="/create">Style Builder</a>
 					<a class="text-sm text-slate-500 hover:text-primary" href="/">API</a>
 				</div>
 				<div class="flex flex-col gap-4">

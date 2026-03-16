@@ -98,11 +98,12 @@ export function render_bibliography(style_yaml, refs_json) {
  * @param {string} style_yaml
  * @param {string} refs_json
  * @param {string} citation_json
+ * @param {string | null} [mode]
  * @returns {string}
  */
-export function render_citation(style_yaml, refs_json, citation_json) {
-    let deferred5_0;
-    let deferred5_1;
+export function render_citation(style_yaml, refs_json, citation_json, mode) {
+    let deferred6_0;
+    let deferred6_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passStringToWasm0(style_yaml, wasm.__wbindgen_export, wasm.__wbindgen_export2);
@@ -111,23 +112,25 @@ export function render_citation(style_yaml, refs_json, citation_json) {
         const len1 = WASM_VECTOR_LEN;
         const ptr2 = passStringToWasm0(citation_json, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len2 = WASM_VECTOR_LEN;
-        wasm.render_citation(retptr, ptr0, len0, ptr1, len1, ptr2, len2);
+        var ptr3 = isLikeNone(mode) ? 0 : passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        var len3 = WASM_VECTOR_LEN;
+        wasm.render_citation(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
         var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
-        var ptr4 = r0;
-        var len4 = r1;
+        var ptr5 = r0;
+        var len5 = r1;
         if (r3) {
-            ptr4 = 0; len4 = 0;
+            ptr5 = 0; len5 = 0;
             throw takeObject(r2);
         }
-        deferred5_0 = ptr4;
-        deferred5_1 = len4;
-        return getStringFromWasm0(ptr4, len4);
+        deferred6_0 = ptr5;
+        deferred6_1 = len5;
+        return getStringFromWasm0(ptr5, len5);
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
-        wasm.__wbindgen_export3(deferred5_0, deferred5_1, 1);
+        wasm.__wbindgen_export3(deferred6_0, deferred6_1, 1);
     }
 }
 
@@ -135,11 +138,12 @@ export function render_citation(style_yaml, refs_json, citation_json) {
  * @param {string} intent_json
  * @param {string} refs_json
  * @param {string} citation_json
+ * @param {string | null} [mode]
  * @returns {string}
  */
-export function render_intent_citation(intent_json, refs_json, citation_json) {
-    let deferred5_0;
-    let deferred5_1;
+export function render_intent_citation(intent_json, refs_json, citation_json, mode) {
+    let deferred6_0;
+    let deferred6_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passStringToWasm0(intent_json, wasm.__wbindgen_export, wasm.__wbindgen_export2);
@@ -148,23 +152,25 @@ export function render_intent_citation(intent_json, refs_json, citation_json) {
         const len1 = WASM_VECTOR_LEN;
         const ptr2 = passStringToWasm0(citation_json, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len2 = WASM_VECTOR_LEN;
-        wasm.render_intent_citation(retptr, ptr0, len0, ptr1, len1, ptr2, len2);
+        var ptr3 = isLikeNone(mode) ? 0 : passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        var len3 = WASM_VECTOR_LEN;
+        wasm.render_intent_citation(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
         var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
-        var ptr4 = r0;
-        var len4 = r1;
+        var ptr5 = r0;
+        var len5 = r1;
         if (r3) {
-            ptr4 = 0; len4 = 0;
+            ptr5 = 0; len5 = 0;
             throw takeObject(r2);
         }
-        deferred5_0 = ptr4;
-        deferred5_1 = len4;
-        return getStringFromWasm0(ptr4, len4);
+        deferred6_0 = ptr5;
+        deferred6_1 = len5;
+        return getStringFromWasm0(ptr5, len5);
     } finally {
         wasm.__wbindgen_add_to_stack_pointer(16);
-        wasm.__wbindgen_export3(deferred5_0, deferred5_1, 1);
+        wasm.__wbindgen_export3(deferred6_0, deferred6_1, 1);
     }
 }
 export function __wbindgen_cast_0000000000000001(arg0, arg1) {
@@ -214,6 +220,10 @@ let heap = new Array(1024).fill(undefined);
 heap.push(undefined, null, true, false);
 
 let heap_next = heap.length;
+
+function isLikeNone(x) {
+    return x === undefined || x === null;
+}
 
 function passStringToWasm0(arg, malloc, realloc) {
     if (realloc === undefined) {
