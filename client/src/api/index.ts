@@ -271,10 +271,18 @@ app.post("/v1/preview", async (c) => {
 			htmlNarrative = errHtml;
 		}
 
+		const note =
+			typeof fixtureType === "string" &&
+			(fixtureType === "note" ||
+				fixtureType === "footnote" ||
+				fixtureType === "endnote")
+				? htmlParenthetical
+				: null;
+
 		return c.json({
 			in_text_parenthetical: htmlParenthetical,
 			in_text_narrative: htmlNarrative,
-			note: null,
+			note,
 			bibliography: bib,
 		});
 	} catch (e) {
