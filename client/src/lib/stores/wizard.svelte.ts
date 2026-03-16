@@ -336,6 +336,7 @@ export const wizardStore = {
 	},
 	setActiveRefType(t: string) {
 		activeRefType = t;
+		persist();
 	},
 
 	// Actions
