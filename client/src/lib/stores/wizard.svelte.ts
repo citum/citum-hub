@@ -169,6 +169,9 @@ function undo() {
 	if (historyIndex > 0) {
 		historyIndex--;
 		styleYaml = history[historyIndex];
+		// Keep persisted state and previews in sync with restored YAML
+		persist();
+		fetchPreview();
 	}
 }
 
@@ -176,6 +179,9 @@ function redo() {
 	if (historyIndex < history.length - 1) {
 		historyIndex++;
 		styleYaml = history[historyIndex];
+		// Keep persisted state and previews in sync with restored YAML
+		persist();
+		fetchPreview();
 	}
 }
 
