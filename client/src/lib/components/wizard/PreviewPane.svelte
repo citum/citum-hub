@@ -12,7 +12,7 @@ const showParenthetical = $derived(
 );
 const showNarrative = $derived(wizardStore.family === "author-date");
 const showNote = $derived(wizardStore.family === "note");
-const showBibliography = $derived(wizardStore.family !== "numeric");
+const showBibliography = $derived(true);
 </script>
 
 <div class="rounded-lg border border-border-light bg-surface-light">
