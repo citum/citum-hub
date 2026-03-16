@@ -4,6 +4,7 @@
 	let containerRef: HTMLDivElement | undefined = $state();
 	let tooltipPos = $state({ x: 0, y: 0 });
 	let tooltipInfo = $state<{ type: string; label: string } | null>(null);
+	let lastSelectedElement: HTMLElement | null = null;
 
 	function getComponentInfo(el: HTMLElement): { type: string; label: string } | null {
 		const classes = Array.from(el.classList);
@@ -65,14 +66,6 @@
 					});
 				});
 
-				// Update selected state
-				$effect(() => {
-					if (wizardStore.selectedComponent?.element === htmlEl) {
-						htmlEl.classList.add("csln-selected");
-					} else {
-						htmlEl.classList.remove("csln-selected");
-					}
-				});
 			}
 		});
 	}
@@ -84,6 +77,20 @@
 				attachListeners();
 			}, 0);
 		}
+	});
+
+	$effect(() => {
+		const el = wizardStore.selectedComponent?.element ?? null;
+
+		if (lastSelectedElement && lastSelectedElement !== el) {
+			lastSelectedElement.classList.remove("csln-selected");
+		}
+
+		if (el) {
+			el.classList.add("csln-selected");
+		}
+
+		lastSelectedElement = el;
 	});
 </script>
 
