@@ -1,7 +1,9 @@
 import { jwtVerify, SignJWT } from "jose";
 import { env } from "$env/dynamic/private";
 
-const secret = new TextEncoder().encode(env.JWT_SECRET || "fallback_secret_for_dev_only");
+const secret = new TextEncoder().encode(
+	env.JWT_SECRET || "fallback_secret_for_dev_only",
+);
 
 export async function createJWT(userId: string, role: string) {
 	const alg = "HS256";

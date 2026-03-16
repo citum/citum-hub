@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import { FIELD_OPTIONS } from "$lib/types/wizard";
-	import type { CitationField } from "$lib/types/wizard";
+import { goto } from "$app/navigation";
+import { wizardStore } from "$lib/stores/wizard.svelte";
+import { FIELD_OPTIONS } from "$lib/types/wizard";
+import type { CitationField } from "$lib/types/wizard";
 
-	async function selectField(fieldId: CitationField) {
-		wizardStore.setField(fieldId);
-		wizardStore.setStep(2);
-		await goto("/create/family");
-	}
+async function selectField(fieldId: CitationField) {
+	wizardStore.setField(fieldId);
+	wizardStore.setStep(2);
+	await goto("/create/family");
+}
 </script>
 
 <div class="space-y-4 sm:space-y-6">

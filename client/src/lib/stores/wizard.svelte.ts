@@ -39,11 +39,10 @@ let historyIndex = $state(-1);
 let isLoading = $state(false);
 let error = $state<string | null>(null);
 
-function pushHistory(nextYaml?: string) {
-	const snapshot = nextYaml ?? styleYaml;
-	if (!snapshot) return;
+function pushHistory() {
+	if (!styleYaml) return;
 	// Trim future entries if we undid something
-	history = [...history.slice(0, historyIndex + 1), snapshot];
+	history = [...history.slice(0, historyIndex + 1), styleYaml];
 	historyIndex = history.length - 1;
 	// Cap at 50 entries
 	if (history.length > 50) {
@@ -68,24 +67,74 @@ function serializeStyle(obj: Record<string, unknown>): string {
 }
 
 /** Update a specific path in the style YAML.
- *  path is dot-separated, e.g. "options.contributors.and" */
+ *  path is dot-separated, e.g. "options.contributors.and" or "bibliography.template.0.prefix" */
 function updateStyleField(path: string, value: unknown) {
 	const obj = parseStyle();
 	if (!obj) return;
 
-	const parts = path.split(".");
-	let current: Record<string, unknown> = obj;
-	for (let i = 0; i < parts.length - 1; i++) {
-		if (!(parts[i] in current) || typeof current[parts[i]] !== "object") {
-			current[parts[i]] = {};
-		}
-		current = current[parts[i]] as Record<string, unknown>;
-	}
-	current[parts[parts.length - 1]] = value;
+	pushHistory();
 
-	const newYaml = serializeStyle(obj);
-	styleYaml = newYaml;
-	pushHistory(newYaml);
+	const parts = path.split(".");
+	let current: any = obj;
+	for (let i = 0; i < parts.length - 1; i++) {
+		const part = parts[i];
+		const nextPart = parts[i + 1];
+
+		if (!(part in current)) {
+			current[part] = /^\d+$/.test(nextPart) ? [] : {};
+		}
+		current = current[part];
+	}
+
+	const lastPart = parts[parts.length - 1];
+	if (value === undefined) {
+		if (Array.isArray(current)) {
+			current.splice(parseInt(lastPart), 1);
+		} else {
+			delete current[lastPart];
+		}
+	} else {
+		current[lastPart] = value;
+	}
+	styleYaml = serializeStyle(obj);
+}
+
+/** Move a component within a template array. */
+function moveComponent(templatePath: string, fromIndex: number, toIndex: number) {
+	const obj = parseStyle();
+	if (!obj) return;
+
+	const parts = templatePath.split(".");
+	let template: any = obj;
+	for (const part of parts) {
+		template = template[part];
+	}
+
+	if (!Array.isArray(template)) return;
+	if (toIndex < 0 || toIndex >= template.length) return;
+
+	pushHistory();
+	const [item] = template.splice(fromIndex, 1);
+	template.splice(toIndex, 0, item);
+	styleYaml = serializeStyle(obj);
+}
+
+/** Delete a component from a template array. */
+function deleteComponent(templatePath: string, index: number) {
+	const obj = parseStyle();
+	if (!obj) return;
+
+	const parts = templatePath.split(".");
+	let template: any = obj;
+	for (const part of parts) {
+		template = template[part];
+	}
+
+	if (!Array.isArray(template)) return;
+	
+	pushHistory();
+	template.splice(index, 1);
+	styleYaml = serializeStyle(obj);
 }
 
 /** Get the options block from the style. */
@@ -131,7 +180,9 @@ async function fetchPreview() {
 }
 
 /** Generate base style YAML from intent fields via the server. */
-async function generateFromIntent(intentFields: Record<string, string | boolean | null>) {
+async function generateFromIntent(
+	intentFields: Record<string, string | boolean | null>,
+) {
 	isLoading = true;
 	error = null;
 	try {
@@ -169,9 +220,6 @@ function undo() {
 	if (historyIndex > 0) {
 		historyIndex--;
 		styleYaml = history[historyIndex];
-		// Keep persisted state and previews in sync with restored YAML
-		persist();
-		fetchPreview();
 	}
 }
 
@@ -179,9 +227,6 @@ function redo() {
 	if (historyIndex < history.length - 1) {
 		historyIndex++;
 		styleYaml = history[historyIndex];
-		// Keep persisted state and previews in sync with restored YAML
-		persist();
-		fetchPreview();
 	}
 }
 
@@ -225,7 +270,7 @@ function persist() {
 				styleYaml,
 				styleName,
 				activeRefType,
-			})
+			}),
 		);
 	} catch {
 		// Storage unavailable
@@ -336,11 +381,12 @@ export const wizardStore = {
 	},
 	setActiveRefType(t: string) {
 		activeRefType = t;
-		persist();
 	},
 
 	// Actions
 	updateStyleField,
+	moveComponent,
+	deleteComponent,
 	getOptions,
 	parseStyle,
 	serializeStyle,

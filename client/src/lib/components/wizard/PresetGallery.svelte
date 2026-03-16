@@ -1,64 +1,64 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import { getPresetsForFamily } from "$lib/data/presets";
-	import type { PresetInfo } from "$lib/types/wizard";
+import { goto } from "$app/navigation";
+import { wizardStore } from "$lib/stores/wizard.svelte";
+import { getPresetsForFamily } from "$lib/data/presets";
+import type { PresetInfo } from "$lib/types/wizard";
 
-	let presets = $derived(getPresetsForFamily(wizardStore.family!));
-	let previewsLoaded = $state<Record<string, string | null>>({});
-	let isLoadingPreviews = $state(true);
+let presets = $derived(getPresetsForFamily(wizardStore.family!));
+let previewsLoaded = $state<Record<string, string | null>>({});
+let isLoadingPreviews = $state(true);
 
-	async function loadPreview(preset: PresetInfo) {
-		if (previewsLoaded[preset.id]) return;
+async function loadPreview(preset: PresetInfo) {
+	if (previewsLoaded[preset.id]) return;
 
-		try {
-			const res = await fetch("/api/v1/preview", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({
-					intent: {
-						...preset.intentFields,
-						field: wizardStore.field,
-					},
-				}),
-			});
+	try {
+		const res = await fetch("/api/v1/preview", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({
+				intent: {
+					...preset.intentFields,
+					field: wizardStore.field,
+				},
+			}),
+		});
 
-			if (!res.ok) {
-				previewsLoaded[preset.id] = null;
-				return;
-			}
-
-			const data = await res.json();
-			const html =
-				data.in_text_parenthetical ||
-				data.in_text_narrative ||
-				data.note ||
-				data.bibliography ||
-				"";
-			previewsLoaded[preset.id] = html;
-		} catch {
+		if (!res.ok) {
 			previewsLoaded[preset.id] = null;
+			return;
 		}
-	}
 
-	async function selectPreset(preset: PresetInfo) {
-		wizardStore.setPresetId(preset.id);
-		wizardStore.setStep(4);
-		await wizardStore.generateFromIntent(preset.intentFields);
-		await goto("/create/refine");
+		const data = await res.json();
+		const html =
+			data.in_text_parenthetical ||
+			data.in_text_narrative ||
+			data.note ||
+			data.bibliography ||
+			"";
+		previewsLoaded[preset.id] = html;
+	} catch {
+		previewsLoaded[preset.id] = null;
 	}
+}
 
-	$effect(() => {
-		if (!wizardStore.family) return;
-		isLoadingPreviews = true;
-		const loadAll = async () => {
-			for (const preset of presets) {
-				await loadPreview(preset);
-			}
-			isLoadingPreviews = false;
-		};
-		loadAll();
-	});
+async function selectPreset(preset: PresetInfo) {
+	wizardStore.setPresetId(preset.id);
+	wizardStore.setStep(4);
+	await wizardStore.generateFromIntent(preset.intentFields);
+	await goto("/create/refine");
+}
+
+$effect(() => {
+	if (!wizardStore.family) return;
+	isLoadingPreviews = true;
+	const loadAll = async () => {
+		for (const preset of presets) {
+			await loadPreview(preset);
+		}
+		isLoadingPreviews = false;
+	};
+	loadAll();
+});
 </script>
 
 <div class="space-y-4 sm:space-y-6">

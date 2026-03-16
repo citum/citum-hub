@@ -11,10 +11,13 @@ export const POST: RequestHandler = async ({ params, fetch, request, url }) => {
 		const authHeader = request.headers.get("Authorization");
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}/fork${url.search}`, {
-			method: "POST",
-			headers,
-		});
+		const res = await fetch(
+			`${BACKEND_URL}/api/styles/${params.id}/fork${url.search}`,
+			{
+				method: "POST",
+				headers,
+			},
+		);
 		if (!res.ok) {
 			throw error(res.status as NumericRange<400, 599>, "Backend error");
 		}

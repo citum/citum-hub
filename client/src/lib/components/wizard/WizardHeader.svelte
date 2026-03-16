@@ -1,21 +1,25 @@
 <script lang="ts">
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import { FIELD_OPTIONS, FAMILY_OPTIONS } from "$lib/types/wizard";
+import { wizardStore } from "$lib/stores/wizard.svelte";
+import { FIELD_OPTIONS, FAMILY_OPTIONS } from "$lib/types/wizard";
 
-	function handleBack() {
-		window.history.back();
-	}
+function handleBack() {
+	window.history.back();
+}
 
-	const fieldLabel = $derived(
-		wizardStore.field ? FIELD_OPTIONS.find((f) => f.id === wizardStore.field)?.label : null
-	);
+const fieldLabel = $derived(
+	wizardStore.field
+		? FIELD_OPTIONS.find((f) => f.id === wizardStore.field)?.label
+		: null,
+);
 
-	const familyLabel = $derived(
-		wizardStore.family ? FAMILY_OPTIONS.find((f) => f.id === wizardStore.family)?.label : null
-	);
+const familyLabel = $derived(
+	wizardStore.family
+		? FAMILY_OPTIONS.find((f) => f.id === wizardStore.family)?.label
+		: null,
+);
 
-	const showProgress = $derived(wizardStore.phase === "quick-start");
-	const progressPercent = $derived((wizardStore.step / 7) * 100);
+const showProgress = $derived(wizardStore.phase === "quick-start");
+const progressPercent = $derived((wizardStore.step / 7) * 100);
 </script>
 
 <header class="border-b border-border-light bg-surface-light px-4 py-4 sm:px-6">

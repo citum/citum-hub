@@ -1,22 +1,22 @@
 <script lang="ts">
-	import LivePreview from "./LivePreview.svelte";
+import LivePreview from "./LivePreview.svelte";
 
-	interface PreviewSet {
-		in_text_parenthetical: string | null;
-		in_text_narrative: string | null;
-		note: string | null;
-		bibliography: string | null;
-	}
+interface PreviewSet {
+	in_text_parenthetical: string | null;
+	in_text_narrative: string | null;
+	note: string | null;
+	bibliography: string | null;
+}
 
-	let {
-		previewSet,
-		title = "Comprehensive Preview",
-		subtitle = "Review how this style handles common citation scenarios across your document.",
-	} = $props<{
-		previewSet: PreviewSet | null;
-		title?: string;
-		subtitle?: string;
-	}>();
+let {
+	previewSet,
+	title = "Comprehensive Preview",
+	subtitle = "Review how this style handles common citation scenarios across your document.",
+} = $props<{
+	previewSet: PreviewSet | null;
+	title?: string;
+	subtitle?: string;
+}>();
 </script>
 
 <div class="w-full flex flex-col gap-12">
