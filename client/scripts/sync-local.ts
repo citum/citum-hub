@@ -12,7 +12,9 @@ async function sync() {
 	console.log("Connecting to DB with Bun.sql...");
 
 	if (!(await exists(LOCAL_STYLES_DIR))) {
-		console.error(`Error: Local styles directory not found at ${LOCAL_STYLES_DIR}`);
+		console.error(
+			`Error: Local styles directory not found at ${LOCAL_STYLES_DIR}`,
+		);
 		process.exit(1);
 	}
 
@@ -52,7 +54,8 @@ async function sync() {
 				// Use Bun.file for high-performance reading
 				const content = await file(filePath).text();
 				const styleData = yaml.load(content) as { info?: { title?: string } };
-				const title = styleData.info?.title || filename.replace(/\.yaml$|\.yml$/, "");
+				const title =
+					styleData.info?.title || filename.replace(/\.yaml$|\.yml$/, "");
 
 				await sql`
                     INSERT INTO styles (user_id, title, filename, intent, citum, is_public, updated_at)

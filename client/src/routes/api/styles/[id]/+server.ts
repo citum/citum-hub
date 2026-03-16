@@ -11,9 +11,12 @@ export const GET: RequestHandler = async ({ params, fetch, request, url }) => {
 		const authHeader = request.headers.get("Authorization");
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}${url.search}`, {
-			headers,
-		});
+		const res = await fetch(
+			`${BACKEND_URL}/api/styles/${params.id}${url.search}`,
+			{
+				headers,
+			},
+		);
 		if (!res.ok) {
 			throw error(res.status as NumericRange<400, 599>, "Backend error");
 		}
@@ -25,7 +28,12 @@ export const GET: RequestHandler = async ({ params, fetch, request, url }) => {
 	}
 };
 
-export const PATCH: RequestHandler = async ({ params, request, fetch, url }) => {
+export const PATCH: RequestHandler = async ({
+	params,
+	request,
+	fetch,
+	url,
+}) => {
 	try {
 		const body = await request.json();
 		const headers: Record<string, string> = {
@@ -34,11 +42,14 @@ export const PATCH: RequestHandler = async ({ params, request, fetch, url }) => 
 		const authHeader = request.headers.get("Authorization");
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}${url.search}`, {
-			method: "PATCH",
-			headers,
-			body: JSON.stringify(body),
-		});
+		const res = await fetch(
+			`${BACKEND_URL}/api/styles/${params.id}${url.search}`,
+			{
+				method: "PATCH",
+				headers,
+				body: JSON.stringify(body),
+			},
+		);
 		if (!res.ok) {
 			throw error(res.status as NumericRange<400, 599>, "Backend error");
 		}

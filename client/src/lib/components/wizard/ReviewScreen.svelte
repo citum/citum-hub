@@ -1,115 +1,109 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { auth } from "$lib/stores/auth";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import PreviewPane from "./PreviewPane.svelte";
+import { goto } from "$app/navigation";
+import { auth } from "$lib/stores/auth";
+import { wizardStore } from "$lib/stores/wizard.svelte";
+import PreviewPane from "./PreviewPane.svelte";
 
-	let styleName = $state(wizardStore.styleName || suggestStyleName());
-	let isSaving = $state(false);
-	let saveError = $state<string | null>(null);
-	let saveSuccess = $state(false);
+let styleName = $state(wizardStore.styleName || suggestStyleName());
+let isSaving = $state(false);
+let saveError = $state<string | null>(null);
+let saveSuccess = $state(false);
 
-	function suggestStyleName(): string {
-		if (wizardStore.presetId) {
-			const presetMap: Record<string, string> = {
-				apa: "APA Author-Date",
-				chicago: "Chicago Author-Date",
-				vancouver: "Vancouver Numeric",
-				harvard: "Harvard Author-Date",
-				numeric: "Numeric",
-				footnote: "Footnote",
-			};
-			return presetMap[wizardStore.presetId] || "My Custom Style";
-		}
-		return "My Custom Style";
+function suggestStyleName(): string {
+	if (wizardStore.presetId) {
+		const presetMap: Record<string, string> = {
+			apa: "APA Author-Date",
+			chicago: "Chicago Author-Date",
+			vancouver: "Vancouver Numeric",
+			harvard: "Harvard Author-Date",
+			numeric: "Numeric",
+			footnote: "Footnote",
+		};
+		return presetMap[wizardStore.presetId] || "My Custom Style";
+	}
+	return "My Custom Style";
+}
+
+function updateStyleName(value: string) {
+	if (value.length <= 100) {
+		styleName = value;
+		wizardStore.setStyleName(value);
+	}
+}
+
+function slugify(s: string): string {
+	return s
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-|-$/g, "");
+}
+
+async function downloadYaml() {
+	const blob = new Blob([wizardStore.styleYaml], { type: "text/yaml" });
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement("a");
+	a.href = url;
+	a.download = slugify(styleName || "my-style") + ".yaml";
+	a.click();
+	URL.revokeObjectURL(url);
+}
+
+async function saveToLibrary() {
+	if (!styleName.trim()) {
+		saveError = "Please enter a style name";
+		return;
 	}
 
-	function updateStyleName(value: string) {
-		if (value.length <= 100) {
-			styleName = value;
-			wizardStore.setStyleName(value);
-		}
-	}
+	isSaving = true;
+	saveError = null;
+	saveSuccess = false;
 
-	function slugify(s: string): string {
-		return s
-			.toLowerCase()
-			.replace(/[^a-z0-9]+/g, "-")
-			.replace(/^-|-$/g, "");
-	}
-
-	async function downloadYaml() {
-		const blob = new Blob([wizardStore.styleYaml], { type: "text/yaml" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = slugify(styleName || "my-style") + ".yaml";
-
-		document.body.appendChild(a);
-		try {
-			a.click();
-		} finally {
-			document.body.removeChild(a);
-			URL.revokeObjectURL(url);
-		}
-	}
-
-	async function saveToLibrary() {
-		if (!styleName.trim()) {
-			saveError = "Please enter a style name";
+	try {
+		if (!$auth.token) {
+			saveError = "Not authenticated";
 			return;
 		}
 
-		isSaving = true;
-		saveError = null;
-		saveSuccess = false;
+		const res = await fetch("/api/styles", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${$auth.token}`,
+			},
+			body: JSON.stringify({
+				title: styleName,
+				intent: {},
+				citum: wizardStore.styleYaml,
+			}),
+		});
 
-		try {
-			if (!$auth.token) {
-				saveError = "Not authenticated";
-				return;
-			}
-
-			const res = await fetch("/api/styles", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${$auth.token}`,
-				},
-				body: JSON.stringify({
-					title: styleName,
-					intent: {},
-					citum: wizardStore.styleYaml,
-				}),
-			});
-
-			if (!res.ok) {
-				throw new Error(`Save failed: ${res.status}`);
-			}
-
-			saveSuccess = true;
-			setTimeout(() => {
-				goto("/library");
-			}, 1000);
-		} catch (e) {
-			saveError = e instanceof Error ? e.message : "Failed to save style";
-		} finally {
-			isSaving = false;
+		if (!res.ok) {
+			throw new Error(`Save failed: ${res.status}`);
 		}
-	}
 
-	function customizeFurther() {
-		wizardStore.setPhase("visual-customizer");
-		goto("/create/customize");
+		saveSuccess = true;
+		setTimeout(() => {
+			goto("/library");
+		}, 1000);
+	} catch (e) {
+		saveError = e instanceof Error ? e.message : "Failed to save style";
+	} finally {
+		isSaving = false;
 	}
+}
 
-	function startOver() {
-		wizardStore.reset();
-		goto("/create/field");
-	}
+function customizeFurther() {
+	wizardStore.setPhase("visual-customizer");
+	goto("/create/customize");
+}
 
-	// Use $auth reactive store subscription for template access
-	const authState = $derived($auth);
+function startOver() {
+	wizardStore.reset();
+	goto("/create/field");
+}
+
+// Use $auth reactive store subscription for template access
+const authState = $derived($auth);
 </script>
 
 <div class="min-h-screen bg-background-light p-4 sm:p-6 lg:p-8">

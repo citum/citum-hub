@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
-	import { onMount } from "svelte";
+import { goto } from "$app/navigation";
+import { onMount } from "svelte";
 
-	onMount(() => {
-		goto("/create", { replaceState: true });
-	});
+onMount(() => {
+	goto("/create", { replaceState: true });
+});
 </script>
 
 <div class="flex items-center justify-center py-20">

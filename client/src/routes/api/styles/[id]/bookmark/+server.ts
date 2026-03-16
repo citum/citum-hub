@@ -11,10 +11,13 @@ export const POST: RequestHandler = async ({ params, fetch, request, url }) => {
 		const authHeader = request.headers.get("Authorization");
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}/bookmark${url.search}`, {
-			method: "POST",
-			headers,
-		});
+		const res = await fetch(
+			`${BACKEND_URL}/api/styles/${params.id}/bookmark${url.search}`,
+			{
+				method: "POST",
+				headers,
+			},
+		);
 		if (!res.ok) {
 			throw error(res.status as NumericRange<400, 599>, "Backend error");
 		}
@@ -25,7 +28,12 @@ export const POST: RequestHandler = async ({ params, fetch, request, url }) => {
 	}
 };
 
-export const DELETE: RequestHandler = async ({ params, fetch, request, url }) => {
+export const DELETE: RequestHandler = async ({
+	params,
+	fetch,
+	request,
+	url,
+}) => {
 	try {
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
@@ -33,10 +41,13 @@ export const DELETE: RequestHandler = async ({ params, fetch, request, url }) =>
 		const authHeader = request.headers.get("Authorization");
 		if (authHeader) headers["Authorization"] = authHeader;
 
-		const res = await fetch(`${BACKEND_URL}/api/styles/${params.id}/bookmark${url.search}`, {
-			method: "DELETE",
-			headers,
-		});
+		const res = await fetch(
+			`${BACKEND_URL}/api/styles/${params.id}/bookmark${url.search}`,
+			{
+				method: "DELETE",
+				headers,
+			},
+		);
 		if (!res.ok) {
 			throw error(res.status as NumericRange<400, 599>, "Backend error");
 		}

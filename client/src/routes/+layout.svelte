@@ -1,17 +1,17 @@
 <script lang="ts">
-	import "../index.css";
-	import favicon from "$lib/assets/favicon.svg";
-	import { auth } from "$lib/stores/auth";
+import "../index.css";
+import favicon from "$lib/assets/favicon.svg";
+import { auth } from "$lib/stores/auth";
 
-	let { children } = $props();
+let { children } = $props();
 
-	function handleLogin() {
-		window.location.href = "/api/auth/github";
-	}
+function handleLogin() {
+	window.location.href = "/api/auth/github";
+}
 
-	function handleLogout() {
-		auth.logout();
-	}
+function handleLogout() {
+	auth.logout();
+}
 </script>
 
 <svelte:head>

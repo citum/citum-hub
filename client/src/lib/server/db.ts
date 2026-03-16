@@ -44,7 +44,10 @@ export async function runMigrations() {
 			.sort();
 
 		for (const file of files) {
-			const { rows } = await client.query("SELECT name FROM _migrations WHERE name = $1", [file]);
+			const { rows } = await client.query(
+				"SELECT name FROM _migrations WHERE name = $1",
+				[file],
+			);
 			if (rows.length === 0) {
 				console.log(`Applying migration: ${file}`);
 				const sql = fs.readFileSync(path.join(migrationsDir, file), "utf8");
@@ -52,7 +55,9 @@ export async function runMigrations() {
 				await client.query("BEGIN");
 				try {
 					await client.query(sql);
-					await client.query("INSERT INTO _migrations (name) VALUES ($1)", [file]);
+					await client.query("INSERT INTO _migrations (name) VALUES ($1)", [
+						file,
+					]);
 					await client.query("COMMIT");
 				} catch (err) {
 					await client.query("ROLLBACK");

@@ -72,6 +72,22 @@ body {
 	margin-bottom: 1rem;
 }
 
+/* Citum Engine Styling */
+.csln-bibliography {
+	display: flex;
+	flex-direction: column;
+	gap: 1rem;
+}
+
+.csln-entry {
+	line-height: 1.6;
+}
+
+.csln-citation {
+	cursor: help;
+	border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
+}
+
 /* Wizard v2: Interactive preview hover/selection */
 .csln-interactive {
 	cursor: pointer;

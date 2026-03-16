@@ -18,7 +18,12 @@ export type StyleIntent = {
 	has_bibliography: boolean | null;
 };
 
-export type CitationClass = "author_date" | "footnote" | "endnote" | "numeric" | "label";
+export type CitationClass =
+	| "author_date"
+	| "footnote"
+	| "endnote"
+	| "numeric"
+	| "label";
 
 export type CustomizeTarget =
 	| "menu"

@@ -43,7 +43,6 @@ async function getFixtureData(type: string = "expanded") {
 	try {
 		const raw = await file(filePath).json();
 		const refs: Record<string, unknown> = {};
-		const citationItems: unknown[] = [];
 
 		const entries = Array.isArray(raw)
 			? raw
@@ -51,30 +50,55 @@ async function getFixtureData(type: string = "expanded") {
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		entries.slice(0, 12).forEach((ref: unknown, index: number) => {
+		let multiAuthorItem = null;
+		const otherItems: unknown[] = [];
+
+		entries.forEach((ref: any) => {
 			if (ref && typeof ref === "object" && "id" in ref) {
-				const typedRef = ref as Record<string, unknown>;
-				refs[String(typedRef.id)] = ref;
-				// Add a page locator to the first item so previews show
-				// how the style formats locators (p. 15, pp. 23–45, etc.)
-				const item: Record<string, unknown> = { id: typedRef.id };
-				if (index === 0) {
-					item.locator = { label: "page", value: "15" };
+				refs[String(ref.id)] = ref;
+				
+				if (!multiAuthorItem && ref.author && Array.isArray(ref.author) && ref.author.length >= 4) {
+					multiAuthorItem = ref;
+				} else if (otherItems.length < 5) {
+					otherItems.push(ref);
 				}
-				citationItems.push(item);
 			}
 		});
 
+		if (!multiAuthorItem && otherItems.length > 0) {
+			multiAuthorItem = otherItems.pop();
+		}
+
+		const selectedItems = [multiAuthorItem, ...otherItems].filter(Boolean).slice(0, 4);
+		
+		const cite1Items = [];
+		const cite2Items = [];
+		
+		if (selectedItems.length > 0) {
+			cite1Items.push({ id: selectedItems[0].id, locator: { label: "page", value: "15" } });
+			if (selectedItems.length > 1) cite1Items.push({ id: selectedItems[1].id });
+			if (selectedItems.length > 2) cite2Items.push({ id: selectedItems[2].id });
+			if (selectedItems.length > 3) cite2Items.push({ id: selectedItems[3].id });
+		}
+
+		const nonIntegralCitation = { items: cite1Items, mode: "non-integral" };
+		const integralCitation = { items: cite2Items, mode: "integral" };
+
 		return {
 			references: refs,
-			citation: { items: citationItems, mode: "non-integral" },
+			citation: nonIntegralCitation, // fallback for decide route
+			citations: {
+				nonIntegral: nonIntegralCitation,
+				integral: integralCitation
+			}
 		};
 	} catch (e) {
 		console.error(
 			`[Fixture] Failed to load ${fileName} from ${filePath}. Previews will be empty.`,
 			e,
 		);
-		return { references: {}, citation: { items: [], mode: "non-integral" } };
+		const emptyCite = { items: [], mode: "non-integral" };
+		return { references: {}, citation: emptyCite, citations: { nonIntegral: emptyCite, integral: emptyCite } };
 	}
 }
 
@@ -222,7 +246,8 @@ app.post("/v1/preview", async (c) => {
 
 		const fixture = await getFixtureData(fixtureType);
 		const refsStr = JSON.stringify(fixture.references);
-		const citeStr = JSON.stringify(fixture.citation);
+		const citeNonIntegralStr = JSON.stringify(fixture.citations.nonIntegral);
+		const citeIntegralStr = JSON.stringify(fixture.citations.integral);
 
 		let htmlParenthetical = "",
 			htmlNarrative = "",
@@ -234,33 +259,41 @@ app.post("/v1/preview", async (c) => {
 				typeof style_yaml === "string" &&
 				style_yaml.trim().length > 0
 			) {
-				htmlParenthetical = render_citation(
+				const renderedNonIntegral = render_citation(
 					style_yaml,
 					refsStr,
-					citeStr,
+					citeNonIntegralStr,
 					"NonIntegral",
 				);
-				htmlNarrative = render_citation(
+				const renderedIntegral = render_citation(
 					style_yaml,
 					refsStr,
-					citeStr,
+					citeIntegralStr,
 					"Integral",
 				);
+				
+				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;
+				htmlNarrative = `According to ${renderedIntegral}, the implications are broad and warrant further research in the field.`;
+				
 				bib = render_bibliography(style_yaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
 				const intentStr = JSON.stringify(body.intent || body);
-				htmlParenthetical = render_intent_citation(
+				const renderedNonIntegral = render_intent_citation(
 					intentStr,
 					refsStr,
-					citeStr,
+					citeNonIntegralStr,
 					"NonIntegral",
 				);
-				htmlNarrative = render_intent_citation(
+				const renderedIntegral = render_intent_citation(
 					intentStr,
 					refsStr,
-					citeStr,
+					citeIntegralStr,
 					"Integral",
 				);
+				
+				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;
+				htmlNarrative = `According to ${renderedIntegral}, the implications are broad and warrant further research in the field.`;
+				
 				const generated_style = generate_style(intentStr);
 				bib = render_bibliography(generated_style, refsStr);
 			}
@@ -271,18 +304,10 @@ app.post("/v1/preview", async (c) => {
 			htmlNarrative = errHtml;
 		}
 
-		const note =
-			typeof fixtureType === "string" &&
-			(fixtureType === "note" ||
-				fixtureType === "footnote" ||
-				fixtureType === "endnote")
-				? htmlParenthetical
-				: null;
-
 		return c.json({
 			in_text_parenthetical: htmlParenthetical,
 			in_text_narrative: htmlNarrative,
-			note,
+			note: null,
 			bibliography: bib,
 		});
 	} catch (e) {

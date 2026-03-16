@@ -1,97 +1,107 @@
 <script lang="ts">
-	import { wizardStore } from "$lib/stores/wizard.svelte";
+import { wizardStore } from "$lib/stores/wizard.svelte";
 
-	let containerRef: HTMLDivElement | undefined = $state();
-	let tooltipPos = $state({ x: 0, y: 0 });
-	let tooltipInfo = $state<{ type: string; label: string } | null>(null);
-	let lastSelectedElement: HTMLElement | null = null;
+let containerRef: HTMLDivElement | undefined = $state();
+let tooltipPos = $state({ x: 0, y: 0 });
+let tooltipInfo = $state<{ type: string; label: string } | null>(null);
 
-	function getComponentInfo(el: HTMLElement): { type: string; label: string } | null {
-		const classes = Array.from(el.classList);
-		const cslnClass = classes.find(
-			(c) =>
-				c.startsWith("csln-") &&
-				c !== "csln-entry" &&
-				c !== "csln-bibliography" &&
-				c !== "csln-citation"
-		);
-		if (!cslnClass) return null;
+const showParenthetical = $derived(
+	wizardStore.family === "author-date" || wizardStore.family === "numeric",
+);
+const showNarrative = $derived(wizardStore.family === "author-date");
+const showNote = $derived(wizardStore.family === "note");
+const showBibliography = $derived(wizardStore.family !== "numeric");
 
-		const type = cslnClass.replace("csln-", "");
-		const labels: Record<string, string> = {
-			author: "Author",
-			editor: "Editor",
-			translator: "Translator",
-			title: "Title",
-			"container-title": "Journal/Book Title",
-			issued: "Date",
-			accessed: "Access Date",
-			volume: "Volume",
-			issue: "Issue",
-			pages: "Pages",
-			doi: "DOI",
-			url: "URL",
-			publisher: "Publisher",
-			"citation-number": "Number",
-			edition: "Edition",
-		};
-		return { type, label: labels[type] || type.replace(/-/g, " ") };
+function getComponentInfo(
+	el: HTMLElement,
+): { type: string; label: string; index: number | null } | null {
+	const classes = Array.from(el.classList);
+	const cslnClass = classes.find(
+		(c) =>
+			c.startsWith("csln-") &&
+			c !== "csln-entry" &&
+			c !== "csln-bibliography" &&
+			c !== "csln-citation",
+	);
+	if (!cslnClass) return null;
+
+	const indexStr = el.getAttribute("data-index");
+	const index = indexStr ? parseInt(indexStr) : null;
+
+	const type = cslnClass.replace("csln-", "");
+	const labels: Record<string, string> = {
+		author: "Author",
+		editor: "Editor",
+		translator: "Translator",
+		title: "Title",
+		"container-title": "Journal/Book Title",
+		issued: "Date",
+		accessed: "Access Date",
+		volume: "Volume",
+		issue: "Issue",
+		pages: "Pages",
+		doi: "DOI",
+		url: "URL",
+		publisher: "Publisher",
+		"citation-number": "Number",
+		edition: "Edition",
+	};
+	return { type, label: labels[type] || type.replace(/-/g, " "), index };
+}
+
+function handleInteraction(e: MouseEvent) {
+	const target = e.target as HTMLElement;
+	const cslnEl = target.closest('[class*="csln-"]') as HTMLElement;
+	
+	if (!cslnEl || cslnEl.classList.contains("csln-entry") || cslnEl.classList.contains("csln-bibliography")) {
+		if (e.type === "mousemove") tooltipInfo = null;
+		return;
 	}
 
-	function attachListeners() {
-		if (!containerRef) return;
+	const info = getComponentInfo(cslnEl);
+	if (!info) return;
+
+	if (e.type === "mousemove") {
+		tooltipInfo = info;
+		const rect = cslnEl.getBoundingClientRect();
+		tooltipPos = { x: rect.left + rect.width / 2, y: rect.top - 5 };
+	} else if (e.type === "click") {
+		e.stopPropagation();
+		wizardStore.setSelectedComponent({
+			componentType: info.type,
+			cssClass: `csln-${info.type}`,
+			element: cslnEl,
+			index: info.index,
+		});
+	}
+}
+
+// Update selected state highlighting
+$effect(() => {
+	if (!containerRef) return;
+	const selected = wizardStore.selectedComponent;
+	
+	// Clear all selections
+	containerRef.querySelectorAll(".csln-selected").forEach(el => el.classList.remove("csln-selected"));
+	
+	if (selected?.index !== null && selected?.index !== undefined) {
+		// Highlight by index to be stable across re-renders
+		const el = containerRef.querySelector(`[data-index="${selected.index}"].csln-${selected.componentType}`);
+		if (el) el.classList.add("csln-selected");
+	}
+});
+
+$effect(() => {
+	// Add interactive class to elements for CSS styling
+	if (containerRef && wizardStore.previewHtml.bibliography) {
 		const elements = containerRef.querySelectorAll('[class^="csln-"]');
-		elements.forEach((el) => {
-			const htmlEl = el as HTMLElement;
-			const info = getComponentInfo(htmlEl);
-			if (info && !htmlEl.classList.contains("csln-interactive")) {
-				htmlEl.classList.add("csln-interactive");
-
-				htmlEl.addEventListener("mouseenter", () => {
-					tooltipInfo = info;
-					const rect = htmlEl.getBoundingClientRect();
-					tooltipPos = { x: rect.left, y: rect.top - 5 };
-				});
-
-				htmlEl.addEventListener("mouseleave", () => {
-					tooltipInfo = null;
-				});
-
-				htmlEl.addEventListener("click", (e) => {
-					e.stopPropagation();
-					wizardStore.setSelectedComponent({
-						componentType: info.type,
-						cssClass: `csln-${info.type}`,
-						element: htmlEl,
-					});
-				});
-
+		elements.forEach(el => {
+			if (!el.classList.contains("csln-entry") && !el.classList.contains("csln-bibliography")) {
+				el.classList.add("csln-interactive");
 			}
 		});
 	}
-
-	$effect(() => {
-		// Re-attach listeners when HTML changes
-		if (wizardStore.previewHtml.bibliography) {
-			setTimeout(() => {
-				attachListeners();
-			}, 0);
-		}
-	});
-
-	$effect(() => {
-		const el = wizardStore.selectedComponent?.element ?? null;
-
-		if (lastSelectedElement && lastSelectedElement !== el) {
-			lastSelectedElement.classList.remove("csln-selected");
-		}
-
-		if (el) {
-			el.classList.add("csln-selected");
-		}
-
-		lastSelectedElement = el;
-	});
+});
 </script>
 
 <div class="rounded-lg border border-border-light bg-surface-light overflow-hidden">
@@ -107,8 +117,57 @@
 		</div>
 	{:else}
 		<div class="p-6">
-			<div bind:this={containerRef} class="space-y-4">
-				{#if wizardStore.previewHtml.bibliography}
+			<div 
+				bind:this={containerRef} 
+				class="space-y-6"
+				role="region"
+				aria-label="Citation Preview"
+				onmousemove={handleInteraction}
+				onclick={handleInteraction}
+				onkeydown={(e) => {
+					if (e.key === "Enter" || e.key === " ") {
+						handleInteraction(e as any);
+					}
+				}}
+				onmouseleave={() => tooltipInfo = null}
+			>
+				{#if showParenthetical && wizardStore.previewHtml.parenthetical}
+					<div class="space-y-2">
+						<h4 class="font-semibold text-text-main text-sm">Parenthetical Citation</h4>
+						<div
+							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html wizardStore.previewHtml.parenthetical}
+						</div>
+					</div>
+				{/if}
+
+				{#if showNarrative && wizardStore.previewHtml.narrative}
+					<div class="space-y-2">
+						<h4 class="font-semibold text-text-main text-sm">Narrative Citation</h4>
+						<div
+							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html wizardStore.previewHtml.narrative}
+						</div>
+					</div>
+				{/if}
+
+				{#if showNote && wizardStore.previewHtml.note}
+					<div class="space-y-2">
+						<h4 class="font-semibold text-text-main text-sm">Footnote</h4>
+						<div
+							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html wizardStore.previewHtml.note}
+						</div>
+					</div>
+				{/if}
+
+				{#if showBibliography && wizardStore.previewHtml.bibliography}
 					<div class="space-y-2">
 						<h4 class="font-semibold text-text-main text-sm">Bibliography</h4>
 						<div
@@ -118,7 +177,7 @@
 							{@html wizardStore.previewHtml.bibliography}
 						</div>
 					</div>
-				{:else}
+				{:else if !showParenthetical && !showNarrative && !showNote && !showBibliography}
 					<div class="text-center py-8">
 						<p class="text-text-secondary">No preview available yet</p>
 					</div>

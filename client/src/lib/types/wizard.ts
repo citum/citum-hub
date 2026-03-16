@@ -144,9 +144,24 @@ export interface PresetInfo {
 	traits: string;
 }
 
+export interface TemplateComponent {
+	variable?: string;
+	number?: string;
+	component?: string;
+	prefix?: string;
+	suffix?: string;
+	emph?: boolean;
+	strong?: boolean;
+	suppress?: boolean;
+	[key: string]: any;
+}
+
+export type BibliographyTemplate = TemplateComponent[];
+
 /** Component selection for the visual customizer. */
 export interface ComponentSelection {
 	componentType: string;
 	cssClass: string;
 	element: HTMLElement;
+	index: number | null;
 }

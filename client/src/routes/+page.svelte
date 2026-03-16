@@ -1,32 +1,34 @@
 <script lang="ts">
-	import { onMount } from "svelte";
+import { onMount } from "svelte";
 
-	import type { Style } from "$lib/types/style";
+import type { Style } from "$lib/types/style";
 
-	let publicStyles: Style[] = $state([]);
-	let searchQuery = $state("");
-	let loading = $state(true);
+let publicStyles: Style[] = $state([]);
+let searchQuery = $state("");
+let loading = $state(true);
 
-	const filteredStyles = $derived(
-		publicStyles.filter((s) => {
-			const query = searchQuery.toLowerCase();
-			const inTitle = s.title.toLowerCase().includes(query);
-			const inDesc = (s.description || "").toLowerCase().includes(query);
-			const inFields = (s.fields || []).some((f) => f.toLowerCase().includes(query));
-			return inTitle || inDesc || inFields;
-		})
-	);
+const filteredStyles = $derived(
+	publicStyles.filter((s) => {
+		const query = searchQuery.toLowerCase();
+		const inTitle = s.title.toLowerCase().includes(query);
+		const inDesc = (s.description || "").toLowerCase().includes(query);
+		const inFields = (s.fields || []).some((f) =>
+			f.toLowerCase().includes(query),
+		);
+		return inTitle || inDesc || inFields;
+	}),
+);
 
-	onMount(async () => {
-		try {
-			const res = await fetch("/api/hub");
-			if (res.ok) {
-				publicStyles = await res.json();
-			}
-		} finally {
-			loading = false;
+onMount(async () => {
+	try {
+		const res = await fetch("/api/hub");
+		if (res.ok) {
+			publicStyles = await res.json();
 		}
-	});
+	} finally {
+		loading = false;
+	}
+});
 </script>
 
 <main class="min-h-screen bg-slate-50">

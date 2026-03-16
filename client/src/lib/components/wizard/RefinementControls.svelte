@@ -1,117 +1,132 @@
 <script lang="ts">
-	import type { WizardStyleOptions } from "$lib/types/wizard";
+import type { WizardStyleOptions } from "$lib/types/wizard";
 
-	interface Props {
-		currentOptions: WizardStyleOptions | null;
-		onUpdateContributors: (path: string, value: unknown) => void;
-		onUpdateDates: (form: string) => void;
-		onUpdateTitles: (textCase: string) => void;
-		onHighlightChange?: (field: string | null) => void;
+interface Props {
+	currentOptions: WizardStyleOptions | null;
+	onUpdateContributors: (path: string, value: unknown) => void;
+	onUpdateDates: (form: string) => void;
+	onUpdateTitles: (textCase: string) => void;
+	onHighlightChange?: (field: string | null) => void;
+}
+
+const {
+	currentOptions,
+	onUpdateContributors,
+	onUpdateDates,
+	onUpdateTitles,
+	onHighlightChange,
+}: Props = $props();
+
+let expandedSections = $state<Record<string, boolean>>({
+	names: true,
+	dates: true,
+	titles: true,
+});
+
+function toggleSection(section: string) {
+	expandedSections[section] = !expandedSections[section];
+}
+
+function updateNameOrder(order: string) {
+	const displayAsSort = order === "family-first" ? "all" : undefined;
+	onUpdateContributors("display-as-sort", displayAsSort);
+}
+
+function updateAndConnector(connector: string) {
+	let value: string | undefined;
+	if (connector === "symbol") {
+		value = "symbol";
+	} else if (connector === "text") {
+		value = "text";
 	}
-
-	const {
-		currentOptions,
-		onUpdateContributors,
-		onUpdateDates,
-		onUpdateTitles,
-		onHighlightChange,
-	}: Props = $props();
-
-	let expandedSections = $state<Record<string, boolean>>({
-		names: true,
-		dates: true,
-		titles: true,
-	});
-
-	function toggleSection(section: string) {
-		expandedSections[section] = !expandedSections[section];
+	if (value !== undefined) {
+		onUpdateContributors("and", value);
 	}
+}
 
-	function updateNameOrder(order: string) {
-		const displayAsSort = order === "family-first" ? "all" : undefined;
-		onUpdateContributors("display-as-sort", displayAsSort);
+function updateEtAlAfter(minValue: number) {
+	if (minValue < 1 || minValue > 20) return;
+	const useFirst =
+		currentOptions?.contributors &&
+		typeof currentOptions.contributors === "object"
+			? (currentOptions.contributors.shorten?.["use-first"] ?? 1)
+			: 1;
+	onUpdateContributors("shorten", { min: minValue, "use-first": useFirst });
+}
+
+function updateInitials(style: string) {
+	let value: string | undefined;
+	if (style === "abbreviated") {
+		value = ". ";
+	} else if (style === "compact") {
+		value = "";
 	}
-
-	function updateAndConnector(connector: string) {
-		let value: string | undefined;
-		if (connector === "symbol") {
-			value = "symbol";
-		} else if (connector === "text") {
-			value = "text";
-		}
-		if (value !== undefined) {
-			onUpdateContributors("and", value);
-		}
+	if (value !== undefined) {
+		onUpdateContributors("initialize-with", value);
 	}
+}
 
-	function updateEtAlAfter(minValue: number) {
-		if (minValue < 1 || minValue > 20) return;
-		const useFirst =
-			currentOptions?.contributors && typeof currentOptions.contributors === "object"
-				? (currentOptions.contributors.shorten?.["use-first"] ?? 1)
-				: 1;
-		onUpdateContributors("shorten", { min: minValue, "use-first": useFirst });
+const getNameOrderValue = () => {
+	if (
+		currentOptions?.contributors &&
+		typeof currentOptions.contributors === "object"
+	) {
+		return currentOptions.contributors["display-as-sort"] === "all"
+			? "family-first"
+			: "given-first";
 	}
+	return "family-first";
+};
 
-	function updateInitials(style: string) {
-		let value: string | undefined;
-		if (style === "abbreviated") {
-			value = ". ";
-		} else if (style === "compact") {
-			value = "";
-		}
-		if (value !== undefined) {
-			onUpdateContributors("initialize-with", value);
-		}
+const getAndValue = () => {
+	if (
+		currentOptions?.contributors &&
+		typeof currentOptions.contributors === "object"
+	) {
+		return currentOptions.contributors.and === "text" ? "text" : "symbol";
 	}
+	return "symbol";
+};
 
-	const getNameOrderValue = () => {
-		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
-			return currentOptions.contributors["display-as-sort"] === "all"
-				? "family-first"
-				: "given-first";
-		}
-		return "family-first";
-	};
+const getEtAlValue = () => {
+	if (
+		currentOptions?.contributors &&
+		typeof currentOptions.contributors === "object"
+	) {
+		return currentOptions.contributors.shorten?.min || 3;
+	}
+	return 3;
+};
 
-	const getAndValue = () => {
-		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
-			return currentOptions.contributors.and === "text" ? "text" : "symbol";
-		}
-		return "symbol";
-	};
+const getInitialsValue = () => {
+	if (
+		currentOptions?.contributors &&
+		typeof currentOptions.contributors === "object"
+	) {
+		const initWith = currentOptions.contributors["initialize-with"];
+		if (initWith === ". ") return "abbreviated";
+		if (initWith === "") return "compact";
+	}
+	return "full";
+};
 
-	const getEtAlValue = () => {
-		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
-			return currentOptions.contributors.shorten?.min || 3;
-		}
-		return 3;
-	};
+const getMonthFormatValue = () => {
+	if (currentOptions?.dates && typeof currentOptions.dates === "object") {
+		return currentOptions.dates.month || "long";
+	}
+	return "long";
+};
 
-	const getInitialsValue = () => {
-		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
-			const initWith = currentOptions.contributors["initialize-with"];
-			if (initWith === ". ") return "abbreviated";
-			if (initWith === "") return "compact";
-		}
-		return "full";
-	};
-
-	const getMonthFormatValue = () => {
-		if (currentOptions?.dates && typeof currentOptions.dates === "object") {
-			return currentOptions.dates.month || "long";
-		}
-		return "long";
-	};
-
-	const getTitleCaseValue = () => {
-		if (currentOptions?.titles && typeof currentOptions.titles === "object") {
-			const titles = currentOptions.titles as Record<string, unknown>;
-			const defaultRendering = titles.default as Record<string, unknown> | undefined;
-			return (defaultRendering?.["text-case"] as string) || "sentence";
-		}
-		return "sentence";
-	};
+const getTitleCaseValue = () => {
+	if (currentOptions?.titles && typeof currentOptions.titles === "object") {
+		const titles = currentOptions.titles as Record<string, unknown>;
+		const defaultRendering = titles.default as
+			| Record<string, unknown>
+			| undefined;
+		return (defaultRendering?.["text-case"] as string) || "sentence";
+	}
+	return "sentence";
+};
 </script>
 
 <div class="space-y-4">
