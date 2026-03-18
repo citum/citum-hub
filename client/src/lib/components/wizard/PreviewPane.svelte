@@ -1,18 +1,18 @@
 <script lang="ts">
-import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { wizardStore } from "$lib/stores/wizard.svelte";
 
-interface Props {
-	activeHighlight?: string | null;
-}
+	interface Props {
+		activeHighlight?: string | null;
+	}
 
-const { activeHighlight = null }: Props = $props();
+	const { activeHighlight = null }: Props = $props();
 
-const showParenthetical = $derived(
-	wizardStore.family === "author-date" || wizardStore.family === "numeric",
-);
-const showNarrative = $derived(wizardStore.family === "author-date");
-const showNote = $derived(wizardStore.family === "note");
-const showBibliography = $derived(wizardStore.family !== "numeric");
+	const showParenthetical = $derived(
+		wizardStore.family === "author-date" || wizardStore.family === "numeric"
+	);
+	const showNarrative = $derived(wizardStore.family === "author-date");
+	const showNote = $derived(wizardStore.family === "note");
+	const showBibliography = $derived(wizardStore.family !== "numeric");
 </script>
 
 <div class="rounded-lg border border-border-light bg-surface-light">
@@ -29,11 +29,15 @@ const showBibliography = $derived(wizardStore.family !== "numeric");
 			</p>
 		</div>
 	{:else}
-		<div class={`space-y-6 p-6 ${activeHighlight === "contributors" ? "highlight-contributors" : ""}`}>
+		<div
+			class={`space-y-6 p-6 ${activeHighlight === "contributors" ? "highlight-contributors" : ""}`}
+		>
 			{#if showParenthetical && wizardStore.previewHtml.parenthetical}
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Parenthetical Citation</h4>
-					<div class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main">
+					<div
+						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.parenthetical}
 					</div>
@@ -43,7 +47,9 @@ const showBibliography = $derived(wizardStore.family !== "numeric");
 			{#if showNarrative && wizardStore.previewHtml.narrative}
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Narrative Citation</h4>
-					<div class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main">
+					<div
+						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.narrative}
 					</div>
@@ -53,7 +59,9 @@ const showBibliography = $derived(wizardStore.family !== "numeric");
 			{#if showNote && wizardStore.previewHtml.note}
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Footnote</h4>
-					<div class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main">
+					<div
+						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.note}
 					</div>
@@ -63,7 +71,9 @@ const showBibliography = $derived(wizardStore.family !== "numeric");
 			{#if showBibliography && wizardStore.previewHtml.bibliography}
 				<div class="space-y-2">
 					<h4 class="font-semibold text-text-main">Bibliography</h4>
-					<div class="live-preview-content rounded bg-background-light p-3 font-serif text-sm text-text-main">
+					<div
+						class="live-preview-content rounded bg-background-light p-3 font-serif text-sm text-text-main"
+					>
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html wizardStore.previewHtml.bibliography}
 					</div>
@@ -88,6 +98,8 @@ const showBibliography = $derived(wizardStore.family !== "numeric");
 		padding: 0 2px;
 		outline: 1px solid color-mix(in srgb, var(--color-primary, #3b82f6) 30%, transparent);
 		outline-offset: 1px;
-		transition: background-color 0.2s ease, outline-color 0.2s ease;
+		transition:
+			background-color 0.2s ease,
+			outline-color 0.2s ease;
 	}
 </style>

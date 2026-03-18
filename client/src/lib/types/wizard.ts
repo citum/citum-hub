@@ -105,6 +105,13 @@ export interface WizardStyleOptions {
 	contributors?: string | ContributorConfig;
 	dates?: string | DateConfig;
 	titles?: string | TitleConfig;
+	locators?: string | LocatorConfig;
+	"page-range-format"?: string;
+}
+
+export interface LocatorConfig {
+	"default-label-form"?: string;
+	[key: string]: unknown;
 }
 
 export interface ContributorConfig {
@@ -134,6 +141,23 @@ export interface TitleConfig {
 	periodical?: TitleRendering;
 }
 
+export interface AxisChoices {
+	// Author-date
+	nameForm?: "family-first-initials" | "given-first-initials" | "family-first-full";
+	datePosition?: "after-author-parens" | "after-author-bare" | "after-author-comma";
+	articleTitleEmphasis?: "plain" | "quoted" | "italic";
+	etAlThreshold?: 2 | 3 | 6 | null; // null = show all
+	authorConnector?: "symbol" | "text" | "none";
+	// Numeric
+	numberBracket?: "square" | "period" | "paren" | "superscript";
+	yearPosition?: "volume-issue" | "end-parens" | "after-title";
+	// Note
+	footnoteNameForm?: "full" | "inverted";
+	bookEmphasis?: "italic" | "plain";
+	repeatCitation?: "ibid" | "short-title" | "full";
+	hasBibliography?: boolean;
+}
+
 export interface PresetInfo {
 	id: string;
 	name: string;
@@ -153,7 +177,7 @@ export interface TemplateComponent {
 	emph?: boolean;
 	strong?: boolean;
 	suppress?: boolean;
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 export type BibliographyTemplate = TemplateComponent[];

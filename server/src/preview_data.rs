@@ -25,7 +25,7 @@ fn empty_monograph(id: &str, r#type: MonographType, title: Title) -> Monograph {
     Monograph {
         id: Some(id.to_string()),
         r#type,
-        title,
+        title: Some(title),
         author: None,
         editor: None,
         translator: None,
@@ -58,7 +58,7 @@ fn empty_monograph(id: &str, r#type: MonographType, title: Title) -> Monograph {
 fn empty_serial(title: Title, r#type: SerialType) -> Serial {
     Serial {
         r#type,
-        title,
+        title: Some(title),
         short_title: None,
         editor: None,
         publisher: None,
@@ -180,6 +180,7 @@ fn book(
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn article(
     id: &str,
     author: Contributor,
@@ -204,6 +205,7 @@ fn article(
     (id.to_string(), Reference::SerialComponent(Box::new(component)))
 }
 
+#[allow(clippy::too_many_arguments)]
 fn chapter(
     id: &str,
     author: Contributor,

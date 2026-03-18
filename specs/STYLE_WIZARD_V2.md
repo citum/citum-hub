@@ -148,7 +148,7 @@ decisions. Every decision uses rendered examples as choices, not text labels.
 ### Flow
 
 ```
-[1. Field]  →  [2. Style Family]  →  [3. Starting Preset]
+[1. Field]  →  [2. Style Family]  →  [3. Style Navigator]
                                             │
                               ┌─────────────┼─────────────┐
                               ▼             ▼             ▼
@@ -239,46 +239,95 @@ Caption: "Superscript numbers link to footnotes or endnotes"
 
 ---
 
-### Step 3: Starting Preset
+### Step 3: Style Navigator
 
-**Question:** "Pick the closest match to start from"
+**Question:** (none — user chooses by looking, not by reading)
 
-**Presentation:** A gallery of 3-5 preset cards (filtered by the selected family).
-Each card shows a mini bibliography (3 entries: article, book, chapter) rendered
-via WASM.
+**Rationale for this design:** The ~520 independent CSL parent styles cannot be
+honestly collapsed into 3–5 preset cards. Author-date alone spans ~220 distinct
+patterns across name order, date position, title emphasis, et al. threshold, and
+bracket/connector format — five independent dimensions. A small card gallery
+creates a false promise that users end up working around in Steps 4-6. The axis
+navigator eliminates that mismatch by making the dimensions the decision surface
+from the start.
 
-#### Author-Date Presets
+**Presentation:** A centered split-screen. The left two-thirds shows a live WASM
+preview updating in real-time. The right one-third shows a stack of axis cards,
+rendered one at a time (or 2-3 visible with current active highlighted). As each
+axis is resolved the next appears.
 
-| Preset | Key Visual Traits |
-|--------|-------------------|
-| **APA** | `Smith, J. A. (2024). Title. Journal, 12(3), 45.` — year in parens after author, italic journal |
-| **Chicago Author-Date** | `Smith, John A. 2024. "Title." Journal 12 (3): 45.` — year after author no parens, quoted article titles |
-| **Harvard** | `Smith, J.A. (2024) Title. Journal, 12(3), pp.45-67.` — minimal punctuation, `pp.` prefix |
-| **Elsevier** | `J.A. Smith, Title, Journal 12 (2024) 45-67.` — given-first, compact |
+```
+┌──────────────────────────────────┬────────────────────────┐
+│                                  │  How should author     │
+│  Chen, L., Kim, S., & Park, J.   │  names look?           │
+│  (2023). Title of the article.   │                        │
+│  Journal of Examples, 15(2),     │  ● Smith, J. A.        │
+│  100–115.                        │  ○ J. A. Smith         │
+│                                  │  ○ Smith, John A.      │
+│  Smith, J. A., & Jones, B. C.    │                        │
+│  (2024). Book title. Publisher.  ├────────────────────────┤
+│                                  │  (next axis appears    │
+│                                  │   after choice above)  │
+│  ─────────────────────────────   │                        │
+│  Closest match: APA 7th          │                        │
+│  (updates as axes are resolved)  │                        │
+└──────────────────────────────────┴────────────────────────┘
+```
 
-#### Numeric Presets
+The "Closest match" banner beneath the preview names the best-matching Citum style
+at all times. It is informational — the user is navigating by appearance, not by
+choosing a name. When the navigation converges on an exact match the banner reads
+"Exact match: APA 7th"; when it is approximate it reads "Closest match: APA 7th
+(3 of 5 axes match)".
 
-| Preset | Key Visual Traits |
-|--------|-------------------|
-| **Vancouver** | `1. Smith JA, Jones BC. Title. Journal. 2024;12(3):45-67.` — initials no dots, semicolon date |
-| **IEEE** | `[1] J. A. Smith and B. C. Jones, "Title," Journal, vol. 12, no. 3, pp. 45-67, 2024.` — given-first, quoted titles |
-| **Nature** | `1. Smith, J. A. & Jones, B. C. Title. Journal 12, 45-67 (2024).` — ampersand, year in parens at end |
-| **ACS** | `(1) Smith, J. A.; Jones, B. C. Title. Journal 2024, 12 (3), 45-67.` — semicolon between authors |
+#### Axes by Family
 
-#### Note Presets
+**Author-Date** (5 axes, presented in this order):
 
-| Preset | Key Visual Traits |
-|--------|-------------------|
-| **Chicago Notes** | `1. John A. Smith, Title of Book (Place: Publisher, 2024), 42.` — full names, comma-separated |
-| **Turabian** | Similar to Chicago Notes with minor variations |
+| # | Question | Rendered choices |
+|---|----------|-----------------|
+| 1 | How should author names look? | `Smith, J. A.` / `J. A. Smith` / `Smith, John A.` |
+| 2 | Where does the year appear? | `Smith (2024).` / `Smith 2024.` / `Smith, 2024.` |
+| 3 | How are article titles formatted? | plain / "In quotes" / *Italic* |
+| 4 | How many authors before "et al."? | after 2 / after 3 / after 6 / show all |
+| 5 | Author connector | `&` / `and` / `,` (comma only) |
+
+**Numeric** (4 axes):
+
+| # | Question | Rendered choices |
+|---|----------|-----------------|
+| 1 | How is the reference number shown? | `[1]` / `1.` / `(1)` / superscript¹ |
+| 2 | How should author names look? | `Smith JA` (initials, no dots) / `Smith, J. A.` / `J. A. Smith` |
+| 3 | How are article titles formatted? | plain / "In quotes" |
+| 4 | Where does the year appear? | after volume/issue `2024;12(3)` / end `(2024)` / after title |
+
+**Note** (4 axes):
+
+| # | Question | Rendered choices |
+|---|----------|-----------------|
+| 1 | How are names written in footnotes? | Full name `John A. Smith` / Inverted `Smith, John A.` |
+| 2 | How are book titles shown? | *Italic* / plain |
+| 3 | On second citation, use… | Ibid. / shortened title / full repeat |
+| 4 | Do you also need a bibliography? | Yes / Footnotes only |
+
+Each rendered choice is generated live by WASM using the actual CitumStyle for
+the closest matching converted style — not a static string mock.
 
 **Behavior:**
-- Each card is a fully rendered bibliography preview (3 diverse reference types).
-- User clicks a card to select it.
-- Selection loads the preset into the `parsedStyle`, setting `options.contributors`,
-  `options.dates`, `options.titles`, and `citation`/`bibliography` `use_preset`.
-- Advances to Steps 4-6 (refinement screen).
+- Axis cards appear one at a time. After each selection the preview updates
+  within 50ms and the next card slides in.
+- After all axes are resolved (or the user clicks "Use this" at any point), the
+  wizard loads the best-matching Citum style as the base for Steps 4-6.
+- If the exact combination matches a converted Citum style, that style is loaded
+  directly — zero deviation from the preset at the start of Steps 4-6.
+- If the combination does not match any converted style, the wizard constructs a
+  synthetic base from the axis choices and marks it as "custom (not a named preset)".
+  SQI deviation tracking begins immediately.
+- A "Skip — show me all styles" link opens a search-browse modal (all 146+
+  converted styles, searchable by name) for users who know exactly what they want.
 - Back button returns to Step 2.
+- The axis state is persisted in `WizardState.axisChoices` and the resolved
+  preset (or null for synthetic) in `WizardState.presetName`.
 
 ---
 
@@ -391,7 +440,7 @@ deviates, the wizard expands to an explicit configuration (lower SQI but accurat
 - All three sections are expanded by default. User can collapse any section.
 - A "Skip — use defaults" button at the bottom advances directly to Step 7.
 - Changes update the live preview within 50ms (WASM rendering).
-- Back button returns to Step 3 (preset gallery).
+- Back button returns to Step 3 (style navigator).
 
 ---
 
@@ -871,6 +920,10 @@ interface WizardState {
   quickStartStep: number; // 1-7
   field: CitationField | null;
   family: 'author-date' | 'numeric' | 'note' | null;
+
+  // Step 3: axis choices made in the style navigator
+  axisChoices: Partial<AxisChoices>;
+  // Resolved preset name after axis navigation (null = synthetic/custom base)
   presetName: string | null; // 'apa', 'chicago-ad', 'vancouver', etc.
 
   // The style being built (single source of truth)
@@ -890,6 +943,25 @@ interface WizardState {
   // Undo history
   history: Style[];
   historyIndex: number;
+}
+
+/** Axis choices from Step 3 (Style Navigator). All fields are optional —
+ *  the user may advance before all axes are resolved. */
+interface AxisChoices {
+  // Author-date
+  nameForm: 'family-first-initials' | 'given-first-initials' | 'family-first-full';
+  datePosition: 'after-author-parens' | 'after-author-bare' | 'after-author-comma';
+  articleTitleEmphasis: 'plain' | 'quoted' | 'italic';
+  etAlThreshold: 2 | 3 | 6 | null; // null = show all
+  authorConnector: 'symbol' | 'text' | 'none';
+  // Numeric
+  numberBracket: 'square' | 'period' | 'paren' | 'superscript';
+  yearPosition: 'volume-issue' | 'end-parens' | 'after-title';
+  // Note
+  footnoteNameForm: 'full' | 'inverted';
+  bookEmphasis: 'italic' | 'plain';
+  repeatCitation: 'ibid' | 'short-title' | 'full';
+  hasBibliography: boolean;
 }
 
 interface ComponentSelection {
@@ -939,7 +1011,7 @@ client-side preset matching without server round-trips.
 /create/                   → Redirects to /create/field
 /create/field              → Step 1: Field selector
 /create/family             → Step 2: Style family
-/create/preset             → Step 3: Preset gallery
+/create/style              → Step 3: Style navigator
 /create/refine             → Steps 4-6: Refinement
 /create/review             → Step 7: Review & name
 /create/customize          → Phase 2: Visual customizer
@@ -957,7 +1029,7 @@ Each route is a SvelteKit page that reads from and writes to the shared
 ├── +page.svelte (per route)
 │   ├── FieldSelector.svelte     # Step 1
 │   ├── FamilySelector.svelte    # Step 2
-│   ├── PresetGallery.svelte     # Step 3
+│   ├── StyleNavigator.svelte    # Step 3
 │   ├── RefinementPanel.svelte   # Steps 4-6
 │   │   ├── NameOptions.svelte
 │   │   ├── DateOptions.svelte
@@ -1159,8 +1231,10 @@ An implementation is complete when:
 1. Field selector shows 6 discipline cards; selection advances to family step.
 2. Family selector shows 3 panels with rendered paragraph examples; field-default
    is highlighted with a recommendation badge.
-3. Preset gallery shows 3-5 cards per family, each with a WASM-rendered mini
-   bibliography of 3 reference types.
+3. Style navigator presents axis cards sequentially; each choice updates the live
+   WASM preview within 50ms and reveals the next axis. The "Closest match" banner
+   updates after every axis resolution. The user can advance at any point via
+   "Use this". Axis state is persisted in `WizardState.axisChoices`.
 4. Refinement screen shows Names, Dates, Titles sections simultaneously with
    dropdown controls; changes update the live preview within 50ms.
 5. Review screen shows a name input (required, validated), full preview, and
@@ -1201,10 +1275,13 @@ An implementation is complete when:
 ## 18. Implementation Priority
 
 ### Wave 1: Quick Start MVP
-- Steps 1-3 (field → family → preset) with WASM preview
+- Steps 1-2 (field → family) with WASM preview
+- Step 3 (style navigator): axis cards with live WASM preview and "Closest match"
+  banner; all axes for the selected family; "Skip — show me all styles" modal
 - Step 7 (review & download) with name input
-- Skip steps 4-6 (refinement) — go straight from preset to review
+- Skip steps 4-6 (refinement) — go straight from navigator to review
 - WASM bridge: `render_bibliography`, `render_citation`, `validate_style`
+- Axis-to-preset matching: `match_axes_to_preset(family, axisChoices) → PresetMatch`
 
 ### Wave 2: Refinement & Visual Basics
 - Steps 4-6 (names, dates, titles refinement controls)
@@ -1247,7 +1324,16 @@ An implementation is complete when:
    (no wizard re-entry). Given that only wizard-created styles need round-trip
    support, saving `WizardState` alongside the YAML is recommended.
 
-4. **Citation template editing.** The Visual Customizer spec focuses on
+4. **Axis coverage completeness.** The five author-date axes and four numeric/note
+   axes are sufficient to discriminate between the ~30 most popular styles in each
+   family. However, there are long-tail styles (ABNT, DIN, ISO, Japanese JIS) whose
+   discriminating axes differ from the Western academic set. Should the navigator
+   silently fall back to "closest Western match" for these, or should it surface a
+   "Non-Western / regional style" branch after Step 2 that presents a different axis
+   set? Recommended: defer to v2.1 — for now, the "Skip — show me all styles" modal
+   covers these cases.
+
+5. **Citation template editing.** The Visual Customizer spec focuses on
    bibliography editing. Citation templates (especially author-date with
    integral/non-integral modes) need their own editing surface. The same
    click-to-edit pattern applies, but the rendered context is different (inline

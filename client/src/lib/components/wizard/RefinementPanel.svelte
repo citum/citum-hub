@@ -1,68 +1,54 @@
 <script lang="ts">
-import { goto } from "$app/navigation";
-import { wizardStore } from "$lib/stores/wizard.svelte";
-import PreviewPane from "./PreviewPane.svelte";
-import RefinementControls from "./RefinementControls.svelte";
+	import { goto } from "$app/navigation";
+	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import PreviewPane from "./PreviewPane.svelte";
+	import RefinementControls from "./RefinementControls.svelte";
 
-let debounceTimer: number | undefined;
-let activeHighlight = $state<string | null>(null);
+	let debounceTimer: number | undefined;
+	let activeHighlight = $state<string | null>(null);
 
-function debouncedFetchPreview() {
-	clearTimeout(debounceTimer);
-	debounceTimer = window.setTimeout(() => {
-		wizardStore.fetchPreview();
-	}, 300);
-}
-
-function updateContributorsField(path: string, value: unknown) {
-	const opts = wizardStore.getOptions();
-	let contributors = opts?.contributors ?? {};
-
-	// If contributors is a string preset, convert to object
-	if (typeof contributors === "string") {
-		contributors = {};
+	function debouncedFetchPreview() {
+		clearTimeout(debounceTimer);
+		debounceTimer = window.setTimeout(() => {
+			wizardStore.fetchPreview();
+		}, 300);
 	}
 
-	// Merge the change, filtering out undefined to avoid null in YAML
-	const merged = { ...contributors } as Record<string, unknown>;
-	if (value === undefined) {
-		delete merged[path];
-	} else {
-		merged[path] = value;
+	function updateContributorsField(path: string, value: unknown) {
+		wizardStore.updateStyleField(`options.contributors.${path}`, value);
+		debouncedFetchPreview();
 	}
-	wizardStore.updateStyleField("options.contributors", merged);
-	debouncedFetchPreview();
-}
 
-function updateMonthFormat(month: string) {
-	wizardStore.updateStyleField("options.dates", { month });
-	debouncedFetchPreview();
-}
+	function updateMonthFormat(month: string) {
+		wizardStore.updateStyleField("options.dates.month", month);
+		debouncedFetchPreview();
+	}
 
-function updateTitleCase(caseStyle: string) {
-	const opts = wizardStore.getOptions();
-	let titles =
-		opts?.titles && typeof opts.titles === "object"
-			? (opts.titles as Record<string, unknown>)
-			: {};
-	const currentDefault =
-		titles.default && typeof titles.default === "object"
-			? (titles.default as Record<string, unknown>)
-			: {};
-	const merged = {
-		...titles,
-		default: { ...currentDefault, "text-case": caseStyle },
-	};
-	wizardStore.updateStyleField("options.titles", merged);
-	debouncedFetchPreview();
-}
+	function updateTitleCase(caseStyle: string) {
+		wizardStore.updateStyleField("options.titles.default.text-case", caseStyle);
+		debouncedFetchPreview();
+	}
 
-function skipToReview() {
-	wizardStore.setStep(7);
-	goto("/create/review");
-}
+	function updatePageRangeFormat(format: string) {
+		wizardStore.updateStyleField("options.page-range-format", format);
+		debouncedFetchPreview();
+	}
 
-const currentOptions = $derived(wizardStore.getOptions());
+	function updateLocatorLabel(form: string) {
+		if (form === "none") {
+			wizardStore.updateStyleField("options.locators", undefined);
+		} else {
+			wizardStore.updateStyleField("options.locators.default-label-form", form);
+		}
+		debouncedFetchPreview();
+	}
+
+	function skipToReview() {
+		wizardStore.setStep(7);
+		goto("/create/review");
+	}
+
+	const currentOptions = $derived(wizardStore.getOptions());
 </script>
 
 <div class="min-h-screen bg-background-light p-4 sm:p-6 lg:p-8">
@@ -87,6 +73,8 @@ const currentOptions = $derived(wizardStore.getOptions());
 					onUpdateContributors={updateContributorsField}
 					onUpdateDates={updateMonthFormat}
 					onUpdateTitles={updateTitleCase}
+					onUpdatePageRange={updatePageRangeFormat}
+					onUpdateLocatorLabel={updateLocatorLabel}
 					onHighlightChange={(field) => {
 						activeHighlight = field;
 					}}

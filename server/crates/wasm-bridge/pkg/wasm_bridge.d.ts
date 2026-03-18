@@ -5,6 +5,8 @@ export function decide(intent_json: string): string;
 
 export function generate_style(intent_json: string): string;
 
+export function get_style_metadata(style_yaml: string): string;
+
 export function render_bibliography(style_yaml: string, refs_json: string): string;
 
 export function render_citation(style_yaml: string, refs_json: string, citation_json: string, mode?: string | null): string;

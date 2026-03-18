@@ -1,31 +1,31 @@
 <script lang="ts">
-import { goto } from "$app/navigation";
-import { wizardStore } from "$lib/stores/wizard.svelte";
-import TypeSelector from "./TypeSelector.svelte";
-import InteractivePreview from "./InteractivePreview.svelte";
-import ComponentEditor from "./ComponentEditor.svelte";
+	import { goto } from "$app/navigation";
+	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import TypeSelector from "./TypeSelector.svelte";
+	import InteractivePreview from "./InteractivePreview.svelte";
+	import ComponentEditor from "./ComponentEditor.svelte";
 
-function goBack() {
-	wizardStore.setPhase("quick-start");
-	goto("/create/preset");
-}
-
-async function downloadStyle() {
-	const yaml = wizardStore.styleYaml;
-	if (!yaml) {
-		alert("No style to download");
-		return;
+	function goBack() {
+		wizardStore.setPhase("quick-start");
+		goto("/create/preset");
 	}
-	const blob = new Blob([yaml], { type: "text/plain" });
-	const url = URL.createObjectURL(blob);
-	const a = document.createElement("a");
-	a.href = url;
-	a.download = `${wizardStore.styleName || "style"}.yaml`;
-	document.body.appendChild(a);
-	a.click();
-	document.body.removeChild(a);
-	URL.revokeObjectURL(url);
-}
+
+	async function downloadStyle() {
+		const yaml = wizardStore.styleYaml;
+		if (!yaml) {
+			alert("No style to download");
+			return;
+		}
+		const blob = new Blob([yaml], { type: "text/plain" });
+		const url = URL.createObjectURL(blob);
+		const a = document.createElement("a");
+		a.href = url;
+		a.download = `${wizardStore.styleName || "style"}.yaml`;
+		document.body.appendChild(a);
+		a.click();
+		document.body.removeChild(a);
+		URL.revokeObjectURL(url);
+	}
 </script>
 
 <div class="min-h-screen bg-background-light">

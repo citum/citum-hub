@@ -11,15 +11,14 @@ export const GET: RequestHandler = async ({ params, fetch }) => {
 			const errorText = await res.text();
 			throw error(
 				res.status as NumericRange<400, 599>,
-				errorText || `Backend error: ${res.status}`,
+				errorText || `Backend error: ${res.status}`
 			);
 		}
 
 		// Pass through the response (image, etc)
 		return new Response(res.body, {
 			headers: {
-				"Content-Type":
-					res.headers.get("Content-Type") || "application/octet-stream",
+				"Content-Type": res.headers.get("Content-Type") || "application/octet-stream",
 			},
 		});
 	} catch (e: unknown) {

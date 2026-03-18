@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request, fetch, url }) => {
 			const errorText = await res.text();
 			throw error(
 				res.status as NumericRange<400, 599>,
-				errorText || `Backend error: ${res.status}`,
+				errorText || `Backend error: ${res.status}`
 			);
 		}
 

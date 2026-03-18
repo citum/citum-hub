@@ -1,371 +1,541 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html class="light" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Citation Style Detailed Preview</title>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap" rel="stylesheet"/>
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Theme Config -->
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#135bec",
-                        "background-light": "#f8f9fc",
-                        "background-dark": "#101622",
-                        "surface-light": "#ffffff",
-                        "border-light": "#e7ebf3",
-                        "text-main": "#0d121b",
-                        "text-secondary": "#4c669a"
-                    },
-                    fontFamily: {
-                        "display": ["Lexend", "sans-serif"],
-                        "serif": ["Merriweather", "serif"],
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
-                },
-            },
-        }
-    </script>
-<style>
-        body {
-            font-family: 'Lexend', sans-serif;
-        }
-        .citation-preview {
-            font-family: 'Merriweather', serif;
-        }
-        /* Custom scrollbar for cleaner look */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: transparent; 
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1; 
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8; 
-        }
-    </style>
-</head>
-<body class="bg-background-light dark:bg-background-dark text-text-main antialiased min-h-screen flex flex-col">
-<!-- TopNavBar -->
-<header class="sticky top-0 z-50 w-full bg-surface-light border-b border-border-light">
-<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
-<div class="flex h-16 items-center justify-between">
-<!-- Logo & Nav -->
-<div class="flex items-center gap-8">
-<div class="flex items-center gap-3">
-<div class="size-8 text-primary bg-primary/10 rounded-lg flex items-center justify-center">
-<span class="material-symbols-outlined text-2xl">school</span>
-</div>
-<h2 class="text-text-main text-xl font-bold tracking-tight hidden sm:block">Citation Repo</h2>
-</div>
-<nav class="hidden md:flex items-center gap-6">
-<a class="text-text-main text-sm font-medium hover:text-primary transition-colors" href="#">Styles</a>
-<a class="text-text-secondary text-sm font-medium hover:text-primary transition-colors" href="#">Editor</a>
-<a class="text-text-secondary text-sm font-medium hover:text-primary transition-colors" href="#">Guide</a>
-<a class="text-text-secondary text-sm font-medium hover:text-primary transition-colors" href="#">About</a>
-</nav>
-</div>
-<!-- Search & Actions -->
-<div class="flex items-center gap-4">
-<div class="hidden sm:flex relative group">
-<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-<span class="material-symbols-outlined text-text-secondary text-[20px]">search</span>
-</div>
-<input class="block w-full rounded-lg border-none bg-background-light py-2 pl-10 pr-3 text-sm placeholder:text-text-secondary focus:ring-2 focus:ring-primary focus:bg-white transition-all w-64" placeholder="Search styles..." type="text"/>
-</div>
-<button type="button" class="bg-primary text-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200">
-                        Log In
-                    </button>
-</div>
-</div>
-</div>
-</header>
-<!-- Main Layout -->
-<main class="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
-<!-- Breadcrumbs -->
-<nav aria-label="Breadcrumb" class="flex mb-8">
-<ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-<li class="inline-flex items-center">
-<a class="inline-flex items-center text-sm font-medium text-text-secondary hover:text-primary" href="#">
-<span class="material-symbols-outlined text-[18px] mr-1">home</span>
-                        Home
-                    </a>
-</li>
-<li>
-<div class="flex items-center">
-<span class="material-symbols-outlined text-text-secondary text-[16px]">chevron_right</span>
-<a class="ms-1 text-sm font-medium text-text-secondary hover:text-primary md:ms-2" href="#">Styles</a>
-</div>
-</li>
-<li aria-current="page">
-<div class="flex items-center">
-<span class="material-symbols-outlined text-text-secondary text-[16px]">chevron_right</span>
-<span class="ms-1 text-sm font-medium text-text-main md:ms-2">APA 7th Edition</span>
-</div>
-</li>
-</ol>
-</nav>
-<!-- Two Column Layout -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
-<!-- Left Sidebar (Metadata & Actions) -->
-<aside class="lg:col-span-4 flex flex-col gap-6 sticky top-24">
-<!-- Title Block -->
-<div class="flex flex-col gap-2">
-<h1 class="text-3xl lg:text-4xl font-black text-text-main leading-tight tracking-tight">
-                        APA 7th Edition
-                    </h1>
-<p class="text-text-secondary text-sm font-medium">American Psychological Association</p>
-<div class="mt-2 inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full w-fit border border-green-100">
-<span class="material-symbols-outlined text-[16px]">check_circle</span>
-<span class="text-xs font-bold uppercase tracking-wide">Verified Style</span>
-</div>
-</div>
-<!-- Action Buttons -->
-<div class="flex flex-col gap-3 py-4 border-b border-border-light">
-<button type="button" class="flex w-full items-center justify-center gap-3 bg-primary text-white h-12 rounded-lg font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/30 transition-all active:scale-[0.98]">
-<span class="material-symbols-outlined">download</span>
-                        Install Style
-                    </button>
-<div class="flex gap-3">
-<button type="button" class="flex-1 flex items-center justify-center gap-2 bg-white border border-border-light text-text-main h-10 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors">
-<span class="material-symbols-outlined text-[20px]">code</span>
-                            Source
-                        </button>
-<button type="button" class="flex-1 flex items-center justify-center gap-2 bg-white border border-border-light text-text-main h-10 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors">
-<span class="material-symbols-outlined text-[20px]">edit</span>
-                            Edit
-                        </button>
-</div>
-</div>
-<!-- Metadata List -->
-<div class="flex flex-col gap-5 py-2">
-<h3 class="text-text-main text-sm font-bold uppercase tracking-wider opacity-70">Metadata</h3>
-<div class="grid grid-cols-1 gap-4">
-<div class="flex items-start gap-4">
-<div class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0">
-<span class="material-symbols-outlined">menu_book</span>
-</div>
-<div>
-<p class="text-xs text-text-secondary font-medium">Field</p>
-<p class="text-base text-text-main font-semibold">Social Sciences</p>
-</div>
-</div>
-<div class="flex items-start gap-4">
-<div class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0">
-<span class="material-symbols-outlined">format_quote</span>
-</div>
-<div>
-<p class="text-xs text-text-secondary font-medium">Format</p>
-<p class="text-base text-text-main font-semibold">Author-Date</p>
-</div>
-</div>
-<div class="flex items-start gap-4">
-<div class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0">
-<span class="material-symbols-outlined">policy</span>
-</div>
-<div>
-<p class="text-xs text-text-secondary font-medium">License</p>
-<p class="text-base text-text-main font-semibold">CC-BY-SA 4.0</p>
-</div>
-</div>
-<div class="flex items-start gap-4">
-<div class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0">
-<span class="material-symbols-outlined">update</span>
-</div>
-<div>
-<p class="text-xs text-text-secondary font-medium">Last Updated</p>
-<p class="text-base text-text-main font-semibold">October 24, 2023</p>
-</div>
-</div>
-</div>
-<div class="mt-4 pt-6 border-t border-border-light">
-<p class="text-sm text-text-secondary leading-relaxed">
-                            This style follows the guidelines of the 7th edition of the Publication Manual of the American Psychological Association.
-                        </p>
-</div>
-</div>
-</aside>
-<!-- Right Content (Previews) -->
-<section class="lg:col-span-8 flex flex-col gap-10 min-w-0">
-<!-- Section Header -->
-<div class="flex items-end justify-between border-b border-border-light pb-4">
-<div>
-<h2 class="text-xl font-bold text-text-main">Comprehensive Preview</h2>
-<p class="text-sm text-text-secondary mt-1">Review how this style handles common citation scenarios.</p>
-</div>
-<div class="flex gap-2 bg-white rounded-lg p-1 border border-border-light shadow-sm">
-<button type="button" class="px-3 py-1.5 rounded text-xs font-bold bg-primary/10 text-primary">Citations</button>
-<button type="button" class="px-3 py-1.5 rounded text-xs font-bold text-text-secondary hover:bg-background-light">Bibliography</button>
-</div>
-</div>
-<!-- In-Text Citations Block -->
-<div class="flex flex-col gap-4 group/section">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-[20px]">short_text</span>
-<h3 class="text-base font-bold text-text-main">In-Text Citations</h3>
-</div>
-<div class="bg-white rounded-xl shadow-sm border border-border-light overflow-hidden">
-<!-- Preview Item: Single Author -->
-<div class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors">
-<div class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light">
-<span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Single</span>
-</div>
-<div class="flex-1 p-5 flex justify-between items-center gap-4">
-<p class="citation-preview text-lg text-slate-800">
-                                    (Smith, 2023)
-                                </p>
-<button type="button" aria-label="Copy" class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50">
-<span class="material-symbols-outlined text-[20px]">content_copy</span>
-</button>
-</div>
-</div>
-<!-- Preview Item: Multiple Authors -->
-<div class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors">
-<div class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light">
-<span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Multiple</span>
-</div>
-<div class="flex-1 p-5 flex justify-between items-center gap-4">
-<p class="citation-preview text-lg text-slate-800">
-                                    (Jones, 2021; Smith, 2023)
-                                </p>
-<button type="button" aria-label="Copy" class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50">
-<span class="material-symbols-outlined text-[20px]">content_copy</span>
-</button>
-</div>
-</div>
-<!-- Preview Item: With Locator -->
-<div class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors">
-<div class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light">
-<span class="text-xs font-bold text-text-secondary uppercase tracking-wider">With Page</span>
-</div>
-<div class="flex-1 p-5 flex justify-between items-center gap-4">
-<p class="citation-preview text-lg text-slate-800">
-                                    (Smith, 2023, p. 45)
-                                </p>
-<button type="button" aria-label="Copy" class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50">
-<span class="material-symbols-outlined text-[20px]">content_copy</span>
-</button>
-</div>
-</div>
-<!-- Preview Item: Narrative -->
-<div class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors">
-<div class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light">
-<span class="text-xs font-bold text-text-secondary uppercase tracking-wider">Narrative</span>
-</div>
-<div class="flex-1 p-5 flex justify-between items-center gap-4">
-<p class="citation-preview text-lg text-slate-800">
-                                    According to Smith (2023)...
-                                </p>
-<button type="button" aria-label="Copy" class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50">
-<span class="material-symbols-outlined text-[20px]">content_copy</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-<!-- Bibliography Block -->
-<div class="flex flex-col gap-4">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-primary text-[20px]">list_alt</span>
-<h3 class="text-base font-bold text-text-main">Bibliography Preview</h3>
-</div>
-<div class="bg-white rounded-xl shadow-sm border border-border-light p-8">
-<div class="flex flex-col gap-6">
-<!-- Book Entry -->
-<div class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all">
-<div class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
-</div>
-<div class="mb-1 flex items-center gap-2">
-<span class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">Book</span>
-</div>
-<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
-                                    Smith, J. (2023). <i class="italic">The future of artificial intelligence in academia</i>. Academic Press. https://doi.org/10.1038/s41586-023-00000
-                                </p>
-</div>
-<!-- Journal Entry -->
-<div class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all">
-<div class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
-</div>
-<div class="mb-1 flex items-center gap-2">
-<span class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">Journal Article</span>
-</div>
-<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
-                                    Jones, A., &amp; Williams, B. (2021). Citation metrics in the modern era: A comprehensive review. <i class="italic">Journal of Bibliometrics and Information Science</i>, <i class="italic">12</i>(3), 45-60.
-                                </p>
-</div>
-<!-- Report Entry -->
-<div class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all">
-<div class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
-</div>
-<div class="mb-1 flex items-center gap-2">
-<span class="bg-orange-50 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">Report</span>
-</div>
-<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
-                                    National Institute of Mental Health. (2022). <i class="italic">Clinical training in serious mental illness</i> (DHHS Publication No. ADM 90-1679). U.S. Government Printing Office.
-                                </p>
-</div>
-<!-- Website Entry -->
-<div class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all">
-<div class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity">
-<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
-</div>
-<div class="mb-1 flex items-center gap-2">
-<span class="bg-teal-50 text-teal-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide">Webpage</span>
-</div>
-<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
-                                    Bologna, C. (2019, October 31). <i class="italic">Why some people with anxiety love watching horror movies</i>. HuffPost. https://www.huffpost.com/entry/anxiety-love-watching-horror-movies_l_5d277587e4b02a5a5d57b59e
-                                </p>
-</div>
-</div>
-</div>
-</div>
-<!-- Footer / Info -->
-<div class="rounded-lg bg-blue-50 p-4 border border-blue-100 flex gap-3">
-<span class="material-symbols-outlined text-primary">info</span>
-<div>
-<h4 class="text-sm font-bold text-primary">About this preview</h4>
-<p class="text-sm text-text-secondary mt-1">
-                            These previews are generated in real-time using the Citation Style Language (Citum) processor. The formatting matches exactly what will appear in your document editor.
-                        </p>
-</div>
-</div>
-</section>
-</div>
-</main>
-<!-- Simple Footer -->
-<footer class="mt-auto border-t border-border-light py-8 bg-white">
-<div class="max-w-[1280px] mx-auto px-4 flex justify-between items-center text-sm text-text-secondary">
-<p>© 2024 Citation Repo. All rights reserved.</p>
-<div class="flex gap-4">
-<a class="hover:text-primary" href="#">Privacy</a>
-<a class="hover:text-primary" href="#">Terms</a>
-</div>
-</div>
-</footer>
-<!-- Custom Style for Hanging Indent (common in bibliographies) -->
-<style>
-        .hanging-indent {
-            padding-left: 2em;
-            text-indent: -2em;
-        }
-    </style>
-</body></html>
+<html class="light" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<title>Citation Style Detailed Preview</title>
+		<!-- Google Fonts -->
+		<link href="https://fonts.googleapis.com" rel="preconnect" />
+		<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<!-- Material Symbols -->
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+		<!-- Theme Config -->
+		<script id="tailwind-config">
+			tailwind.config = {
+				darkMode: "class",
+				theme: {
+					extend: {
+						colors: {
+							primary: "#135bec",
+							"background-light": "#f8f9fc",
+							"background-dark": "#101622",
+							"surface-light": "#ffffff",
+							"border-light": "#e7ebf3",
+							"text-main": "#0d121b",
+							"text-secondary": "#4c669a",
+						},
+						fontFamily: {
+							display: ["Lexend", "sans-serif"],
+							serif: ["Merriweather", "serif"],
+						},
+						borderRadius: {
+							DEFAULT: "0.25rem",
+							lg: "0.5rem",
+							xl: "0.75rem",
+							"2xl": "1rem",
+							full: "9999px",
+						},
+					},
+				},
+			};
+		</script>
+		<style>
+			body {
+				font-family: "Lexend", sans-serif;
+			}
+			.citation-preview {
+				font-family: "Merriweather", serif;
+			}
+			/* Custom scrollbar for cleaner look */
+			::-webkit-scrollbar {
+				width: 8px;
+				height: 8px;
+			}
+			::-webkit-scrollbar-track {
+				background: transparent;
+			}
+			::-webkit-scrollbar-thumb {
+				background: #cbd5e1;
+				border-radius: 4px;
+			}
+			::-webkit-scrollbar-thumb:hover {
+				background: #94a3b8;
+			}
+		</style>
+	</head>
+	<body
+		class="bg-background-light dark:bg-background-dark text-text-main antialiased min-h-screen flex flex-col"
+	>
+		<!-- TopNavBar -->
+		<header class="sticky top-0 z-50 w-full bg-surface-light border-b border-border-light">
+			<div class="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+				<div class="flex h-16 items-center justify-between">
+					<!-- Logo & Nav -->
+					<div class="flex items-center gap-8">
+						<div class="flex items-center gap-3">
+							<div
+								class="size-8 text-primary bg-primary/10 rounded-lg flex items-center justify-center"
+							>
+								<span class="material-symbols-outlined text-2xl">school</span>
+							</div>
+							<h2 class="text-text-main text-xl font-bold tracking-tight hidden sm:block">
+								Citation Repo
+							</h2>
+						</div>
+						<nav class="hidden md:flex items-center gap-6">
+							<a
+								class="text-text-main text-sm font-medium hover:text-primary transition-colors"
+								href="#"
+								>Styles</a
+							>
+							<a
+								class="text-text-secondary text-sm font-medium hover:text-primary transition-colors"
+								href="#"
+								>Editor</a
+							>
+							<a
+								class="text-text-secondary text-sm font-medium hover:text-primary transition-colors"
+								href="#"
+								>Guide</a
+							>
+							<a
+								class="text-text-secondary text-sm font-medium hover:text-primary transition-colors"
+								href="#"
+								>About</a
+							>
+						</nav>
+					</div>
+					<!-- Search & Actions -->
+					<div class="flex items-center gap-4">
+						<div class="hidden sm:flex relative group">
+							<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+								<span class="material-symbols-outlined text-text-secondary text-[20px]"
+									>search</span
+								>
+							</div>
+							<input
+								class="block w-full rounded-lg border-none bg-background-light py-2 pl-10 pr-3 text-sm placeholder:text-text-secondary focus:ring-2 focus:ring-primary focus:bg-white transition-all w-64"
+								placeholder="Search styles..."
+								type="text"
+							/>
+						</div>
+						<button
+							type="button"
+							class="bg-primary text-white text-sm font-bold px-5 py-2 rounded-lg hover:bg-blue-700 transition-colors shadow-sm shadow-blue-200"
+						>
+							Log In
+						</button>
+					</div>
+				</div>
+			</div>
+		</header>
+		<!-- Main Layout -->
+		<main class="flex-1 max-w-[1280px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
+			<!-- Breadcrumbs -->
+			<nav aria-label="Breadcrumb" class="flex mb-8">
+				<ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+					<li class="inline-flex items-center">
+						<a
+							class="inline-flex items-center text-sm font-medium text-text-secondary hover:text-primary"
+							href="#"
+						>
+							<span class="material-symbols-outlined text-[18px] mr-1">home</span>
+							Home
+						</a>
+					</li>
+					<li>
+						<div class="flex items-center">
+							<span class="material-symbols-outlined text-text-secondary text-[16px]"
+								>chevron_right</span
+							>
+							<a
+								class="ms-1 text-sm font-medium text-text-secondary hover:text-primary md:ms-2"
+								href="#"
+								>Styles</a
+							>
+						</div>
+					</li>
+					<li aria-current="page">
+						<div class="flex items-center">
+							<span class="material-symbols-outlined text-text-secondary text-[16px]"
+								>chevron_right</span
+							>
+							<span class="ms-1 text-sm font-medium text-text-main md:ms-2">APA 7th Edition</span>
+						</div>
+					</li>
+				</ol>
+			</nav>
+			<!-- Two Column Layout -->
+			<div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+				<!-- Left Sidebar (Metadata & Actions) -->
+				<aside class="lg:col-span-4 flex flex-col gap-6 sticky top-24">
+					<!-- Title Block -->
+					<div class="flex flex-col gap-2">
+						<h1 class="text-3xl lg:text-4xl font-black text-text-main leading-tight tracking-tight">
+							APA 7th Edition
+						</h1>
+						<p class="text-text-secondary text-sm font-medium">
+							American Psychological Association
+						</p>
+						<div
+							class="mt-2 inline-flex items-center gap-2 bg-green-50 text-green-700 px-3 py-1 rounded-full w-fit border border-green-100"
+						>
+							<span class="material-symbols-outlined text-[16px]">check_circle</span>
+							<span class="text-xs font-bold uppercase tracking-wide">Verified Style</span>
+						</div>
+					</div>
+					<!-- Action Buttons -->
+					<div class="flex flex-col gap-3 py-4 border-b border-border-light">
+						<button
+							type="button"
+							class="flex w-full items-center justify-center gap-3 bg-primary text-white h-12 rounded-lg font-bold shadow-lg shadow-blue-500/20 hover:bg-blue-700 hover:shadow-blue-500/30 transition-all active:scale-[0.98]"
+						>
+							<span class="material-symbols-outlined">download</span>
+							Install Style
+						</button>
+						<div class="flex gap-3">
+							<button
+								type="button"
+								class="flex-1 flex items-center justify-center gap-2 bg-white border border-border-light text-text-main h-10 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+							>
+								<span class="material-symbols-outlined text-[20px]">code</span>
+								Source
+							</button>
+							<button
+								type="button"
+								class="flex-1 flex items-center justify-center gap-2 bg-white border border-border-light text-text-main h-10 rounded-lg text-sm font-bold hover:bg-gray-50 transition-colors"
+							>
+								<span class="material-symbols-outlined text-[20px]">edit</span>
+								Edit
+							</button>
+						</div>
+					</div>
+					<!-- Metadata List -->
+					<div class="flex flex-col gap-5 py-2">
+						<h3 class="text-text-main text-sm font-bold uppercase tracking-wider opacity-70">
+							Metadata
+						</h3>
+						<div class="grid grid-cols-1 gap-4">
+							<div class="flex items-start gap-4">
+								<div
+									class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0"
+								>
+									<span class="material-symbols-outlined">menu_book</span>
+								</div>
+								<div>
+									<p class="text-xs text-text-secondary font-medium">Field</p>
+									<p class="text-base text-text-main font-semibold">Social Sciences</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-4">
+								<div
+									class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0"
+								>
+									<span class="material-symbols-outlined">format_quote</span>
+								</div>
+								<div>
+									<p class="text-xs text-text-secondary font-medium">Format</p>
+									<p class="text-base text-text-main font-semibold">Author-Date</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-4">
+								<div
+									class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0"
+								>
+									<span class="material-symbols-outlined">policy</span>
+								</div>
+								<div>
+									<p class="text-xs text-text-secondary font-medium">License</p>
+									<p class="text-base text-text-main font-semibold">CC-BY-SA 4.0</p>
+								</div>
+							</div>
+							<div class="flex items-start gap-4">
+								<div
+									class="size-10 rounded-lg bg-white border border-border-light flex items-center justify-center text-text-main shrink-0"
+								>
+									<span class="material-symbols-outlined">update</span>
+								</div>
+								<div>
+									<p class="text-xs text-text-secondary font-medium">Last Updated</p>
+									<p class="text-base text-text-main font-semibold">October 24, 2023</p>
+								</div>
+							</div>
+						</div>
+						<div class="mt-4 pt-6 border-t border-border-light">
+							<p class="text-sm text-text-secondary leading-relaxed">
+								This style follows the guidelines of the 7th edition of the Publication Manual of
+								the American Psychological Association.
+							</p>
+						</div>
+					</div>
+				</aside>
+				<!-- Right Content (Previews) -->
+				<section class="lg:col-span-8 flex flex-col gap-10 min-w-0">
+					<!-- Section Header -->
+					<div class="flex items-end justify-between border-b border-border-light pb-4">
+						<div>
+							<h2 class="text-xl font-bold text-text-main">Comprehensive Preview</h2>
+							<p class="text-sm text-text-secondary mt-1">
+								Review how this style handles common citation scenarios.
+							</p>
+						</div>
+						<div class="flex gap-2 bg-white rounded-lg p-1 border border-border-light shadow-sm">
+							<button
+								type="button"
+								class="px-3 py-1.5 rounded text-xs font-bold bg-primary/10 text-primary"
+							>
+								Citations
+							</button>
+							<button
+								type="button"
+								class="px-3 py-1.5 rounded text-xs font-bold text-text-secondary hover:bg-background-light"
+							>
+								Bibliography
+							</button>
+						</div>
+					</div>
+					<!-- In-Text Citations Block -->
+					<div class="flex flex-col gap-4 group/section">
+						<div class="flex items-center gap-2">
+							<span class="material-symbols-outlined text-primary text-[20px]">short_text</span>
+							<h3 class="text-base font-bold text-text-main">In-Text Citations</h3>
+						</div>
+						<div class="bg-white rounded-xl shadow-sm border border-border-light overflow-hidden">
+							<!-- Preview Item: Single Author -->
+							<div
+								class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors"
+							>
+								<div
+									class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light"
+								>
+									<span class="text-xs font-bold text-text-secondary uppercase tracking-wider"
+										>Single</span
+									>
+								</div>
+								<div class="flex-1 p-5 flex justify-between items-center gap-4">
+									<p class="citation-preview text-lg text-slate-800">(Smith, 2023)</p>
+									<button
+										type="button"
+										aria-label="Copy"
+										class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50"
+									>
+										<span class="material-symbols-outlined text-[20px]">content_copy</span>
+									</button>
+								</div>
+							</div>
+							<!-- Preview Item: Multiple Authors -->
+							<div
+								class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors"
+							>
+								<div
+									class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light"
+								>
+									<span class="text-xs font-bold text-text-secondary uppercase tracking-wider"
+										>Multiple</span
+									>
+								</div>
+								<div class="flex-1 p-5 flex justify-between items-center gap-4">
+									<p class="citation-preview text-lg text-slate-800">(Jones, 2021; Smith, 2023)</p>
+									<button
+										type="button"
+										aria-label="Copy"
+										class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50"
+									>
+										<span class="material-symbols-outlined text-[20px]">content_copy</span>
+									</button>
+								</div>
+							</div>
+							<!-- Preview Item: With Locator -->
+							<div
+								class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors"
+							>
+								<div
+									class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light"
+								>
+									<span class="text-xs font-bold text-text-secondary uppercase tracking-wider"
+										>With Page</span
+									>
+								</div>
+								<div class="flex-1 p-5 flex justify-between items-center gap-4">
+									<p class="citation-preview text-lg text-slate-800">(Smith, 2023, p. 45)</p>
+									<button
+										type="button"
+										aria-label="Copy"
+										class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50"
+									>
+										<span class="material-symbols-outlined text-[20px]">content_copy</span>
+									</button>
+								</div>
+							</div>
+							<!-- Preview Item: Narrative -->
+							<div
+								class="flex flex-col sm:flex-row border-b border-border-light last:border-0 hover:bg-slate-50 transition-colors"
+							>
+								<div
+									class="w-full sm:w-40 bg-background-light p-4 flex items-center border-b sm:border-b-0 sm:border-r border-border-light"
+								>
+									<span class="text-xs font-bold text-text-secondary uppercase tracking-wider"
+										>Narrative</span
+									>
+								</div>
+								<div class="flex-1 p-5 flex justify-between items-center gap-4">
+									<p class="citation-preview text-lg text-slate-800">
+										According to Smith (2023)...
+									</p>
+									<button
+										type="button"
+										aria-label="Copy"
+										class="text-slate-400 hover:text-primary transition-colors p-2 rounded-lg hover:bg-blue-50"
+									>
+										<span class="material-symbols-outlined text-[20px]">content_copy</span>
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- Bibliography Block -->
+					<div class="flex flex-col gap-4">
+						<div class="flex items-center gap-2">
+							<span class="material-symbols-outlined text-primary text-[20px]">list_alt</span>
+							<h3 class="text-base font-bold text-text-main">Bibliography Preview</h3>
+						</div>
+						<div class="bg-white rounded-xl shadow-sm border border-border-light p-8">
+							<div class="flex flex-col gap-6">
+								<!-- Book Entry -->
+								<div
+									class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all"
+								>
+									<div
+										class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+									>
+										<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
+									</div>
+									<div class="mb-1 flex items-center gap-2">
+										<span
+											class="bg-blue-50 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide"
+											>Book</span
+										>
+									</div>
+									<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
+										Smith, J. (2023).
+										<i class="italic">The future of artificial intelligence in academia</i>.
+										Academic Press. https://doi.org/10.1038/s41586-023-00000
+									</p>
+								</div>
+								<!-- Journal Entry -->
+								<div
+									class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all"
+								>
+									<div
+										class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+									>
+										<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
+									</div>
+									<div class="mb-1 flex items-center gap-2">
+										<span
+											class="bg-purple-50 text-purple-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide"
+											>Journal Article</span
+										>
+									</div>
+									<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
+										Jones, A., &amp; Williams, B. (2021). Citation metrics in the modern era: A
+										comprehensive review.
+										<i class="italic">Journal of Bibliometrics and Information Science</i>,
+										<i class="italic">12</i>(3), 45-60.
+									</p>
+								</div>
+								<!-- Report Entry -->
+								<div
+									class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all"
+								>
+									<div
+										class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+									>
+										<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
+									</div>
+									<div class="mb-1 flex items-center gap-2">
+										<span
+											class="bg-orange-50 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide"
+											>Report</span
+										>
+									</div>
+									<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
+										National Institute of Mental Health. (2022).
+										<i class="italic">Clinical training in serious mental illness</i> (DHHS
+										Publication No. ADM 90-1679). U.S. Government Printing Office.
+									</p>
+								</div>
+								<!-- Website Entry -->
+								<div
+									class="group relative pl-4 border-l-2 border-transparent hover:border-primary transition-all"
+								>
+									<div
+										class="absolute -left-[25px] top-1 opacity-0 group-hover:opacity-100 transition-opacity"
+									>
+										<span class="material-symbols-outlined text-primary text-sm">bookmark</span>
+									</div>
+									<div class="mb-1 flex items-center gap-2">
+										<span
+											class="bg-teal-50 text-teal-700 text-[10px] font-bold px-2 py-0.5 rounded uppercase tracking-wide"
+											>Webpage</span
+										>
+									</div>
+									<p class="citation-preview text-lg text-slate-900 leading-relaxed hanging-indent">
+										Bologna, C. (2019, October 31).
+										<i class="italic">Why some people with anxiety love watching horror movies</i>.
+										HuffPost.
+										https://www.huffpost.com/entry/anxiety-love-watching-horror-movies_l_5d277587e4b02a5a5d57b59e
+									</p>
+								</div>
+							</div>
+						</div>
+					</div>
+					<!-- Footer / Info -->
+					<div class="rounded-lg bg-blue-50 p-4 border border-blue-100 flex gap-3">
+						<span class="material-symbols-outlined text-primary">info</span>
+						<div>
+							<h4 class="text-sm font-bold text-primary">About this preview</h4>
+							<p class="text-sm text-text-secondary mt-1">
+								These previews are generated in real-time using the Citation Style Language (Citum)
+								processor. The formatting matches exactly what will appear in your document editor.
+							</p>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+		<!-- Simple Footer -->
+		<footer class="mt-auto border-t border-border-light py-8 bg-white">
+			<div
+				class="max-w-[1280px] mx-auto px-4 flex justify-between items-center text-sm text-text-secondary"
+			>
+				<p>© 2024 Citation Repo. All rights reserved.</p>
+				<div class="flex gap-4">
+					<a class="hover:text-primary" href="#">Privacy</a>
+					<a class="hover:text-primary" href="#">Terms</a>
+				</div>
+			</div>
+		</footer>
+		<!-- Custom Style for Hanging Indent (common in bibliographies) -->
+		<style>
+			.hanging-indent {
+				padding-left: 2em;
+				text-indent: -2em;
+			}
+		</style>
+	</body>
+</html>

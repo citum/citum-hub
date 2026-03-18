@@ -1,46 +1,47 @@
 <script lang="ts">
-import { wizardStore } from "$lib/stores/wizard.svelte";
-import type { DateConfig } from "$lib/types/wizard";
+	/* eslint-disable @typescript-eslint/no-explicit-any */
+	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import type { DateConfig } from "$lib/types/wizard";
 
-let { editScope = "all" } = $props<{ editScope?: "all" | "local" }>();
-let debounceTimer: number | undefined;
+	let { editScope = "all" } = $props<{ editScope?: "all" | "local" }>();
+	let debounceTimer: number | undefined;
 
-function debouncedFetchPreview() {
-	clearTimeout(debounceTimer);
-	debounceTimer = window.setTimeout(() => {
-		wizardStore.fetchPreview();
-	}, 300);
-}
-
-function getDateConfig(): DateConfig {
-	const obj = wizardStore.parseStyle();
-	if (!obj) return {};
-
-	if (editScope === "local") {
-		const override = (obj.options as any)?.dates?.[wizardStore.activeRefType];
-		if (override && typeof override === "object") return override;
+	function debouncedFetchPreview() {
+		clearTimeout(debounceTimer);
+		debounceTimer = window.setTimeout(() => {
+			wizardStore.fetchPreview();
+		}, 300);
 	}
 
-	const opts = wizardStore.getOptions();
-	if (opts?.dates && typeof opts.dates === "object") return opts.dates;
-	return {};
-}
+	function getDateConfig(): DateConfig {
+		const obj = wizardStore.parseStyle();
+		if (!obj) return {};
 
-function updateDate(path: keyof DateConfig, value: unknown) {
-	const current = getDateConfig();
-	const updated = { ...current, [path]: value };
+		if (editScope === "local") {
+			const override = (obj.options as any)?.dates?.[wizardStore.activeRefType];
+			if (override && typeof override === "object") return override;
+		}
 
-	if (editScope === "all") {
-		wizardStore.updateStyleField("options.dates", updated);
-	} else {
-		const typePath = `options.dates.${wizardStore.activeRefType}`;
-		wizardStore.updateStyleField(typePath, updated);
+		const opts = wizardStore.getOptions();
+		if (opts?.dates && typeof opts.dates === "object") return opts.dates;
+		return {};
 	}
-	debouncedFetchPreview();
-}
 
-const config = $derived(getDateConfig());
-const monthFormat = $derived(config.month ?? "long");
+	function updateDate(path: keyof DateConfig, value: unknown) {
+		const current = getDateConfig();
+		const updated = { ...current, [path]: value };
+
+		if (editScope === "all") {
+			wizardStore.updateStyleField("options.dates", updated);
+		} else {
+			const typePath = `options.dates.${wizardStore.activeRefType}`;
+			wizardStore.updateStyleField(typePath, updated);
+		}
+		debouncedFetchPreview();
+	}
+
+	const config = $derived(getDateConfig());
+	const monthFormat = $derived(config.month ?? "long");
 </script>
 
 <div class="space-y-4 p-6 pt-4">
@@ -48,10 +49,12 @@ const monthFormat = $derived(config.month ?? "long");
 	<p class="text-xs text-text-secondary mb-4">
 		Affects all dates in your bibliography and citations.
 	</p>
-	
+
 	<div class="space-y-4">
 		<div>
-			<label for="de-month" class="block text-sm font-medium text-text-main mb-2">Month Format</label>
+			<label for="de-month" class="block text-sm font-medium text-text-main mb-2"
+				>Month Format</label
+			>
 			<select
 				id="de-month"
 				value={monthFormat}
