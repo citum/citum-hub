@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: server -> target
+      - run: cargo check --manifest-path server/Cargo.toml
+      - run: cargo clippy --manifest-path server/Cargo.toml -- -D warnings
+      - run: cargo test --manifest-path server/Cargo.toml
+
+  wasm:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - run: curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+      - run: wasm-pack build --target nodejs
+        working-directory: server/crates/wasm-bridge
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wasm-pkg
+          path: server/crates/wasm-bridge/pkg
+
+  frontend:
+    needs: wasm
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v1
+      - uses: actions/download-artifact@v4
+        with:
+          name: wasm-pkg
+          path: server/crates/wasm-bridge/pkg
+      - run: bun install
+        working-directory: client
+      - run: bun run lint
+        working-directory: client
+      - run: bun run format:check
+        working-directory: client
+      - run: bun run check
+        working-directory: client
+      - run: bun run build
+        working-directory: client
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f Dockerfile.citum .
