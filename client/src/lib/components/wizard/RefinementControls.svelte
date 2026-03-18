@@ -1,135 +1,165 @@
 <script lang="ts">
-import type { WizardStyleOptions } from "$lib/types/wizard";
+	import type { WizardStyleOptions, ContributorConfig, LocatorConfig } from "$lib/types/wizard";
 
-interface Props {
-	currentOptions: WizardStyleOptions | null;
-	onUpdateContributors: (path: string, value: unknown) => void;
-	onUpdateDates: (form: string) => void;
-	onUpdateTitles: (textCase: string) => void;
-	onHighlightChange?: (field: string | null) => void;
-}
-
-const {
-	currentOptions,
-	onUpdateContributors,
-	onUpdateDates,
-	onUpdateTitles,
-	onHighlightChange,
-}: Props = $props();
-
-let expandedSections = $state<Record<string, boolean>>({
-	names: true,
-	dates: true,
-	titles: true,
-});
-
-function toggleSection(section: string) {
-	expandedSections[section] = !expandedSections[section];
-}
-
-function updateNameOrder(order: string) {
-	const displayAsSort = order === "family-first" ? "all" : undefined;
-	onUpdateContributors("display-as-sort", displayAsSort);
-}
-
-function updateAndConnector(connector: string) {
-	let value: string | undefined;
-	if (connector === "symbol") {
-		value = "symbol";
-	} else if (connector === "text") {
-		value = "text";
+	interface Props {
+		currentOptions: WizardStyleOptions | null;
+		onUpdateContributors: (path: string, value: unknown) => void;
+		onUpdateDates: (form: string) => void;
+		onUpdateTitles: (textCase: string) => void;
+		onUpdatePageRange: (format: string) => void;
+		onUpdateLocatorLabel: (form: string) => void;
+		onHighlightChange?: (field: string | null) => void;
 	}
-	if (value !== undefined) {
-		onUpdateContributors("and", value);
-	}
-}
 
-function updateEtAlAfter(minValue: number) {
-	if (minValue < 1 || minValue > 20) return;
-	const useFirst =
-		currentOptions?.contributors &&
-		typeof currentOptions.contributors === "object"
-			? (currentOptions.contributors.shorten?.["use-first"] ?? 1)
-			: 1;
-	onUpdateContributors("shorten", { min: minValue, "use-first": useFirst });
-}
+	const {
+		currentOptions,
+		onUpdateContributors,
+		onUpdateDates,
+		onUpdateTitles,
+		onUpdatePageRange,
+		onUpdateLocatorLabel,
+		onHighlightChange,
+	}: Props = $props();
 
-function updateInitials(style: string) {
-	let value: string | undefined;
-	if (style === "abbreviated") {
-		value = ". ";
-	} else if (style === "compact") {
-		value = "";
-	}
-	if (value !== undefined) {
-		onUpdateContributors("initialize-with", value);
-	}
-}
+	let expandedSections = $state<Record<string, boolean>>({
+		names: true,
+		dates: true,
+		titles: true,
+		citations: true,
+	});
 
-const getNameOrderValue = () => {
-	if (
-		currentOptions?.contributors &&
-		typeof currentOptions.contributors === "object"
-	) {
-		return currentOptions.contributors["display-as-sort"] === "all"
-			? "family-first"
-			: "given-first";
+	function toggleSection(section: string) {
+		expandedSections[section] = !expandedSections[section];
 	}
-	return "family-first";
-};
 
-const getAndValue = () => {
-	if (
-		currentOptions?.contributors &&
-		typeof currentOptions.contributors === "object"
-	) {
-		return currentOptions.contributors.and === "text" ? "text" : "symbol";
+	function updateNameOrder(order: string) {
+		const displayAsSort = order === "family-first" ? "all" : "none";
+		onUpdateContributors("display-as-sort", displayAsSort);
 	}
-	return "symbol";
-};
 
-const getEtAlValue = () => {
-	if (
-		currentOptions?.contributors &&
-		typeof currentOptions.contributors === "object"
-	) {
-		return currentOptions.contributors.shorten?.min || 3;
+	function updateAndConnector(connector: string) {
+		onUpdateContributors("and", connector);
 	}
-	return 3;
-};
 
-const getInitialsValue = () => {
-	if (
-		currentOptions?.contributors &&
-		typeof currentOptions.contributors === "object"
-	) {
-		const initWith = currentOptions.contributors["initialize-with"];
-		if (initWith === ". ") return "abbreviated";
-		if (initWith === "") return "compact";
+	function updateEtAlAfter(minValue: number) {
+		if (minValue < 1 || minValue > 20) return;
+		onUpdateContributors("shorten", { min: minValue, "use-first": 1 });
 	}
-	return "full";
-};
 
-const getMonthFormatValue = () => {
-	if (currentOptions?.dates && typeof currentOptions.dates === "object") {
-		return currentOptions.dates.month || "long";
+	function updateInitials(style: string) {
+		if (style === "abbreviated") {
+			onUpdateContributors("name-form", "initials");
+			onUpdateContributors("initialize-with", ". ");
+		} else if (style === "compact") {
+			onUpdateContributors("name-form", "initials");
+			onUpdateContributors("initialize-with", "");
+		} else {
+			onUpdateContributors("name-form", "full");
+			onUpdateContributors("initialize-with", undefined);
+		}
 	}
-	return "long";
-};
 
-const getTitleCaseValue = () => {
-	if (currentOptions?.titles && typeof currentOptions.titles === "object") {
-		const titles = currentOptions.titles as Record<string, unknown>;
-		const defaultRendering = titles.default as
-			| Record<string, unknown>
-			| undefined;
-		return (defaultRendering?.["text-case"] as string) || "sentence";
-	}
-	return "sentence";
-};
+	const getNameOrderValue = () => {
+		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
+			const config = currentOptions.contributors as ContributorConfig;
+			return config["display-as-sort"] === "all" ? "family-first" : "given-first";
+		}
+		return "family-first";
+	};
+
+	const getAndValue = () => {
+		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
+			const config = currentOptions.contributors as ContributorConfig;
+			return config.and === "text" ? "text" : "symbol";
+		}
+		return "symbol";
+	};
+
+	const getEtAlValue = () => {
+		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
+			const config = currentOptions.contributors as ContributorConfig;
+			return config.shorten?.min || 3;
+		}
+		return 3;
+	};
+
+	const getInitialsValue = () => {
+		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
+			const config = currentOptions.contributors as ContributorConfig;
+			if (config["name-form"] === "full") return "full";
+			const initWith = config["initialize-with"];
+			if (initWith === ". ") return "abbreviated";
+			if (initWith === "") return "compact";
+		}
+		return "full";
+	};
+
+	const getMonthFormatValue = () => {
+		if (currentOptions?.dates && typeof currentOptions.dates === "object") {
+			return currentOptions.dates.month || "long";
+		}
+		return "long";
+	};
+
+	const getTitleCaseValue = () => {
+		if (currentOptions?.titles && typeof currentOptions.titles === "object") {
+			const titles = currentOptions.titles as Record<string, unknown>;
+			const defaultRendering = titles.default as Record<string, unknown> | undefined;
+			return (defaultRendering?.["text-case"] as string) || "sentence";
+		}
+		return "sentence";
+	};
+
+	const getLocatorLabelValue = () => {
+		if (currentOptions?.locators && typeof currentOptions.locators === "object") {
+			const config = currentOptions.locators as LocatorConfig;
+			return config["default-label-form"] || "short";
+		}
+		return "short";
+	};
 </script>
 
 <div class="space-y-4">
+	<!-- Citations Section -->
+	<div class="overflow-hidden rounded-lg border border-border-light bg-surface-light">
+		<button
+			onclick={() => toggleSection("citations")}
+			class="flex w-full items-center justify-between px-6 py-4 hover:bg-background-light transition-colors"
+		>
+			<h2 class="font-semibold text-text-main">Citations</h2>
+			<span
+				class="material-symbols-outlined transition-transform duration-200"
+				class:rotate-180={expandedSections.citations}
+			>
+				expand_more
+			</span>
+		</button>
+
+		{#if expandedSections.citations}
+			<div class="space-y-4 border-t border-border-light px-6 py-4">
+				<p class="text-xs text-text-secondary">
+					Configure how pinpoint locators (page numbers, etc.) appear in citations.
+				</p>
+				<div>
+					<label for="rc-locator-label" class="block text-sm font-medium text-text-main mb-2"
+						>Locator Label Format</label
+					>
+					<select
+						id="rc-locator-label"
+						onchange={(e) => onUpdateLocatorLabel(e.currentTarget.value)}
+						value={getLocatorLabelValue()}
+						class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+					>
+						<option value="short">Short (p. 42)</option>
+						<option value="long">Long (page 42)</option>
+						<option value="symbol">Symbol (§ 42)</option>
+						<option value="none">None (42)</option>
+					</select>
+				</div>
+			</div>
+		{/if}
+	</div>
+
 	<!-- Names Section -->
 	<div class="overflow-hidden rounded-lg border border-border-light bg-surface-light">
 		<button
@@ -232,8 +262,7 @@ const getTitleCaseValue = () => {
 		{#if expandedSections.dates}
 			<div class="space-y-4 border-t border-border-light px-6 py-4">
 				<p class="text-xs text-text-secondary">
-					Affects all dates in your bibliography and citations — publication year, access date,
-					event date, etc.
+					Affects dates and number ranges in your bibliography and citations.
 				</p>
 				<div>
 					<label for="rc-month-format" class="block text-sm font-medium text-text-main mb-2"
@@ -261,6 +290,23 @@ const getTitleCaseValue = () => {
 							e.g. "Published 01/15/2024" · "Accessed 03/03/2025"
 						{/if}
 					</p>
+				</div>
+
+				<div class="pt-2">
+					<label for="rc-page-range" class="block text-sm font-medium text-text-main mb-2"
+						>Page Range Format</label
+					>
+					<select
+						id="rc-page-range"
+						onchange={(e) => onUpdatePageRange(e.currentTarget.value)}
+						value={currentOptions?.["page-range-format"] || "expanded"}
+						class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+					>
+						<option value="expanded">Expanded (123–125)</option>
+						<option value="minimal">Minimal (123–5)</option>
+						<option value="minimal-two">Minimal-two (123–25)</option>
+						<option value="chicago">Chicago (123–25, but 100–104)</option>
+					</select>
 				</div>
 			</div>
 		{/if}

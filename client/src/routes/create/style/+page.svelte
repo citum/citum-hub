@@ -1,16 +1,16 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
+	import { goto } from "$app/navigation";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import PresetGallery from "$lib/components/wizard/PresetGallery.svelte";
+	import StyleNavigator from "$lib/components/wizard/StyleNavigator.svelte";
 
 	onMount(() => {
 		if (!wizardStore.family) {
-			goto("/create/field", { replaceState: true });
+			goto("/create/family", { replaceState: true });
 			return;
 		}
 		wizardStore.setStep(3);
 	});
 </script>
 
-<PresetGallery />
+<StyleNavigator />

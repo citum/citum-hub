@@ -1,20 +1,33 @@
 <script lang="ts">
-import { goto } from "$app/navigation";
-import { wizardStore } from "$lib/stores/wizard.svelte";
-import { FAMILY_OPTIONS, FIELD_DEFAULTS } from "$lib/types/wizard";
-import type { StyleFamily } from "$lib/types/wizard";
+	import { goto } from "$app/navigation";
+	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { FAMILY_OPTIONS, FIELD_DEFAULTS } from "$lib/types/wizard";
+	import type { StyleFamily } from "$lib/types/wizard";
 
-async function selectFamily(familyId: StyleFamily) {
-	wizardStore.setFamily(familyId);
-	wizardStore.setStep(3);
-	await goto("/create/preset");
-}
+	async function selectFamily(familyId: StyleFamily) {
+		wizardStore.setFamily(familyId);
+		wizardStore.setStep(3);
 
-const isDefaultFamily = (familyId: StyleFamily): boolean => {
-	return wizardStore.field
-		? FIELD_DEFAULTS[wizardStore.field] === familyId
-		: false;
-};
+		// Generate base style from family/preset
+		const presetId =
+			familyId === "author-date" ? "apa" : familyId === "numeric" ? "vancouver" : "chicago-note";
+		wizardStore.setPresetId(presetId);
+		await wizardStore.generateFromIntent({
+			class:
+				familyId === "author-date"
+					? "author_date"
+					: familyId === "numeric"
+						? "numeric"
+						: "footnote",
+			from_preset: presetId,
+		});
+
+		await goto("/create/style");
+	}
+
+	const isDefaultFamily = (familyId: StyleFamily): boolean => {
+		return wizardStore.field ? FIELD_DEFAULTS[wizardStore.field] === familyId : false;
+	};
 </script>
 
 <div class="space-y-4 sm:space-y-6">

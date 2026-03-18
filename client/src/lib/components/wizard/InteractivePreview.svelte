@@ -1,107 +1,115 @@
 <script lang="ts">
-import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { wizardStore } from "$lib/stores/wizard.svelte";
 
-let containerRef: HTMLDivElement | undefined = $state();
-let tooltipPos = $state({ x: 0, y: 0 });
-let tooltipInfo = $state<{ type: string; label: string } | null>(null);
+	let containerRef: HTMLDivElement | undefined = $state();
+	let tooltipPos = $state({ x: 0, y: 0 });
+	let tooltipInfo = $state<{ type: string; label: string } | null>(null);
 
-const showParenthetical = $derived(
-	wizardStore.family === "author-date" || wizardStore.family === "numeric",
-);
-const showNarrative = $derived(wizardStore.family === "author-date");
-const showNote = $derived(wizardStore.family === "note");
-const showBibliography = $derived(wizardStore.family !== "numeric");
-
-function getComponentInfo(
-	el: HTMLElement,
-): { type: string; label: string; index: number | null } | null {
-	const classes = Array.from(el.classList);
-	const cslnClass = classes.find(
-		(c) =>
-			c.startsWith("csln-") &&
-			c !== "csln-entry" &&
-			c !== "csln-bibliography" &&
-			c !== "csln-citation",
+	const showParenthetical = $derived(
+		wizardStore.family === "author-date" || wizardStore.family === "numeric"
 	);
-	if (!cslnClass) return null;
+	const showNarrative = $derived(wizardStore.family === "author-date");
+	const showNote = $derived(wizardStore.family === "note");
+	const showBibliography = $derived(wizardStore.family !== "numeric");
 
-	const indexStr = el.getAttribute("data-index");
-	const index = indexStr ? parseInt(indexStr) : null;
+	function getComponentInfo(
+		el: HTMLElement
+	): { type: string; label: string; index: number | null } | null {
+		const classes = Array.from(el.classList);
+		const cslnClass = classes.find(
+			(c) =>
+				c.startsWith("csln-") &&
+				c !== "csln-entry" &&
+				c !== "csln-bibliography" &&
+				c !== "csln-citation"
+		);
+		if (!cslnClass) return null;
 
-	const type = cslnClass.replace("csln-", "");
-	const labels: Record<string, string> = {
-		author: "Author",
-		editor: "Editor",
-		translator: "Translator",
-		title: "Title",
-		"container-title": "Journal/Book Title",
-		issued: "Date",
-		accessed: "Access Date",
-		volume: "Volume",
-		issue: "Issue",
-		pages: "Pages",
-		doi: "DOI",
-		url: "URL",
-		publisher: "Publisher",
-		"citation-number": "Number",
-		edition: "Edition",
-	};
-	return { type, label: labels[type] || type.replace(/-/g, " "), index };
-}
+		const indexStr = el.getAttribute("data-index");
+		const index = indexStr ? parseInt(indexStr) : null;
 
-function handleInteraction(e: MouseEvent) {
-	const target = e.target as HTMLElement;
-	const cslnEl = target.closest('[class*="csln-"]') as HTMLElement;
-	
-	if (!cslnEl || cslnEl.classList.contains("csln-entry") || cslnEl.classList.contains("csln-bibliography")) {
-		if (e.type === "mousemove") tooltipInfo = null;
-		return;
+		const type = cslnClass.replace("csln-", "");
+		const labels: Record<string, string> = {
+			author: "Author",
+			editor: "Editor",
+			translator: "Translator",
+			title: "Title",
+			"container-title": "Journal/Book Title",
+			issued: "Date",
+			accessed: "Access Date",
+			volume: "Volume",
+			issue: "Issue",
+			pages: "Pages",
+			doi: "DOI",
+			url: "URL",
+			publisher: "Publisher",
+			"citation-number": "Number",
+			edition: "Edition",
+		};
+		return { type, label: labels[type] || type.replace(/-/g, " "), index };
 	}
 
-	const info = getComponentInfo(cslnEl);
-	if (!info) return;
+	function handleInteraction(e: MouseEvent | KeyboardEvent) {
+		const target = e.target as HTMLElement;
+		const cslnEl = target.closest('[class*="csln-"]') as HTMLElement;
 
-	if (e.type === "mousemove") {
-		tooltipInfo = info;
-		const rect = cslnEl.getBoundingClientRect();
-		tooltipPos = { x: rect.left + rect.width / 2, y: rect.top - 5 };
-	} else if (e.type === "click") {
-		e.stopPropagation();
-		wizardStore.setSelectedComponent({
-			componentType: info.type,
-			cssClass: `csln-${info.type}`,
-			element: cslnEl,
-			index: info.index,
-		});
-	}
-}
+		if (
+			!cslnEl ||
+			cslnEl.classList.contains("csln-entry") ||
+			cslnEl.classList.contains("csln-bibliography")
+		) {
+			if (e.type === "mousemove") tooltipInfo = null;
+			return;
+		}
 
-// Update selected state highlighting
-$effect(() => {
-	if (!containerRef) return;
-	const selected = wizardStore.selectedComponent;
-	
-	// Clear all selections
-	containerRef.querySelectorAll(".csln-selected").forEach(el => el.classList.remove("csln-selected"));
-	
-	if (selected?.index !== null && selected?.index !== undefined) {
-		// Highlight by index to be stable across re-renders
-		const el = containerRef.querySelector(`[data-index="${selected.index}"].csln-${selected.componentType}`);
-		if (el) el.classList.add("csln-selected");
-	}
-});
+		const info = getComponentInfo(cslnEl);
+		if (!info) return;
 
-$effect(() => {
-	// Add interactive class to elements for CSS styling
-	if (containerRef && wizardStore.previewHtml.bibliography) {
-		const elements = containerRef.querySelectorAll('[class^="csln-"]');
-		elements.forEach(el => {
-			if (!el.classList.contains("csln-entry") && !el.classList.contains("csln-bibliography")) {
-				el.classList.add("csln-interactive");
-			}
-		});
+		if (e.type === "mousemove") {
+			tooltipInfo = info;
+			const rect = cslnEl.getBoundingClientRect();
+			tooltipPos = { x: rect.left + rect.width / 2, y: rect.top - 5 };
+		} else if (e.type === "click") {
+			e.stopPropagation();
+			wizardStore.setSelectedComponent({
+				componentType: info.type,
+				cssClass: `csln-${info.type}`,
+				element: cslnEl,
+				index: info.index,
+			});
+		}
 	}
-});
+
+	// Update selected state highlighting
+	$effect(() => {
+		if (!containerRef) return;
+		const selected = wizardStore.selectedComponent;
+
+		// Clear all selections
+		containerRef
+			.querySelectorAll(".csln-selected")
+			.forEach((el) => el.classList.remove("csln-selected"));
+
+		if (selected?.index !== null && selected?.index !== undefined) {
+			// Highlight by index to be stable across re-renders
+			const el = containerRef.querySelector(
+				`[data-index="${selected.index}"].csln-${selected.componentType}`
+			);
+			if (el) el.classList.add("csln-selected");
+		}
+	});
+
+	$effect(() => {
+		// Add interactive class to elements for CSS styling
+		if (containerRef && wizardStore.previewHtml.bibliography) {
+			const elements = containerRef.querySelectorAll('[class^="csln-"]');
+			elements.forEach((el) => {
+				if (!el.classList.contains("csln-entry") && !el.classList.contains("csln-bibliography")) {
+					el.classList.add("csln-interactive");
+				}
+			});
+		}
+	});
 </script>
 
 <div class="rounded-lg border border-border-light bg-surface-light overflow-hidden">
@@ -117,19 +125,22 @@ $effect(() => {
 		</div>
 	{:else}
 		<div class="p-6">
-			<div 
-				bind:this={containerRef} 
-				class="space-y-6"
+			<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+			<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+			<div
+				bind:this={containerRef}
+				class="space-y-6 focus:outline-none"
 				role="region"
 				aria-label="Citation Preview"
+				tabindex="0"
 				onmousemove={handleInteraction}
 				onclick={handleInteraction}
-				onkeydown={(e) => {
+				onkeydown={(e: KeyboardEvent) => {
 					if (e.key === "Enter" || e.key === " ") {
-						handleInteraction(e as any);
+						handleInteraction(e);
 					}
 				}}
-				onmouseleave={() => tooltipInfo = null}
+				onmouseleave={() => (tooltipInfo = null)}
 			>
 				{#if showParenthetical && wizardStore.previewHtml.parenthetical}
 					<div class="space-y-2">

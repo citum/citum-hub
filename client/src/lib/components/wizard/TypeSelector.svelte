@@ -1,19 +1,19 @@
 <script lang="ts">
-import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { wizardStore } from "$lib/stores/wizard.svelte";
 
-interface RefType {
-	id: string;
-	label: string;
-}
+	interface RefType {
+		id: string;
+		label: string;
+	}
 
-const refTypes: RefType[] = [
-	{ id: "article-journal", label: "Article" },
-	{ id: "book", label: "Book" },
-	{ id: "chapter", label: "Chapter" },
-	{ id: "report", label: "Report" },
-	{ id: "thesis", label: "Thesis" },
-	{ id: "webpage", label: "Web page" },
-];
+	const refTypes: RefType[] = [
+		{ id: "article-journal", label: "Article" },
+		{ id: "book", label: "Book" },
+		{ id: "chapter", label: "Chapter" },
+		{ id: "report", label: "Report" },
+		{ id: "thesis", label: "Thesis" },
+		{ id: "webpage", label: "Web page" },
+	];
 </script>
 
 <div class="flex gap-1 border-b border-border-light overflow-x-auto">

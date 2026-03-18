@@ -7,7 +7,7 @@ export async function GET() {
 	try {
 		const fileContents = fs.readFileSync(
 			path.join(process.cwd(), "resources/comprehensive.yaml"),
-			"utf8",
+			"utf8"
 		);
 		const data = yaml.load(fileContents);
 		return json(data);

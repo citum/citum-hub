@@ -5,10 +5,6 @@ export interface StitchComponentProps {
 	className?: string;
 }
 
-export const StitchComponent: React.FC<StitchComponentProps> = ({
-	className = "",
-}) => {
-	return (
-		<div className={` ${className}`}>{/* Component content goes here */}</div>
-	);
+export const StitchComponent: React.FC<StitchComponentProps> = ({ className = "" }) => {
+	return <div className={` ${className}`}>{/* Component content goes here */}</div>;
 };

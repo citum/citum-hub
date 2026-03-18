@@ -1,321 +1,518 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Citum Forge - Style Preview</title>
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&amp;display=swap" rel="stylesheet"/>
-<!-- Material Symbols -->
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<script>
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#2e7dea",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#111821",
-                        "surface-dark": "#1c2026",
-                        "border-dark": "#3c4553",
-                        "text-secondary": "#9da9b8",
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"],
-                        "serif": ["Merriweather", "serif"],
-                    },
-                    borderRadius: {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                },
-            },
-        }
-    </script>
-</head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-x-hidden antialiased">
-<div class="relative flex min-h-screen w-full flex-col">
-<!-- Navigation -->
-<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-border-dark bg-background-dark px-4 py-3 lg:px-10">
-<div class="flex items-center gap-4 lg:gap-8">
-<div class="flex items-center gap-4 text-white">
-<div class="size-8 text-primary">
-<svg class="w-full h-full" fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-<path d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z" fill="currentColor"></path>
-</svg>
-</div>
-<h2 class="text-white text-lg font-bold leading-tight hidden md:block">Citum Forge</h2>
-</div>
-<nav class="hidden md:flex items-center gap-6 lg:gap-9">
-<a class="text-text-secondary hover:text-white text-sm font-medium transition-colors" href="#">Explore</a>
-<a class="text-text-secondary hover:text-white text-sm font-medium transition-colors" href="#">Create</a>
-<a class="text-white text-sm font-medium border-b-2 border-primary pb-0.5" href="#">Styles</a>
-<a class="text-text-secondary hover:text-white text-sm font-medium transition-colors" href="#">Docs</a>
-</nav>
-</div>
-<div class="flex flex-1 justify-end gap-4 lg:gap-8 items-center">
-<label class="hidden md:flex flex-col min-w-40 w-full max-w-64 h-10">
-<div class="flex w-full flex-1 items-stretch rounded-lg h-full bg-surface-dark border border-border-dark focus-within:border-primary transition-colors">
-<div class="text-text-secondary flex items-center justify-center pl-3">
-<span class="material-symbols-outlined text-[20px]">search</span>
-</div>
-<input class="w-full bg-transparent border-none text-white placeholder:text-text-secondary focus:ring-0 text-sm px-3" placeholder="Search styles..."/>
-</div>
-</label>
-<div class="bg-center bg-no-repeat bg-cover rounded-full size-9 border border-border-dark cursor-pointer" data-alt="User profile avatar gradient" style="background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></div>
-</div>
-</header>
-<!-- Main Layout -->
-<main class="flex-1 flex justify-center py-6 px-4 md:px-8 lg:px-12">
-<div class="w-full max-w-[1400px] flex flex-col">
-<!-- Breadcrumbs -->
-<div class="flex flex-wrap items-center gap-2 pb-6 text-sm">
-<a class="text-text-secondary hover:text-white transition-colors" href="#">Library</a>
-<span class="text-text-secondary">/</span>
-<a class="text-text-secondary hover:text-white transition-colors" href="#">Styles</a>
-<span class="text-text-secondary">/</span>
-<span class="text-white font-medium">Chicago 17th Edition (Author-Date)</span>
-</div>
-<!-- Page Heading & Actions -->
-<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-border-dark">
-<div class="flex flex-col gap-3 max-w-3xl">
-<h1 class="text-white text-3xl md:text-5xl font-black leading-tight tracking-tight">Chicago 17th Edition <span class="text-text-secondary font-bold text-2xl md:text-4xl block md:inline">(Author-Date)</span></h1>
-<p class="text-text-secondary text-lg leading-relaxed max-w-2xl">A robust author-date style used widely in the social sciences. Features full stops between elements and hanging indents in the bibliography.</p>
-<div class="flex flex-wrap gap-2 mt-2">
-<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20">
-<span class="material-symbols-outlined text-[14px]">check_circle</span> Verified
-                            </span>
-<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-dark text-text-secondary text-xs font-medium border border-border-dark">
-                                Social Sciences
-                            </span>
-<span class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-dark text-text-secondary text-xs font-medium border border-border-dark">
-                                Author-Date
-                            </span>
-</div>
-</div>
-<div class="flex gap-3 shrink-0">
-<button class="flex items-center gap-2 h-11 px-6 bg-surface-dark hover:bg-border-dark text-white text-sm font-bold rounded-lg border border-border-dark transition-all">
-<span class="material-symbols-outlined text-[20px]">star</span>
-<span>Star</span>
-</button>
-<button class="flex items-center gap-2 h-11 px-6 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20">
-<span class="material-symbols-outlined text-[20px]">fork_right</span>
-<span>Fork &amp; Edit</span>
-</button>
-</div>
-</div>
-<!-- Split Content -->
-<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
-<!-- Sidebar: Metadata -->
-<aside class="lg:col-span-4 flex flex-col gap-6">
-<!-- Info Card -->
-<div class="flex flex-col gap-6 rounded-xl border border-border-dark bg-surface-dark p-6">
-<!-- Version Block -->
-<div class="flex flex-col gap-2">
-<div class="flex items-center justify-between">
-<h3 class="text-text-secondary text-xs font-bold uppercase tracking-wider">Current Version</h3>
-<span class="text-primary bg-primary/10 border border-primary/20 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide">Stable</span>
-</div>
-<div class="flex items-baseline gap-2">
-<span class="text-white text-4xl font-black tracking-tight">v1.2.4</span>
-</div>
-<p class="text-text-secondary text-sm">Updated Oct 24, 2023</p>
-</div>
-<hr class="border-border-dark"/>
-<!-- Actions -->
-<div class="flex flex-col gap-3">
-<button class="w-full flex items-center justify-center gap-2 h-10 bg-white text-background-dark hover:bg-gray-100 text-sm font-bold rounded-lg transition-colors">
-<span class="material-symbols-outlined text-[18px]">download</span>
-                                    Download Citum
-                                </button>
-<button class="w-full flex items-center justify-center gap-2 h-10 bg-transparent border border-border-dark text-white hover:bg-border-dark text-sm font-bold rounded-lg transition-colors">
-<span class="material-symbols-outlined text-[18px]">code</span>
-                                    Copy JSON
-                                </button>
-</div>
-<!-- Details List -->
-<div class="flex flex-col gap-4 pt-2">
-<div class="flex items-start gap-3 text-sm">
-<span class="material-symbols-outlined text-text-secondary text-[20px] shrink-0">verified_user</span>
-<div>
-<p class="text-white font-medium">Maintained by</p>
-<a class="text-primary hover:underline" href="#">CitationStyles.org</a>
-</div>
-</div>
-<div class="flex items-start gap-3 text-sm">
-<span class="material-symbols-outlined text-text-secondary text-[20px] shrink-0">policy</span>
-<div>
-<p class="text-white font-medium">License</p>
-<p class="text-text-secondary">CC-BY-SA 3.0</p>
-</div>
-</div>
-<div class="flex items-start gap-3 text-sm">
-<span class="material-symbols-outlined text-text-secondary text-[20px] shrink-0">link</span>
-<div class="overflow-hidden">
-<p class="text-white font-medium">Canonical ID</p>
-<p class="text-text-secondary truncate text-xs font-mono mt-1 select-all">http://www.zotero.org/styles/chicago-author-date</p>
-</div>
-</div>
-</div>
-</div>
-<!-- Compatibility Card -->
-<div class="rounded-xl border border-border-dark bg-surface-dark p-6">
-<h3 class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-4">Compatible With</h3>
-<div class="flex flex-wrap gap-2">
-<span class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium">Zotero</span>
-<span class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium">Mendeley</span>
-<span class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium">Papers</span>
-<span class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium">RefWorks</span>
-</div>
-</div>
-</aside>
-<!-- Main: Stress Tests -->
-<section class="lg:col-span-8 flex flex-col gap-6">
-<!-- Filters -->
-<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-<h2 class="text-white text-xl font-bold">Citation Stress Tests</h2>
-<div class="flex overflow-x-auto pb-2 sm:pb-0 gap-2 no-scrollbar">
-<button class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-primary text-white text-sm font-medium transition-colors">
-                                    All Tests
-                                </button>
-<button class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors">
-                                    Books
-                                </button>
-<button class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors">
-                                    Journals
-                                </button>
-<button class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors">
-                                    Legal
-                                </button>
-<button class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors">
-                                    Edge Cases
-                                </button>
-</div>
-</div>
-<!-- Test Card 1: Journal Article -->
-<article class="flex flex-col gap-0 rounded-xl border border-border-dark bg-surface-dark overflow-hidden group">
-<!-- Header -->
-<div class="flex items-center justify-between px-6 py-4 bg-[#232932] border-b border-border-dark">
-<div class="flex items-center gap-3">
-<div class="size-2 rounded-full bg-green-500"></div>
-<h3 class="text-white font-bold text-base">Standard Journal Article</h3>
-</div>
-<span class="text-xs font-mono text-text-secondary">Type: article-journal</span>
-</div>
-<!-- Content Area -->
-<div class="p-6 flex flex-col gap-8">
-<!-- In-Text -->
-<div>
-<div class="flex justify-between items-end mb-2">
-<p class="text-text-secondary text-xs font-bold uppercase tracking-wider">In-Text Citation</p>
-</div>
-<div class="relative bg-background-dark border border-border-dark rounded-lg p-5">
-<p class="font-serif text-lg leading-relaxed text-gray-300">
-<span class="text-text-secondary opacity-50 select-none">...as demonstrated in the seminal work on particle physics </span>
-<span class="bg-primary/20 text-white px-1 rounded mx-0.5 border-b border-primary/40">(Aad et al. 2012)</span>
-<span class="text-text-secondary opacity-50 select-none">, the discovery of the Higgs boson confirmed...</span>
-</p>
-</div>
-</div>
-<!-- Bibliography -->
-<div>
-<div class="flex justify-between items-end mb-2">
-<p class="text-text-secondary text-xs font-bold uppercase tracking-wider">Bibliography Entry</p>
-<button class="text-xs text-primary hover:text-white transition-colors flex items-center gap-1 opacity-0 group-hover:opacity-100">
-<span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
-                                        </button>
-</div>
-<div class="relative bg-background-dark border border-border-dark rounded-lg p-5 pl-8">
-<p class="font-serif text-lg leading-relaxed text-gray-200 -indent-4">
-                                            Aad, G., T. Abajyan, B. Abbott, J. Abdallah, S. Abdel Khalek, A. A. Abdelalim, O. Abdinov, et al. 2012. “Observation of a New Particle in the Search for the Standard Model Higgs Boson with the ATLAS Detector at the LHC.” <i class="text-white italic">Physics Letters B</i> 716 (1): 1–29. https://doi.org/10.1016/j.physletb.2012.08.020.
-                                        </p>
-</div>
-</div>
-</div>
-<!-- Footer Metadata (Collapsed view style) -->
-<div class="px-6 py-3 bg-[#181c22] border-t border-border-dark flex items-center gap-4 text-xs text-text-secondary font-mono overflow-x-auto">
-<span class="whitespace-nowrap"><span class="text-gray-500">author:</span> Aad et al.</span>
-<span class="whitespace-nowrap"><span class="text-gray-500">issued:</span> 2012</span>
-<span class="whitespace-nowrap"><span class="text-gray-500">container:</span> Physics Letters B</span>
-<span class="whitespace-nowrap"><span class="text-gray-500">DOI:</span> 10.1016/...</span>
-</div>
-</article>
-<!-- Test Card 2: Translated Book -->
-<article class="flex flex-col gap-0 rounded-xl border border-border-dark bg-surface-dark overflow-hidden group">
-<div class="flex items-center justify-between px-6 py-4 bg-[#232932] border-b border-border-dark">
-<div class="flex items-center gap-3">
-<div class="size-2 rounded-full bg-orange-500"></div>
-<h3 class="text-white font-bold text-base">Translated Book</h3>
-</div>
-<span class="text-xs font-mono text-text-secondary">Type: book</span>
-</div>
-<div class="p-6 flex flex-col gap-8">
-<div>
-<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">In-Text Citation</p>
-<div class="relative bg-background-dark border border-border-dark rounded-lg p-5">
-<p class="font-serif text-lg leading-relaxed text-gray-300">
-<span class="text-text-secondary opacity-50 select-none">Foucault argues that the shift in penal systems represents a political technology of the body </span>
-<span class="bg-primary/20 text-white px-1 rounded mx-0.5 border-b border-primary/40">(Foucault 1977, 24)</span>.
-                                        </p>
-</div>
-</div>
-<div>
-<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">Bibliography Entry</p>
-<div class="relative bg-background-dark border border-border-dark rounded-lg p-5 pl-8">
-<p class="font-serif text-lg leading-relaxed text-gray-200 -indent-4">
-                                            Foucault, Michel. 1977. <i class="text-white italic">Discipline and Punish: The Birth of the Prison</i>. Translated by Alan Sheridan. New York: Pantheon Books.
-                                        </p>
-</div>
-</div>
-</div>
-<div class="px-6 py-3 bg-[#181c22] border-t border-border-dark flex items-center gap-4 text-xs text-text-secondary font-mono overflow-x-auto">
-<span class="whitespace-nowrap"><span class="text-gray-500">author:</span> Foucault, M.</span>
-<span class="whitespace-nowrap"><span class="text-gray-500">translator:</span> Sheridan, A.</span>
-<span class="whitespace-nowrap"><span class="text-gray-500">issued:</span> 1977</span>
-<span class="whitespace-nowrap"><span class="text-gray-500">publisher:</span> Pantheon</span>
-</div>
-</article>
-<!-- Test Card 3: Chapter in Edited Book -->
-<article class="flex flex-col gap-0 rounded-xl border border-border-dark bg-surface-dark overflow-hidden group">
-<div class="flex items-center justify-between px-6 py-4 bg-[#232932] border-b border-border-dark">
-<div class="flex items-center gap-3">
-<div class="size-2 rounded-full bg-blue-500"></div>
-<h3 class="text-white font-bold text-base">Chapter in Edited Book</h3>
-</div>
-<span class="text-xs font-mono text-text-secondary">Type: chapter</span>
-</div>
-<div class="p-6 flex flex-col gap-8">
-<div>
-<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">In-Text Citation</p>
-<div class="relative bg-background-dark border border-border-dark rounded-lg p-5">
-<p class="font-serif text-lg leading-relaxed text-gray-300">
-<span class="text-text-secondary opacity-50 select-none">According to Gould, biological constraints are fundamental </span>
-<span class="bg-primary/20 text-white px-1 rounded mx-0.5 border-b border-primary/40">(Gould 1991)</span>.
-                                        </p>
-</div>
-</div>
-<div>
-<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">Bibliography Entry</p>
-<div class="relative bg-background-dark border border-border-dark rounded-lg p-5 pl-8">
-<p class="font-serif text-lg leading-relaxed text-gray-200 -indent-4">
-                                            Gould, Glenn. 1991. “Streisand as Schwarzkopf.” In <i class="text-white italic">The Glenn Gould Reader</i>, edited by Tim Page, 308–11. New York: Vintage.
-                                        </p>
-</div>
-</div>
-</div>
-</article>
-</section>
-</div>
-</div>
-</main>
-</div>
-</body></html>
+<html class="dark" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<title>Citum Forge - Style Preview</title>
+		<!-- Fonts -->
+		<link href="https://fonts.googleapis.com" rel="preconnect" />
+		<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<!-- Material Symbols -->
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+		<script>
+			tailwind.config = {
+				darkMode: "class",
+				theme: {
+					extend: {
+						colors: {
+							primary: "#2e7dea",
+							"background-light": "#f6f7f8",
+							"background-dark": "#111821",
+							"surface-dark": "#1c2026",
+							"border-dark": "#3c4553",
+							"text-secondary": "#9da9b8",
+						},
+						fontFamily: {
+							display: ["Inter", "sans-serif"],
+							serif: ["Merriweather", "serif"],
+						},
+						borderRadius: {
+							DEFAULT: "0.25rem",
+							lg: "0.5rem",
+							xl: "0.75rem",
+							full: "9999px",
+						},
+					},
+				},
+			};
+		</script>
+	</head>
+	<body
+		class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white font-display overflow-x-hidden antialiased"
+	>
+		<div class="relative flex min-h-screen w-full flex-col">
+			<!-- Navigation -->
+			<header
+				class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-border-dark bg-background-dark px-4 py-3 lg:px-10"
+			>
+				<div class="flex items-center gap-4 lg:gap-8">
+					<div class="flex items-center gap-4 text-white">
+						<div class="size-8 text-primary">
+							<svg
+								class="w-full h-full"
+								fill="none"
+								viewbox="0 0 48 48"
+								xmlns="http://www.w3.org/2000/svg"
+							>
+								<path
+									d="M44 11.2727C44 14.0109 39.8386 16.3957 33.69 17.6364C39.8386 18.877 44 21.2618 44 24C44 26.7382 39.8386 29.123 33.69 30.3636C39.8386 31.6043 44 33.9891 44 36.7273C44 40.7439 35.0457 44 24 44C12.9543 44 4 40.7439 4 36.7273C4 33.9891 8.16144 31.6043 14.31 30.3636C8.16144 29.123 4 26.7382 4 24C4 21.2618 8.16144 18.877 14.31 17.6364C8.16144 16.3957 4 14.0109 4 11.2727C4 7.25611 12.9543 4 24 4C35.0457 4 44 7.25611 44 11.2727Z"
+									fill="currentColor"
+								></path>
+							</svg>
+						</div>
+						<h2 class="text-white text-lg font-bold leading-tight hidden md:block">Citum Forge</h2>
+					</div>
+					<nav class="hidden md:flex items-center gap-6 lg:gap-9">
+						<a
+							class="text-text-secondary hover:text-white text-sm font-medium transition-colors"
+							href="#"
+							>Explore</a
+						>
+						<a
+							class="text-text-secondary hover:text-white text-sm font-medium transition-colors"
+							href="#"
+							>Create</a
+						>
+						<a class="text-white text-sm font-medium border-b-2 border-primary pb-0.5" href="#"
+							>Styles</a
+						>
+						<a
+							class="text-text-secondary hover:text-white text-sm font-medium transition-colors"
+							href="#"
+							>Docs</a
+						>
+					</nav>
+				</div>
+				<div class="flex flex-1 justify-end gap-4 lg:gap-8 items-center">
+					<label class="hidden md:flex flex-col min-w-40 w-full max-w-64 h-10">
+						<div
+							class="flex w-full flex-1 items-stretch rounded-lg h-full bg-surface-dark border border-border-dark focus-within:border-primary transition-colors"
+						>
+							<div class="text-text-secondary flex items-center justify-center pl-3">
+								<span class="material-symbols-outlined text-[20px]">search</span>
+							</div>
+							<input
+								class="w-full bg-transparent border-none text-white placeholder:text-text-secondary focus:ring-0 text-sm px-3"
+								placeholder="Search styles..."
+							/>
+						</div>
+					</label>
+					<div
+						class="bg-center bg-no-repeat bg-cover rounded-full size-9 border border-border-dark cursor-pointer"
+						data-alt="User profile avatar gradient"
+						style="background-image: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+					></div>
+				</div>
+			</header>
+			<!-- Main Layout -->
+			<main class="flex-1 flex justify-center py-6 px-4 md:px-8 lg:px-12">
+				<div class="w-full max-w-[1400px] flex flex-col">
+					<!-- Breadcrumbs -->
+					<div class="flex flex-wrap items-center gap-2 pb-6 text-sm">
+						<a class="text-text-secondary hover:text-white transition-colors" href="#">Library</a>
+						<span class="text-text-secondary">/</span>
+						<a class="text-text-secondary hover:text-white transition-colors" href="#">Styles</a>
+						<span class="text-text-secondary">/</span>
+						<span class="text-white font-medium">Chicago 17th Edition (Author-Date)</span>
+					</div>
+					<!-- Page Heading & Actions -->
+					<div
+						class="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-border-dark"
+					>
+						<div class="flex flex-col gap-3 max-w-3xl">
+							<h1 class="text-white text-3xl md:text-5xl font-black leading-tight tracking-tight">
+								Chicago 17th Edition
+								<span class="text-text-secondary font-bold text-2xl md:text-4xl block md:inline"
+									>(Author-Date)</span
+								>
+							</h1>
+							<p class="text-text-secondary text-lg leading-relaxed max-w-2xl">
+								A robust author-date style used widely in the social sciences. Features full stops
+								between elements and hanging indents in the bibliography.
+							</p>
+							<div class="flex flex-wrap gap-2 mt-2">
+								<span
+									class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-500/10 text-blue-400 text-xs font-medium border border-blue-500/20"
+								>
+									<span class="material-symbols-outlined text-[14px]">check_circle</span> Verified
+								</span>
+								<span
+									class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-dark text-text-secondary text-xs font-medium border border-border-dark"
+								>
+									Social Sciences
+								</span>
+								<span
+									class="inline-flex items-center gap-1 px-2 py-1 rounded bg-surface-dark text-text-secondary text-xs font-medium border border-border-dark"
+								>
+									Author-Date
+								</span>
+							</div>
+						</div>
+						<div class="flex gap-3 shrink-0">
+							<button
+								class="flex items-center gap-2 h-11 px-6 bg-surface-dark hover:bg-border-dark text-white text-sm font-bold rounded-lg border border-border-dark transition-all"
+							>
+								<span class="material-symbols-outlined text-[20px]">star</span>
+								<span>Star</span>
+							</button>
+							<button
+								class="flex items-center gap-2 h-11 px-6 bg-primary hover:bg-blue-600 text-white text-sm font-bold rounded-lg transition-all shadow-lg shadow-blue-900/20"
+							>
+								<span class="material-symbols-outlined text-[20px]">fork_right</span>
+								<span>Fork &amp; Edit</span>
+							</button>
+						</div>
+					</div>
+					<!-- Split Content -->
+					<div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-8">
+						<!-- Sidebar: Metadata -->
+						<aside class="lg:col-span-4 flex flex-col gap-6">
+							<!-- Info Card -->
+							<div
+								class="flex flex-col gap-6 rounded-xl border border-border-dark bg-surface-dark p-6"
+							>
+								<!-- Version Block -->
+								<div class="flex flex-col gap-2">
+									<div class="flex items-center justify-between">
+										<h3 class="text-text-secondary text-xs font-bold uppercase tracking-wider">
+											Current Version
+										</h3>
+										<span
+											class="text-primary bg-primary/10 border border-primary/20 text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wide"
+											>Stable</span
+										>
+									</div>
+									<div class="flex items-baseline gap-2">
+										<span class="text-white text-4xl font-black tracking-tight">v1.2.4</span>
+									</div>
+									<p class="text-text-secondary text-sm">Updated Oct 24, 2023</p>
+								</div>
+								<hr class="border-border-dark" />
+								<!-- Actions -->
+								<div class="flex flex-col gap-3">
+									<button
+										class="w-full flex items-center justify-center gap-2 h-10 bg-white text-background-dark hover:bg-gray-100 text-sm font-bold rounded-lg transition-colors"
+									>
+										<span class="material-symbols-outlined text-[18px]">download</span>
+										Download Citum
+									</button>
+									<button
+										class="w-full flex items-center justify-center gap-2 h-10 bg-transparent border border-border-dark text-white hover:bg-border-dark text-sm font-bold rounded-lg transition-colors"
+									>
+										<span class="material-symbols-outlined text-[18px]">code</span>
+										Copy JSON
+									</button>
+								</div>
+								<!-- Details List -->
+								<div class="flex flex-col gap-4 pt-2">
+									<div class="flex items-start gap-3 text-sm">
+										<span class="material-symbols-outlined text-text-secondary text-[20px] shrink-0"
+											>verified_user</span
+										>
+										<div>
+											<p class="text-white font-medium">Maintained by</p>
+											<a class="text-primary hover:underline" href="#">CitationStyles.org</a>
+										</div>
+									</div>
+									<div class="flex items-start gap-3 text-sm">
+										<span class="material-symbols-outlined text-text-secondary text-[20px] shrink-0"
+											>policy</span
+										>
+										<div>
+											<p class="text-white font-medium">License</p>
+											<p class="text-text-secondary">CC-BY-SA 3.0</p>
+										</div>
+									</div>
+									<div class="flex items-start gap-3 text-sm">
+										<span class="material-symbols-outlined text-text-secondary text-[20px] shrink-0"
+											>link</span
+										>
+										<div class="overflow-hidden">
+											<p class="text-white font-medium">Canonical ID</p>
+											<p class="text-text-secondary truncate text-xs font-mono mt-1 select-all">
+												http://www.zotero.org/styles/chicago-author-date
+											</p>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- Compatibility Card -->
+							<div class="rounded-xl border border-border-dark bg-surface-dark p-6">
+								<h3 class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-4">
+									Compatible With
+								</h3>
+								<div class="flex flex-wrap gap-2">
+									<span
+										class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium"
+										>Zotero</span
+									>
+									<span
+										class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium"
+										>Mendeley</span
+									>
+									<span
+										class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium"
+										>Papers</span
+									>
+									<span
+										class="px-3 py-1.5 rounded-lg bg-background-dark border border-border-dark text-white text-xs font-medium"
+										>RefWorks</span
+									>
+								</div>
+							</div>
+						</aside>
+						<!-- Main: Stress Tests -->
+						<section class="lg:col-span-8 flex flex-col gap-6">
+							<!-- Filters -->
+							<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+								<h2 class="text-white text-xl font-bold">Citation Stress Tests</h2>
+								<div class="flex overflow-x-auto pb-2 sm:pb-0 gap-2 no-scrollbar">
+									<button
+										class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-primary text-white text-sm font-medium transition-colors"
+									>
+										All Tests
+									</button>
+									<button
+										class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors"
+									>
+										Books
+									</button>
+									<button
+										class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors"
+									>
+										Journals
+									</button>
+									<button
+										class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors"
+									>
+										Legal
+									</button>
+									<button
+										class="flex shrink-0 items-center justify-center h-8 px-4 rounded-lg bg-surface-dark border border-border-dark hover:border-text-secondary text-text-secondary hover:text-white text-sm font-medium transition-colors"
+									>
+										Edge Cases
+									</button>
+								</div>
+							</div>
+							<!-- Test Card 1: Journal Article -->
+							<article
+								class="flex flex-col gap-0 rounded-xl border border-border-dark bg-surface-dark overflow-hidden group"
+							>
+								<!-- Header -->
+								<div
+									class="flex items-center justify-between px-6 py-4 bg-[#232932] border-b border-border-dark"
+								>
+									<div class="flex items-center gap-3">
+										<div class="size-2 rounded-full bg-green-500"></div>
+										<h3 class="text-white font-bold text-base">Standard Journal Article</h3>
+									</div>
+									<span class="text-xs font-mono text-text-secondary">Type: article-journal</span>
+								</div>
+								<!-- Content Area -->
+								<div class="p-6 flex flex-col gap-8">
+									<!-- In-Text -->
+									<div>
+										<div class="flex justify-between items-end mb-2">
+											<p class="text-text-secondary text-xs font-bold uppercase tracking-wider">
+												In-Text Citation
+											</p>
+										</div>
+										<div
+											class="relative bg-background-dark border border-border-dark rounded-lg p-5"
+										>
+											<p class="font-serif text-lg leading-relaxed text-gray-300">
+												<span class="text-text-secondary opacity-50 select-none"
+													>...as demonstrated in the seminal work on particle physics
+												</span>
+												<span
+													class="bg-primary/20 text-white px-1 rounded mx-0.5 border-b border-primary/40"
+													>(Aad et al. 2012)</span
+												>
+												<span class="text-text-secondary opacity-50 select-none"
+													>, the discovery of the Higgs boson confirmed...</span
+												>
+											</p>
+										</div>
+									</div>
+									<!-- Bibliography -->
+									<div>
+										<div class="flex justify-between items-end mb-2">
+											<p class="text-text-secondary text-xs font-bold uppercase tracking-wider">
+												Bibliography Entry
+											</p>
+											<button
+												class="text-xs text-primary hover:text-white transition-colors flex items-center gap-1 opacity-0 group-hover:opacity-100"
+											>
+												<span class="material-symbols-outlined text-[14px]">content_copy</span> Copy
+											</button>
+										</div>
+										<div
+											class="relative bg-background-dark border border-border-dark rounded-lg p-5 pl-8"
+										>
+											<p class="font-serif text-lg leading-relaxed text-gray-200 -indent-4">
+												Aad, G., T. Abajyan, B. Abbott, J. Abdallah, S. Abdel Khalek, A. A.
+												Abdelalim, O. Abdinov, et al. 2012. “Observation of a New Particle in the
+												Search for the Standard Model Higgs Boson with the ATLAS Detector at the
+												LHC.” <i class="text-white italic">Physics Letters B</i> 716 (1): 1–29.
+												https://doi.org/10.1016/j.physletb.2012.08.020.
+											</p>
+										</div>
+									</div>
+								</div>
+								<!-- Footer Metadata (Collapsed view style) -->
+								<div
+									class="px-6 py-3 bg-[#181c22] border-t border-border-dark flex items-center gap-4 text-xs text-text-secondary font-mono overflow-x-auto"
+								>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">author:</span> Aad et al.</span
+									>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">issued:</span> 2012</span
+									>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">container:</span> Physics Letters B</span
+									>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">DOI:</span> 10.1016/...</span
+									>
+								</div>
+							</article>
+							<!-- Test Card 2: Translated Book -->
+							<article
+								class="flex flex-col gap-0 rounded-xl border border-border-dark bg-surface-dark overflow-hidden group"
+							>
+								<div
+									class="flex items-center justify-between px-6 py-4 bg-[#232932] border-b border-border-dark"
+								>
+									<div class="flex items-center gap-3">
+										<div class="size-2 rounded-full bg-orange-500"></div>
+										<h3 class="text-white font-bold text-base">Translated Book</h3>
+									</div>
+									<span class="text-xs font-mono text-text-secondary">Type: book</span>
+								</div>
+								<div class="p-6 flex flex-col gap-8">
+									<div>
+										<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">
+											In-Text Citation
+										</p>
+										<div
+											class="relative bg-background-dark border border-border-dark rounded-lg p-5"
+										>
+											<p class="font-serif text-lg leading-relaxed text-gray-300">
+												<span class="text-text-secondary opacity-50 select-none"
+													>Foucault argues that the shift in penal systems represents a political
+													technology of the body
+												</span>
+												<span
+													class="bg-primary/20 text-white px-1 rounded mx-0.5 border-b border-primary/40"
+													>(Foucault 1977, 24)</span
+												>.
+											</p>
+										</div>
+									</div>
+									<div>
+										<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">
+											Bibliography Entry
+										</p>
+										<div
+											class="relative bg-background-dark border border-border-dark rounded-lg p-5 pl-8"
+										>
+											<p class="font-serif text-lg leading-relaxed text-gray-200 -indent-4">
+												Foucault, Michel. 1977.
+												<i class="text-white italic"
+													>Discipline and Punish: The Birth of the Prison</i
+												>. Translated by Alan Sheridan. New York: Pantheon Books.
+											</p>
+										</div>
+									</div>
+								</div>
+								<div
+									class="px-6 py-3 bg-[#181c22] border-t border-border-dark flex items-center gap-4 text-xs text-text-secondary font-mono overflow-x-auto"
+								>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">author:</span> Foucault, M.</span
+									>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">translator:</span> Sheridan, A.</span
+									>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">issued:</span> 1977</span
+									>
+									<span class="whitespace-nowrap"
+										><span class="text-gray-500">publisher:</span> Pantheon</span
+									>
+								</div>
+							</article>
+							<!-- Test Card 3: Chapter in Edited Book -->
+							<article
+								class="flex flex-col gap-0 rounded-xl border border-border-dark bg-surface-dark overflow-hidden group"
+							>
+								<div
+									class="flex items-center justify-between px-6 py-4 bg-[#232932] border-b border-border-dark"
+								>
+									<div class="flex items-center gap-3">
+										<div class="size-2 rounded-full bg-blue-500"></div>
+										<h3 class="text-white font-bold text-base">Chapter in Edited Book</h3>
+									</div>
+									<span class="text-xs font-mono text-text-secondary">Type: chapter</span>
+								</div>
+								<div class="p-6 flex flex-col gap-8">
+									<div>
+										<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">
+											In-Text Citation
+										</p>
+										<div
+											class="relative bg-background-dark border border-border-dark rounded-lg p-5"
+										>
+											<p class="font-serif text-lg leading-relaxed text-gray-300">
+												<span class="text-text-secondary opacity-50 select-none"
+													>According to Gould, biological constraints are fundamental
+												</span>
+												<span
+													class="bg-primary/20 text-white px-1 rounded mx-0.5 border-b border-primary/40"
+													>(Gould 1991)</span
+												>.
+											</p>
+										</div>
+									</div>
+									<div>
+										<p class="text-text-secondary text-xs font-bold uppercase tracking-wider mb-2">
+											Bibliography Entry
+										</p>
+										<div
+											class="relative bg-background-dark border border-border-dark rounded-lg p-5 pl-8"
+										>
+											<p class="font-serif text-lg leading-relaxed text-gray-200 -indent-4">
+												Gould, Glenn. 1991. “Streisand as Schwarzkopf.” In
+												<i class="text-white italic">The Glenn Gould Reader</i>, edited by Tim Page,
+												308–11. New York: Vintage.
+											</p>
+										</div>
+									</div>
+								</div>
+							</article>
+						</section>
+					</div>
+				</div>
+			</main>
+		</div>
+	</body>
+</html>

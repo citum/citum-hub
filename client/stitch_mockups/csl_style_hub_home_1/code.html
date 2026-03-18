@@ -1,306 +1,500 @@
-<!DOCTYPE html>
+<!doctype html>
 
-<html class="dark" lang="en"><head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Citum Hub</title>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Google Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind Config -->
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    colors: {
-                        "primary": "#2e7dea",
-                        "background-light": "#f6f7f8",
-                        "background-dark": "#111821",
-                        "surface-dark": "#1c242e", // Slightly lighter for cards
-                        "surface-darker": "#0d1218", // Darker for footer/header
-                    },
-                    fontFamily: {
-                        "display": ["Inter", "sans-serif"],
-                        "serif": ["Merriweather", "serif"],
-                    },
-                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-                },
-            },
-        }
-    </script>
-<style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        .citation-preview {
-            font-family: 'Merriweather', serif;
-        }
-    </style>
-</head>
-<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-200">
-<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
-<!-- Header -->
-<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111418] px-4 py-3 lg:px-10">
-<div class="flex items-center gap-4">
-<div class="size-8 text-primary flex items-center justify-center">
-<span class="material-symbols-outlined text-3xl">school</span>
-</div>
-<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] dark:text-white">Citum Hub</h2>
-</div>
-<div class="hidden md:flex flex-1 justify-end gap-8">
-<div class="flex items-center gap-9">
-<a class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors" href="#">Find</a>
-<a class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors" href="#">Create</a>
-<a class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors" href="#">Documentation</a>
-<a class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors" href="#">Community</a>
-</div>
-<div class="flex gap-2">
-<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors">
-<span class="truncate">Sign In</span>
-</button>
-<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-md shadow-primary/20">
-<span class="truncate">My Account</span>
-</button>
-</div>
-</div>
-<!-- Mobile Menu Icon -->
-<div class="md:hidden flex items-center">
-<span class="material-symbols-outlined cursor-pointer text-slate-900 dark:text-white">menu</span>
-</div>
-</header>
-<main class="flex-grow">
-<!-- Hero Section -->
-<section class="relative bg-background-light dark:bg-background-dark py-12 lg:py-20 px-4">
-<!-- Background abstract graphic -->
-<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-30 dark:opacity-20">
-<div class="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-primary blur-[120px]"></div>
-<div class="absolute top-[40%] -left-[10%] w-[400px] h-[400px] rounded-full bg-blue-400 blur-[100px]"></div>
-</div>
-<div class="layout-container relative z-10 flex flex-col items-center justify-center max-w-[960px] mx-auto text-center gap-6">
-<div class="flex flex-col gap-4">
-<h1 class="text-4xl lg:text-6xl font-black leading-tight tracking-[-0.033em] bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400">
-                            The Next Generation of <br/> Citum Citation Styles
-                        </h1>
-<h2 class="text-lg lg:text-xl font-normal text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-                            Find, edit, and generate citation styles with real-time academic previews. 
-                            Ensure your research meets the highest standards.
-                        </h2>
-</div>
-<!-- Search Box -->
-<div class="w-full max-w-[580px] mt-4">
-<div class="flex w-full items-center rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 shadow-lg dark:shadow-slate-900/50 p-2 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary transition-all">
-<div class="flex items-center justify-center pl-3 text-slate-400 dark:text-slate-500">
-<span class="material-symbols-outlined">search</span>
-</div>
-<input class="flex-1 bg-transparent border-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 h-12 px-3 text-base focus:ring-0" placeholder="Search by name (e.g., APA 7th edition)..."/>
-<button class="hidden sm:flex items-center justify-center rounded-lg bg-primary hover:bg-blue-600 text-white font-bold h-10 px-6 transition-colors shadow-md">
-                                Find a Style
-                            </button>
-</div>
-<div class="flex justify-center gap-4 mt-4 text-sm text-slate-500 dark:text-slate-400">
-<span>Popular:</span>
-<a class="hover:text-primary hover:underline" href="#">APA 7th</a>
-<a class="hover:text-primary hover:underline" href="#">MLA 9th</a>
-<a class="hover:text-primary hover:underline" href="#">Chicago</a>
-<a class="hover:text-primary hover:underline" href="#">Nature</a>
-</div>
-</div>
-<!-- Secondary Action -->
-<div class="mt-4">
-<a class="inline-flex items-center gap-2 text-primary font-medium hover:text-blue-400 transition-colors group" href="#">
-<span class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform">arrow_forward</span>
-<span>Create a custom style with the wizard</span>
-</a>
-</div>
-</div>
-</section>
-<!-- Featured Styles Section -->
-<section class="py-10 px-4 lg:px-10 bg-white dark:bg-[#0f151c]">
-<div class="max-w-[1200px] mx-auto">
-<div class="flex items-center justify-between mb-8">
-<h2 class="text-2xl font-bold leading-tight tracking-tight dark:text-white">Trending Standards</h2>
-<a class="text-sm font-medium text-primary hover:text-blue-400" href="#">View all styles</a>
-</div>
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-<!-- Card 1: APA -->
-<div class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 transition-all duration-300">
-<div class="h-32 bg-gradient-to-r from-blue-900 to-blue-800 relative p-6 flex flex-col justify-end" data-alt="Blue abstract gradient header for APA style card">
-<div class="absolute top-4 right-4">
-<span class="inline-flex items-center rounded-full bg-blue-500/20 backdrop-blur-sm px-2.5 py-0.5 text-xs font-medium text-white ring-1 ring-inset ring-blue-400/30">
-                                        Verified
-                                     </span>
-</div>
-<h3 class="text-2xl font-bold text-white tracking-tight">APA 8th Gen</h3>
-<p class="text-blue-200 text-sm">Social Sciences • 2024</p>
-</div>
-<div class="p-5 flex flex-col gap-4 flex-1">
-<div class="flex flex-col gap-2">
-<span class="text-xs uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Preview</span>
-<div class="citation-preview text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-<span class="group-hover:text-primary transition-colors font-medium">Doe, J.</span> (2024). <i class="text-slate-900 dark:text-white">The Future of Citation Styles in the Digital Age.</i> Journal of Academic Standards, 12(3), 45-67.
-                                    </div>
-</div>
-<div class="mt-auto pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-700/50">
-<button class="flex-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white h-9 text-sm font-semibold transition-colors">
-                                        Quick Copy
-                                    </button>
-<button class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors">
-<span class="material-symbols-outlined text-[20px]">bookmark</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Card 2: Nature -->
-<div class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 transition-all duration-300">
-<div class="h-32 bg-gradient-to-r from-emerald-900 to-emerald-800 relative p-6 flex flex-col justify-end" data-alt="Emerald green abstract gradient header for Nature style card">
-<h3 class="text-2xl font-bold text-white tracking-tight">Nature Next</h3>
-<p class="text-emerald-200 text-sm">Natural Sciences • v2.1</p>
-</div>
-<div class="p-5 flex flex-col gap-4 flex-1">
-<div class="flex flex-col gap-2">
-<span class="text-xs uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Preview</span>
-<div class="citation-preview text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                        1. <span class="group-hover:text-primary transition-colors font-medium">Doe, J.</span> The Future of Citation Styles in the Digital Age. <i class="text-slate-900 dark:text-white">J. Acad. Stand.</i> <b>12</b>, 45–67 (2024).
-                                    </div>
-</div>
-<div class="mt-auto pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-700/50">
-<button class="flex-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white h-9 text-sm font-semibold transition-colors">
-                                        Quick Copy
-                                    </button>
-<button class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors">
-<span class="material-symbols-outlined text-[20px]">bookmark</span>
-</button>
-</div>
-</div>
-</div>
-<!-- Card 3: IEEE -->
-<div class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 transition-all duration-300">
-<div class="h-32 bg-gradient-to-r from-slate-800 to-slate-700 relative p-6 flex flex-col justify-end" data-alt="Dark gray abstract gradient header for IEEE style card">
-<div class="absolute top-4 right-4">
-<span class="inline-flex items-center rounded-full bg-orange-500/20 backdrop-blur-sm px-2.5 py-0.5 text-xs font-medium text-orange-200 ring-1 ring-inset ring-orange-400/30">
-                                        Beta
-                                     </span>
-</div>
-<h3 class="text-2xl font-bold text-white tracking-tight">IEEE 2024</h3>
-<p class="text-slate-300 text-sm">Engineering • Draft</p>
-</div>
-<div class="p-5 flex flex-col gap-4 flex-1">
-<div class="flex flex-col gap-2">
-<span class="text-xs uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Preview</span>
-<div class="citation-preview text-sm leading-relaxed text-slate-700 dark:text-slate-300">
-                                        [1] <span class="group-hover:text-primary transition-colors font-medium">J. Doe</span>, "The future of citation styles in the digital age," <i class="text-slate-900 dark:text-white">J. Acad. Stand.</i>, vol. 12, no. 3, pp. 45–67, 2024.
-                                    </div>
-</div>
-<div class="mt-auto pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-700/50">
-<button class="flex-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white h-9 text-sm font-semibold transition-colors">
-                                        Quick Copy
-                                    </button>
-<button class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors">
-<span class="material-symbols-outlined text-[20px]">bookmark</span>
-</button>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-<!-- Call to Action Section -->
-<section class="py-16 px-4 lg:px-10 bg-background-light dark:bg-background-dark">
-<div class="max-w-[960px] mx-auto">
-<div class="relative overflow-hidden rounded-2xl bg-surface-darker border border-slate-200 dark:border-slate-800 shadow-xl">
-<div class="absolute inset-0 z-0">
-<!-- Mesh gradient background -->
-<div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 opacity-90"></div>
-<div class="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl"></div>
-<div class="absolute -top-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
-</div>
-<div class="relative z-10 flex flex-col md:flex-row items-center gap-8 p-8 md:p-12">
-<div class="flex-1 flex flex-col gap-4 text-center md:text-left">
-<h2 class="text-3xl font-bold text-white tracking-tight">Can't find the perfect style?</h2>
-<p class="text-slate-300 text-lg">Use our visual editor to create a custom citation style from scratch, or modify an existing one to fit your institution's specific requirements.</p>
-<div class="flex flex-col sm:flex-row gap-4 mt-2 justify-center md:justify-start">
-<button class="flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-blue-600 text-white text-base font-bold h-12 px-8 transition-all hover:scale-105 shadow-lg shadow-primary/25">
-<span class="material-symbols-outlined">add_circle</span>
-                                        Create New Style
-                                    </button>
-<button class="flex items-center justify-center gap-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-white border border-slate-600 text-base font-bold h-12 px-8 transition-colors">
-                                        Read the Docs
-                                    </button>
-</div>
-</div>
-<div class="hidden md:block w-1/3">
-<!-- Abstract decorative element representing code/editor -->
-<div class="bg-slate-900/80 backdrop-blur-md rounded-lg border border-slate-700 p-4 transform rotate-3 shadow-2xl">
-<div class="flex gap-1.5 mb-3">
-<div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
-<div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
-</div>
-<div class="space-y-2">
-<div class="h-2 w-3/4 bg-slate-700 rounded opacity-50"></div>
-<div class="h-2 w-full bg-slate-700 rounded opacity-30"></div>
-<div class="h-2 w-5/6 bg-slate-700 rounded opacity-40"></div>
-<div class="flex gap-2 mt-2">
-<div class="h-6 w-16 bg-primary/30 rounded border border-primary/50"></div>
-<div class="h-6 w-12 bg-slate-700 rounded"></div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
-</main>
-<!-- Footer -->
-<footer class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d1218] px-10 py-12">
-<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between gap-10">
-<div class="flex flex-col gap-4 max-w-sm">
-<div class="flex items-center gap-3">
-<div class="size-6 text-slate-400 flex items-center justify-center">
-<span class="material-symbols-outlined text-2xl">school</span>
-</div>
-<span class="text-lg font-bold text-slate-900 dark:text-white">Citum Hub</span>
-</div>
-<p class="text-sm text-slate-500 dark:text-slate-400">
-                        An open-source initiative to modernize academic referencing. 
-                        Maintained by the Citation Style Language community.
-                    </p>
-<div class="flex gap-4 mt-2">
-<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">code</span></a>
-<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">forum</span></a>
-<a class="text-slate-400 hover:text-primary transition-colors" href="#"><span class="material-symbols-outlined">rss_feed</span></a>
-</div>
-</div>
-<div class="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16">
-<div class="flex flex-col gap-3">
-<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Platform</h4>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Browse Styles</a>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Visual Editor</a>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">API</a>
-</div>
-<div class="flex flex-col gap-3">
-<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Community</h4>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Forum</a>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Contribute</a>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Events</a>
-</div>
-<div class="flex flex-col gap-3">
-<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">Legal</h4>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Privacy Policy</a>
-<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#">Terms of Service</a>
-</div>
-</div>
-</div>
-<div class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 text-center">
-<p class="text-xs text-slate-400 dark:text-slate-600">© 2024 Citum Hub. All rights reserved.</p>
-</div>
-</footer>
-</div>
-</body></html>
+<html class="dark" lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta content="width=device-width, initial-scale=1.0" name="viewport" />
+		<title>Citum Hub</title>
+		<!-- Tailwind CSS -->
+		<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+		<!-- Google Fonts -->
+		<link href="https://fonts.googleapis.com" rel="preconnect" />
+		<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+			rel="stylesheet"
+		/>
+		<!-- Tailwind Config -->
+		<script id="tailwind-config">
+			tailwind.config = {
+				darkMode: "class",
+				theme: {
+					extend: {
+						colors: {
+							primary: "#2e7dea",
+							"background-light": "#f6f7f8",
+							"background-dark": "#111821",
+							"surface-dark": "#1c242e", // Slightly lighter for cards
+							"surface-darker": "#0d1218", // Darker for footer/header
+						},
+						fontFamily: {
+							display: ["Inter", "sans-serif"],
+							serif: ["Merriweather", "serif"],
+						},
+						borderRadius: { DEFAULT: "0.25rem", lg: "0.5rem", xl: "0.75rem", full: "9999px" },
+					},
+				},
+			};
+		</script>
+		<style>
+			body {
+				font-family: "Inter", sans-serif;
+			}
+			.citation-preview {
+				font-family: "Merriweather", serif;
+			}
+		</style>
+	</head>
+	<body
+		class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-white transition-colors duration-200"
+	>
+		<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+			<!-- Header -->
+			<header
+				class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111418] px-4 py-3 lg:px-10"
+			>
+				<div class="flex items-center gap-4">
+					<div class="size-8 text-primary flex items-center justify-center">
+						<span class="material-symbols-outlined text-3xl">school</span>
+					</div>
+					<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] dark:text-white">
+						Citum Hub
+					</h2>
+				</div>
+				<div class="hidden md:flex flex-1 justify-end gap-8">
+					<div class="flex items-center gap-9">
+						<a
+							class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors"
+							href="#"
+							>Find</a
+						>
+						<a
+							class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors"
+							href="#"
+							>Create</a
+						>
+						<a
+							class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors"
+							href="#"
+							>Documentation</a
+						>
+						<a
+							class="text-sm font-medium leading-normal text-slate-600 hover:text-primary dark:text-slate-300 dark:hover:text-white transition-colors"
+							href="#"
+							>Community</a
+						>
+					</div>
+					<div class="flex gap-2">
+						<button
+							class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-900 dark:text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors"
+						>
+							<span class="truncate">Sign In</span>
+						</button>
+						<button
+							class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary hover:bg-blue-600 text-white text-sm font-bold leading-normal tracking-[0.015em] transition-colors shadow-md shadow-primary/20"
+						>
+							<span class="truncate">My Account</span>
+						</button>
+					</div>
+				</div>
+				<!-- Mobile Menu Icon -->
+				<div class="md:hidden flex items-center">
+					<span class="material-symbols-outlined cursor-pointer text-slate-900 dark:text-white"
+						>menu</span
+					>
+				</div>
+			</header>
+			<main class="flex-grow">
+				<!-- Hero Section -->
+				<section class="relative bg-background-light dark:bg-background-dark py-12 lg:py-20 px-4">
+					<!-- Background abstract graphic -->
+					<div
+						class="absolute inset-0 z-0 overflow-hidden pointer-events-none opacity-30 dark:opacity-20"
+					>
+						<div
+							class="absolute -top-[20%] -right-[10%] w-[600px] h-[600px] rounded-full bg-primary blur-[120px]"
+						></div>
+						<div
+							class="absolute top-[40%] -left-[10%] w-[400px] h-[400px] rounded-full bg-blue-400 blur-[100px]"
+						></div>
+					</div>
+					<div
+						class="layout-container relative z-10 flex flex-col items-center justify-center max-w-[960px] mx-auto text-center gap-6"
+					>
+						<div class="flex flex-col gap-4">
+							<h1
+								class="text-4xl lg:text-6xl font-black leading-tight tracking-[-0.033em] bg-clip-text text-transparent bg-gradient-to-br from-slate-900 to-slate-600 dark:from-white dark:to-slate-400"
+							>
+								The Next Generation of <br />
+								Citum Citation Styles
+							</h1>
+							<h2
+								class="text-lg lg:text-xl font-normal text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed"
+							>
+								Find, edit, and generate citation styles with real-time academic previews. Ensure
+								your research meets the highest standards.
+							</h2>
+						</div>
+						<!-- Search Box -->
+						<div class="w-full max-w-[580px] mt-4">
+							<div
+								class="flex w-full items-center rounded-xl bg-white dark:bg-surface-dark border border-slate-200 dark:border-slate-700 shadow-lg dark:shadow-slate-900/50 p-2 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary transition-all"
+							>
+								<div
+									class="flex items-center justify-center pl-3 text-slate-400 dark:text-slate-500"
+								>
+									<span class="material-symbols-outlined">search</span>
+								</div>
+								<input
+									class="flex-1 bg-transparent border-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500 h-12 px-3 text-base focus:ring-0"
+									placeholder="Search by name (e.g., APA 7th edition)..."
+								/>
+								<button
+									class="hidden sm:flex items-center justify-center rounded-lg bg-primary hover:bg-blue-600 text-white font-bold h-10 px-6 transition-colors shadow-md"
+								>
+									Find a Style
+								</button>
+							</div>
+							<div
+								class="flex justify-center gap-4 mt-4 text-sm text-slate-500 dark:text-slate-400"
+							>
+								<span>Popular:</span>
+								<a class="hover:text-primary hover:underline" href="#">APA 7th</a>
+								<a class="hover:text-primary hover:underline" href="#">MLA 9th</a>
+								<a class="hover:text-primary hover:underline" href="#">Chicago</a>
+								<a class="hover:text-primary hover:underline" href="#">Nature</a>
+							</div>
+						</div>
+						<!-- Secondary Action -->
+						<div class="mt-4">
+							<a
+								class="inline-flex items-center gap-2 text-primary font-medium hover:text-blue-400 transition-colors group"
+								href="#"
+							>
+								<span
+									class="material-symbols-outlined text-xl group-hover:translate-x-1 transition-transform"
+									>arrow_forward</span
+								>
+								<span>Create a custom style with the wizard</span>
+							</a>
+						</div>
+					</div>
+				</section>
+				<!-- Featured Styles Section -->
+				<section class="py-10 px-4 lg:px-10 bg-white dark:bg-[#0f151c]">
+					<div class="max-w-[1200px] mx-auto">
+						<div class="flex items-center justify-between mb-8">
+							<h2 class="text-2xl font-bold leading-tight tracking-tight dark:text-white">
+								Trending Standards
+							</h2>
+							<a class="text-sm font-medium text-primary hover:text-blue-400" href="#"
+								>View all styles</a
+							>
+						</div>
+						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+							<!-- Card 1: APA -->
+							<div
+								class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 transition-all duration-300"
+							>
+								<div
+									class="h-32 bg-gradient-to-r from-blue-900 to-blue-800 relative p-6 flex flex-col justify-end"
+									data-alt="Blue abstract gradient header for APA style card"
+								>
+									<div class="absolute top-4 right-4">
+										<span
+											class="inline-flex items-center rounded-full bg-blue-500/20 backdrop-blur-sm px-2.5 py-0.5 text-xs font-medium text-white ring-1 ring-inset ring-blue-400/30"
+										>
+											Verified
+										</span>
+									</div>
+									<h3 class="text-2xl font-bold text-white tracking-tight">APA 8th Gen</h3>
+									<p class="text-blue-200 text-sm">Social Sciences • 2024</p>
+								</div>
+								<div class="p-5 flex flex-col gap-4 flex-1">
+									<div class="flex flex-col gap-2">
+										<span
+											class="text-xs uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500"
+											>Preview</span
+										>
+										<div
+											class="citation-preview text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+										>
+											<span class="group-hover:text-primary transition-colors font-medium"
+												>Doe, J.</span
+											>
+											(2024).
+											<i class="text-slate-900 dark:text-white"
+												>The Future of Citation Styles in the Digital Age.</i
+											>
+											Journal of Academic Standards, 12(3), 45-67.
+										</div>
+									</div>
+									<div
+										class="mt-auto pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-700/50"
+									>
+										<button
+											class="flex-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white h-9 text-sm font-semibold transition-colors"
+										>
+											Quick Copy
+										</button>
+										<button
+											class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors"
+										>
+											<span class="material-symbols-outlined text-[20px]">bookmark</span>
+										</button>
+									</div>
+								</div>
+							</div>
+							<!-- Card 2: Nature -->
+							<div
+								class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 transition-all duration-300"
+							>
+								<div
+									class="h-32 bg-gradient-to-r from-emerald-900 to-emerald-800 relative p-6 flex flex-col justify-end"
+									data-alt="Emerald green abstract gradient header for Nature style card"
+								>
+									<h3 class="text-2xl font-bold text-white tracking-tight">Nature Next</h3>
+									<p class="text-emerald-200 text-sm">Natural Sciences • v2.1</p>
+								</div>
+								<div class="p-5 flex flex-col gap-4 flex-1">
+									<div class="flex flex-col gap-2">
+										<span
+											class="text-xs uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500"
+											>Preview</span
+										>
+										<div
+											class="citation-preview text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+										>
+											1.
+											<span class="group-hover:text-primary transition-colors font-medium"
+												>Doe, J.</span
+											>
+											The Future of Citation Styles in the Digital Age.
+											<i class="text-slate-900 dark:text-white">J. Acad. Stand.</i> <b>12</b>, 45–67
+											(2024).
+										</div>
+									</div>
+									<div
+										class="mt-auto pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-700/50"
+									>
+										<button
+											class="flex-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white h-9 text-sm font-semibold transition-colors"
+										>
+											Quick Copy
+										</button>
+										<button
+											class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors"
+										>
+											<span class="material-symbols-outlined text-[20px]">bookmark</span>
+										</button>
+									</div>
+								</div>
+							</div>
+							<!-- Card 3: IEEE -->
+							<div
+								class="group relative flex flex-col overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-surface-dark hover:border-primary/50 hover:shadow-lg dark:hover:shadow-primary/10 transition-all duration-300"
+							>
+								<div
+									class="h-32 bg-gradient-to-r from-slate-800 to-slate-700 relative p-6 flex flex-col justify-end"
+									data-alt="Dark gray abstract gradient header for IEEE style card"
+								>
+									<div class="absolute top-4 right-4">
+										<span
+											class="inline-flex items-center rounded-full bg-orange-500/20 backdrop-blur-sm px-2.5 py-0.5 text-xs font-medium text-orange-200 ring-1 ring-inset ring-orange-400/30"
+										>
+											Beta
+										</span>
+									</div>
+									<h3 class="text-2xl font-bold text-white tracking-tight">IEEE 2024</h3>
+									<p class="text-slate-300 text-sm">Engineering • Draft</p>
+								</div>
+								<div class="p-5 flex flex-col gap-4 flex-1">
+									<div class="flex flex-col gap-2">
+										<span
+											class="text-xs uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500"
+											>Preview</span
+										>
+										<div
+											class="citation-preview text-sm leading-relaxed text-slate-700 dark:text-slate-300"
+										>
+											[1]
+											<span class="group-hover:text-primary transition-colors font-medium"
+												>J. Doe</span
+											>, "The future of citation styles in the digital age,"
+											<i class="text-slate-900 dark:text-white">J. Acad. Stand.</i>, vol. 12, no. 3,
+											pp. 45–67, 2024.
+										</div>
+									</div>
+									<div
+										class="mt-auto pt-4 flex gap-3 border-t border-slate-200 dark:border-slate-700/50"
+									>
+										<button
+											class="flex-1 rounded-lg bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-900 dark:text-white h-9 text-sm font-semibold transition-colors"
+										>
+											Quick Copy
+										</button>
+										<button
+											class="flex items-center justify-center w-9 h-9 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:text-primary hover:border-primary transition-colors"
+										>
+											<span class="material-symbols-outlined text-[20px]">bookmark</span>
+										</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+				<!-- Call to Action Section -->
+				<section class="py-16 px-4 lg:px-10 bg-background-light dark:bg-background-dark">
+					<div class="max-w-[960px] mx-auto">
+						<div
+							class="relative overflow-hidden rounded-2xl bg-surface-darker border border-slate-200 dark:border-slate-800 shadow-xl"
+						>
+							<div class="absolute inset-0 z-0">
+								<!-- Mesh gradient background -->
+								<div
+									class="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 opacity-90"
+								></div>
+								<div
+									class="absolute -bottom-24 -right-24 w-64 h-64 bg-primary/20 rounded-full blur-3xl"
+								></div>
+								<div
+									class="absolute -top-24 -left-24 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"
+								></div>
+							</div>
+							<div class="relative z-10 flex flex-col md:flex-row items-center gap-8 p-8 md:p-12">
+								<div class="flex-1 flex flex-col gap-4 text-center md:text-left">
+									<h2 class="text-3xl font-bold text-white tracking-tight">
+										Can't find the perfect style?
+									</h2>
+									<p class="text-slate-300 text-lg">
+										Use our visual editor to create a custom citation style from scratch, or modify
+										an existing one to fit your institution's specific requirements.
+									</p>
+									<div class="flex flex-col sm:flex-row gap-4 mt-2 justify-center md:justify-start">
+										<button
+											class="flex items-center justify-center gap-2 rounded-lg bg-primary hover:bg-blue-600 text-white text-base font-bold h-12 px-8 transition-all hover:scale-105 shadow-lg shadow-primary/25"
+										>
+											<span class="material-symbols-outlined">add_circle</span>
+											Create New Style
+										</button>
+										<button
+											class="flex items-center justify-center gap-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-white border border-slate-600 text-base font-bold h-12 px-8 transition-colors"
+										>
+											Read the Docs
+										</button>
+									</div>
+								</div>
+								<div class="hidden md:block w-1/3">
+									<!-- Abstract decorative element representing code/editor -->
+									<div
+										class="bg-slate-900/80 backdrop-blur-md rounded-lg border border-slate-700 p-4 transform rotate-3 shadow-2xl"
+									>
+										<div class="flex gap-1.5 mb-3">
+											<div class="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+											<div class="w-2.5 h-2.5 rounded-full bg-yellow-500"></div>
+											<div class="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+										</div>
+										<div class="space-y-2">
+											<div class="h-2 w-3/4 bg-slate-700 rounded opacity-50"></div>
+											<div class="h-2 w-full bg-slate-700 rounded opacity-30"></div>
+											<div class="h-2 w-5/6 bg-slate-700 rounded opacity-40"></div>
+											<div class="flex gap-2 mt-2">
+												<div class="h-6 w-16 bg-primary/30 rounded border border-primary/50"></div>
+												<div class="h-6 w-12 bg-slate-700 rounded"></div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+			</main>
+			<!-- Footer -->
+			<footer
+				class="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0d1218] px-10 py-12"
+			>
+				<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between gap-10">
+					<div class="flex flex-col gap-4 max-w-sm">
+						<div class="flex items-center gap-3">
+							<div class="size-6 text-slate-400 flex items-center justify-center">
+								<span class="material-symbols-outlined text-2xl">school</span>
+							</div>
+							<span class="text-lg font-bold text-slate-900 dark:text-white">Citum Hub</span>
+						</div>
+						<p class="text-sm text-slate-500 dark:text-slate-400">
+							An open-source initiative to modernize academic referencing. Maintained by the
+							Citation Style Language community.
+						</p>
+						<div class="flex gap-4 mt-2">
+							<a class="text-slate-400 hover:text-primary transition-colors" href="#"
+								><span class="material-symbols-outlined">code</span></a
+							>
+							<a class="text-slate-400 hover:text-primary transition-colors" href="#"
+								><span class="material-symbols-outlined">forum</span></a
+							>
+							<a class="text-slate-400 hover:text-primary transition-colors" href="#"
+								><span class="material-symbols-outlined">rss_feed</span></a
+							>
+						</div>
+					</div>
+					<div class="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16">
+						<div class="flex flex-col gap-3">
+							<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+								Platform
+							</h4>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Browse Styles</a
+							>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Visual Editor</a
+							>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>API</a
+							>
+						</div>
+						<div class="flex flex-col gap-3">
+							<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+								Community
+							</h4>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Forum</a
+							>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Contribute</a
+							>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Events</a
+							>
+						</div>
+						<div class="flex flex-col gap-3">
+							<h4 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+								Legal
+							</h4>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Privacy Policy</a
+							>
+							<a class="text-sm text-slate-500 dark:text-slate-400 hover:text-primary" href="#"
+								>Terms of Service</a
+							>
+						</div>
+					</div>
+				</div>
+				<div class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-800 text-center">
+					<p class="text-xs text-slate-400 dark:text-slate-600">
+						© 2024 Citum Hub. All rights reserved.
+					</p>
+				</div>
+			</footer>
+		</div>
+	</body>
+</html>

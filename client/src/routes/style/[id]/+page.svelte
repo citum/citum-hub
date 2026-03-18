@@ -1,107 +1,105 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import { goto } from "$app/navigation";
-import { page } from "$app/state";
-import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
-import { auth } from "$lib/stores/auth";
+	import { onMount } from "svelte";
+	import { goto } from "$app/navigation";
+	import { page } from "$app/state";
+	import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
+	import { auth } from "$lib/stores/auth";
 
-let style = $state(null);
-let loading = $state(true);
-let previewLoading = $state(false);
-let error = $state(null);
-let isForking = $state(false);
-let showSource = $state(false);
+	let style = $state(null);
+	let loading = $state(true);
+	let previewLoading = $state(false);
+	let error = $state(null);
+	let isForking = $state(false);
+	let showSource = $state(false);
 
-let previewSet = $state({
-	in_text_parenthetical: null,
-	in_text_narrative: null,
-	note: null,
-	bibliography: null,
-});
+	let previewSet = $state({
+		in_text_parenthetical: null,
+		in_text_narrative: null,
+		note: null,
+		bibliography: null,
+	});
 
-onMount(async () => {
-	try {
-		const res = await fetch(`/api/styles/${page.params.id}`, {
-			headers: $auth.token ? { Authorization: `Bearer ${$auth.token}` } : {},
-		});
-		if (res.ok) {
-			style = await res.json();
-			generatePreviews();
-		} else {
-			error = "Style not found or private";
+	onMount(async () => {
+		try {
+			const res = await fetch(`/api/styles/${page.params.id}`, {
+				headers: $auth.token ? { Authorization: `Bearer ${$auth.token}` } : {},
+			});
+			if (res.ok) {
+				style = await res.json();
+				generatePreviews();
+			} else {
+				error = "Style not found or private";
+			}
+		} catch {
+			error = "Network error";
+		} finally {
+			loading = false;
 		}
-	} catch {
-		error = "Network error";
-	} finally {
-		loading = false;
-	}
-});
+	});
 
-async function generatePreviews() {
-	if (!style) return;
-	previewLoading = true;
+	async function generatePreviews() {
+		if (!style) return;
+		previewLoading = true;
 
-	try {
-		const basePayload = style.citum
-			? { style_yaml: style.citum }
-			: { intent: style.intent };
+		try {
+			const basePayload = style.citum ? { style_yaml: style.citum } : { intent: style.intent };
 
-		// Fetch parenthetical (default)
-		const resParen = await fetch("/api/v1/preview", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ ...basePayload, mode: "NonIntegral" }),
-		});
+			// Fetch parenthetical (default)
+			const resParen = await fetch("/api/v1/preview", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ ...basePayload, mode: "NonIntegral" }),
+			});
 
-		// Fetch narrative
-		const resNarrative = await fetch("/api/v1/preview", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ ...basePayload, mode: "Integral" }),
-		});
+			// Fetch narrative
+			const resNarrative = await fetch("/api/v1/preview", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ ...basePayload, mode: "Integral" }),
+			});
 
-		if (resParen.ok && resNarrative.ok) {
-			const dataParen = await resParen.json();
-			const dataNarrative = await resNarrative.json();
+			if (resParen.ok && resNarrative.ok) {
+				const dataParen = await resParen.json();
+				const dataNarrative = await resNarrative.json();
 
-			previewSet = {
-				in_text_parenthetical: dataParen.in_text_parenthetical,
-				in_text_narrative: dataNarrative.in_text_narrative,
-				note: dataParen.note || null,
-				bibliography: dataParen.bibliography || null,
-			};
+				previewSet = {
+					in_text_parenthetical: dataParen.in_text_parenthetical,
+					in_text_narrative: dataNarrative.in_text_narrative,
+					note: dataParen.note || null,
+					bibliography: dataParen.bibliography || null,
+				};
+			}
+		} catch (e) {
+			console.error("Failed to generate previews", e);
+		} finally {
+			previewLoading = false;
 		}
-	} catch (e) {
-		console.error("Failed to generate previews", e);
-	} finally {
-		previewLoading = false;
 	}
-}
 
-async function forkStyle() {
-	if (!$auth.user) return;
-	isForking = true;
-	try {
-		const res = await fetch(`/api/styles/${style.id}/fork`, {
+	async function forkStyle() {
+		if (!$auth.user) return;
+		isForking = true;
+		try {
+			const res = await fetch(`/api/styles/${style.id}/fork`, {
+				method: "POST",
+				headers: { Authorization: `Bearer ${$auth.token}` },
+			});
+			if (res.ok) {
+				goto(`/library`);
+			}
+		} finally {
+			isForking = false;
+		}
+	}
+
+	async function bookmarkStyle() {
+		if (!$auth.user) return;
+		await fetch(`/api/styles/${style.id}/bookmark`, {
 			method: "POST",
 			headers: { Authorization: `Bearer ${$auth.token}` },
 		});
-		if (res.ok) {
-			goto(`/library`);
-		}
-	} finally {
-		isForking = false;
+		alert("Bookmarked!");
 	}
-}
-
-async function bookmarkStyle() {
-	if (!$auth.user) return;
-	await fetch(`/api/styles/${style.id}/bookmark`, {
-		method: "POST",
-		headers: { Authorization: `Bearer ${$auth.token}` },
-	});
-	alert("Bookmarked!");
-}
 </script>
 
 <div class="px-4 py-10 lg:px-10 max-w-[1000px] mx-auto">

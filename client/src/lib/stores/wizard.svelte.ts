@@ -2,6 +2,7 @@
  * WizardStore — Svelte 5 runes-based state for the v2 style wizard.
  * Single source of truth for the wizard flow, style YAML, and preview state.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import yaml from "js-yaml";
 import type {
 	CitationField,
@@ -9,6 +10,7 @@ import type {
 	WizardPhase,
 	ComponentSelection,
 	WizardStyleOptions,
+	AxisChoices,
 } from "$lib/types/wizard";
 import { FIELD_DEFAULTS } from "$lib/types/wizard";
 
@@ -17,11 +19,14 @@ let phase = $state<WizardPhase>("quick-start");
 let step = $state(1);
 let field = $state<CitationField | null>(null);
 let family = $state<StyleFamily | null>(null);
+let axisChoices = $state<Partial<AxisChoices>>({});
 let presetId = $state<string | null>(null);
 let styleYaml = $state("");
 let styleName = $state("");
+let styleInfo = $state<Record<string, any> | null>(null);
 let selectedComponent = $state<ComponentSelection | null>(null);
 let activeRefType = $state("article-journal");
+let testLocator = $state<string>("123-125");
 
 // Preview HTML from the server
 let previewHtml = $state<{
@@ -80,7 +85,8 @@ function updateStyleField(path: string, value: unknown) {
 		const part = parts[i];
 		const nextPart = parts[i + 1];
 
-		if (!(part in current)) {
+		// If part is not in current or is not an object/array, create it
+		if (!(part in current) || typeof current[part] !== "object" || current[part] === null) {
 			current[part] = /^\d+$/.test(nextPart) ? [] : {};
 		}
 		current = current[part];
@@ -131,7 +137,7 @@ function deleteComponent(templatePath: string, index: number) {
 	}
 
 	if (!Array.isArray(template)) return;
-	
+
 	pushHistory();
 	template.splice(index, 1);
 	styleYaml = serializeStyle(obj);
@@ -150,19 +156,14 @@ async function fetchPreview() {
 	isLoading = true;
 	error = null;
 	try {
-		const fixtureType =
-			family === "author-date"
-				? "author_date"
-				: family === "note"
-					? "footnote"
-					: family === "numeric"
-						? "numeric"
-						: "expanded";
-
+		// Use "citum" variant of the preview API
 		const res = await fetch("/api/v1/preview", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ style_yaml: styleYaml, class: fixtureType }),
+			body: JSON.stringify({
+				citum: styleYaml,
+				test_locator: testLocator || undefined,
+			}),
 		});
 		if (!res.ok) throw new Error(`Preview failed: ${res.status}`);
 		const data = await res.json();
@@ -180,9 +181,7 @@ async function fetchPreview() {
 }
 
 /** Generate base style YAML from intent fields via the server. */
-async function generateFromIntent(
-	intentFields: Record<string, string | boolean | null>,
-) {
+async function generateFromIntent(intentFields: Record<string, string | boolean | null>) {
 	isLoading = true;
 	error = null;
 	try {
@@ -205,6 +204,16 @@ async function generateFromIntent(
 		});
 		if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
 		styleYaml = await res.text();
+
+		// Extract metadata (info) from YAML
+		const parsed = parseStyle();
+		if (parsed && parsed.info) {
+			styleInfo = parsed.info as Record<string, any>;
+			if (styleInfo.title && !styleName) {
+				styleName = styleInfo.title;
+			}
+		}
+
 		// Reset history with new base
 		history = [styleYaml];
 		historyIndex = 0;
@@ -235,9 +244,11 @@ function reset() {
 	step = 1;
 	field = null;
 	family = null;
+	axisChoices = {};
 	presetId = null;
 	styleYaml = "";
 	styleName = "";
+	styleInfo = null;
 	selectedComponent = null;
 	activeRefType = "article-journal";
 	previewHtml = {
@@ -266,11 +277,13 @@ function persist() {
 				step,
 				field,
 				family,
+				axisChoices,
 				presetId,
 				styleYaml,
 				styleName,
+				styleInfo,
 				activeRefType,
-			}),
+			})
 		);
 	} catch {
 		// Storage unavailable
@@ -287,9 +300,11 @@ function restore(): boolean {
 		step = data.step ?? 1;
 		field = data.field ?? null;
 		family = data.family ?? null;
+		axisChoices = data.axisChoices ?? {};
 		presetId = data.presetId ?? null;
 		styleYaml = data.styleYaml ?? "";
 		styleName = data.styleName ?? "";
+		styleInfo = data.styleInfo ?? null;
 		activeRefType = data.activeRefType ?? "article-journal";
 		if (styleYaml) {
 			history = [styleYaml];
@@ -315,6 +330,9 @@ export const wizardStore = {
 	get family() {
 		return family;
 	},
+	get axisChoices() {
+		return axisChoices;
+	},
 	get presetId() {
 		return presetId;
 	},
@@ -324,11 +342,17 @@ export const wizardStore = {
 	get styleName() {
 		return styleName;
 	},
+	get styleInfo() {
+		return styleInfo;
+	},
 	get selectedComponent() {
 		return selectedComponent;
 	},
 	get activeRefType() {
 		return activeRefType;
+	},
+	get testLocator() {
+		return testLocator;
 	},
 	get previewHtml() {
 		return previewHtml;
@@ -364,6 +388,10 @@ export const wizardStore = {
 		family = f;
 		persist();
 	},
+	setAxisChoices(c: Partial<AxisChoices>) {
+		axisChoices = { ...axisChoices, ...c };
+		persist();
+	},
 	setPresetId(id: string) {
 		presetId = id;
 		persist();
@@ -381,6 +409,10 @@ export const wizardStore = {
 	},
 	setActiveRefType(t: string) {
 		activeRefType = t;
+	},
+	setTestLocator(l: string) {
+		testLocator = l;
+		fetchPreview();
 	},
 
 	// Actions

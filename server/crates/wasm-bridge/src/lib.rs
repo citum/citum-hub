@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
-use citum_schema::{Style, citation::Citation, CitationSpec, TemplatePreset};
-use citum_engine::{processor::Processor, Reference, render::html::Html as HtmlRenderer};
+use citum_schema::{Style, TemplatePreset, citation::{CitationMode, CitationLocator, LocatorSegment, LocatorType, LocatorValue}, CitationSpec};
+use citum_engine::{processor::Processor, Reference, Citation, CitationItem, render::html::Html as HtmlRenderer};
 use intent_engine::StyleIntent;
 use indexmap::IndexMap;
 use serde_json::Value;
@@ -12,6 +12,29 @@ fn ensure_style_has_templates(style: &mut Style) {
             ..Default::default()
         });
     }
+
+    // Force locator into the citation template if missing, to ensure it renders in preview
+    if let Some(ref mut citation) = style.citation {
+        use citum_schema::template::{TemplateComponent, TemplateVariable, SimpleVariable, Rendering};
+        
+        let mut template = citation.resolve_template().unwrap_or_default();
+        let has_locator = template.iter().any(|c| matches!(c, TemplateComponent::Variable(v) if v.variable == SimpleVariable::Locator));
+
+        if !has_locator {
+            template.push(TemplateComponent::Variable(TemplateVariable {
+                variable: SimpleVariable::Locator,
+                rendering: Rendering {
+                    prefix: Some(", ".to_string()),
+                    ..Default::default()
+                },
+                ..Default::default()
+            }));
+            
+            citation.template = Some(template);
+            citation.use_preset = None; // Explicit template overrides preset
+        }
+    }
+
     // Also ensure bibliography if it's supposed to have one
     if style.bibliography.is_none() {
          style.bibliography = Some(citum_schema::BibliographySpec {
@@ -44,6 +67,15 @@ fn parse_references(refs_json: &str) -> Result<IndexMap<String, Reference>, Stri
         return Err(format!("Failed to parse reference '{}' as either InputReference or legacy CSL-JSON", key));
     }
     Ok(mapped_refs)
+}
+
+#[wasm_bindgen]
+pub fn get_style_metadata(style_yaml: &str) -> Result<String, JsValue> {
+    let style: Style = serde_yaml_ng::from_str(style_yaml)
+        .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
+    
+    serde_json::to_string(&style.info)
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
 }
 
 #[wasm_bindgen]
