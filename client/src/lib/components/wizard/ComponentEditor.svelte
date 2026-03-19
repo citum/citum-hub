@@ -101,30 +101,33 @@
 		const obj = wizardStore.parseStyle();
 		const bibliography = obj?.bibliography as any;
 		if (!bibliography) return [];
-		return (editScope === "all"
-			? bibliography.template
-			: bibliography["type-templates"]?.[wizardStore.activeRefType]?.template ?? bibliography.template) || [];
+		return (
+			(editScope === "all"
+				? bibliography.template
+				: (bibliography["type-templates"]?.[wizardStore.activeRefType]?.template ??
+					bibliography.template)) || []
+		);
 	}
 
 	function getComponentName(c: any): string {
-		if (c.type === 'names') return 'Contributors';
-		if (c.type === 'date') return 'Date';
-		if (c.type === 'text') return c.variable ? `Text (${c.variable})` : 'Text';
-		if (c.type === 'number') return `Number (${c.variable})`;
-		return c.type || 'Unknown';
+		if (c.type === "names") return "Contributors";
+		if (c.type === "date") return "Date";
+		if (c.type === "text") return c.variable ? `Text (${c.variable})` : "Text";
+		if (c.type === "number") return `Number (${c.variable})`;
+		return c.type || "Unknown";
 	}
 
 	function activateComponent(c: any, index: number) {
-		let compType = c.variable || c.type || 'unknown';
+		let compType = c.variable || c.type || "unknown";
 		// Map back 'names' to common variable name if missing to trigger correct editor
-		if (c.type === 'names') compType = 'author'; 
-		if (c.type === 'date') compType = c.variable || 'issued';
+		if (c.type === "names") compType = "author";
+		if (c.type === "date") compType = c.variable || "issued";
 
 		wizardStore.setSelectedComponent({
 			componentType: compType,
 			index,
 			element: null as unknown as HTMLElement,
-			cssClass: ""
+			cssClass: "",
 		});
 	}
 </script>
@@ -134,23 +137,33 @@
 		<div class="p-4 sm:p-6 border-b border-border-light bg-background-light">
 			<h3 class="text-sm font-semibold text-text-main mb-4 flex items-center justify-between">
 				<span>Component Array</span>
-				<span class="text-xs font-normal text-text-secondary bg-surface-light px-2 py-0.5 rounded border border-border-light">{getTemplatePath()}</span>
+				<span
+					class="text-xs font-normal text-text-secondary bg-surface-light px-2 py-0.5 rounded border border-border-light"
+					>{getTemplatePath()}</span
+				>
 			</h3>
-			
+
 			<div class="space-y-2">
 				{#each getActiveTemplate() as component, i}
-					<div class="flex items-center justify-between p-3 bg-surface-light border border-border-light rounded hover:border-primary/50 transition-colors group">
+					<div
+						class="flex items-center justify-between p-3 bg-surface-light border border-border-light rounded hover:border-primary/50 transition-colors group"
+					>
 						<div class="flex items-center gap-3">
 							<span class="material-symbols-outlined text-border-light">drag_indicator</span>
 							<div>
-								<span class="text-sm font-medium text-text-main block capitalize">{getComponentName(component)}</span>
+								<span class="text-sm font-medium text-text-main block capitalize"
+									>{getComponentName(component)}</span
+								>
 								{#if component.variable}
-									<span class="text-[10px] text-text-secondary font-mono bg-background-light px-1 py-0.5 rounded mt-0.5 inline-block">{component.variable}</span>
+									<span
+										class="text-[10px] text-text-secondary font-mono bg-background-light px-1 py-0.5 rounded mt-0.5 inline-block"
+										>{component.variable}</span
+									>
 								{/if}
 							</div>
 						</div>
-						
-						<button 
+
+						<button
 							onclick={() => activateComponent(component, i)}
 							class="text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 px-2.5 py-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity"
 						>
@@ -160,8 +173,12 @@
 				{/each}
 			</div>
 
-			<div class="text-center py-6 mt-4 text-text-secondary border-t border-border-light border-dashed">
-				<span class="material-symbols-outlined text-3xl mb-2 inline-block opacity-50">touch_app</span>
+			<div
+				class="text-center py-6 mt-4 text-text-secondary border-t border-border-light border-dashed"
+			>
+				<span class="material-symbols-outlined text-3xl mb-2 inline-block opacity-50"
+					>touch_app</span
+				>
 				<p class="text-xs">Or click any element in the preview to edit it directly</p>
 			</div>
 		</div>

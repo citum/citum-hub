@@ -1,6 +1,5 @@
 use oauth2::{
-    basic::BasicClient, AuthUrl, ClientId, ClientSecret, RedirectUrl, TokenUrl,
-    CsrfToken, Scope,
+    basic::BasicClient, AuthUrl, ClientId, ClientSecret, CsrfToken, RedirectUrl, Scope, TokenUrl,
 };
 
 pub fn get_auth_url(client: &BasicClient) -> (oauth2::url::Url, CsrfToken) {
@@ -9,10 +8,10 @@ pub fn get_auth_url(client: &BasicClient) -> (oauth2::url::Url, CsrfToken) {
         .add_scope(Scope::new("user:email".to_string()))
         .url()
 }
+use chrono::{Duration, Utc};
+use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
-use chrono::{Utc, Duration};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -30,8 +29,9 @@ pub struct User {
 
 pub fn create_oauth_client() -> BasicClient {
     let client_id = std::env::var("GITHUB_CLIENT_ID").expect("GITHUB_CLIENT_ID must be set");
-    let client_secret = std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET must be set");
-    
+    let client_secret =
+        std::env::var("GITHUB_CLIENT_SECRET").expect("GITHUB_CLIENT_SECRET must be set");
+
     let mut client = BasicClient::new(
         ClientId::new(client_id),
         Some(ClientSecret::new(client_secret)),
@@ -43,7 +43,7 @@ pub fn create_oauth_client() -> BasicClient {
         println!("Using REDIRECT_URL: {}", url);
         client = client.set_redirect_uri(RedirectUrl::new(url).unwrap());
     }
-    
+
     client
 }
 
@@ -60,7 +60,12 @@ pub fn create_jwt(user_id: Uuid, role: &str) -> String {
     };
 
     let secret = std::env::var("JWT_SECRET").expect("JWT_SECRET must be set");
-    encode(&Header::default(), &claims, &EncodingKey::from_secret(secret.as_ref())).unwrap()
+    encode(
+        &Header::default(),
+        &claims,
+        &EncodingKey::from_secret(secret.as_ref()),
+    )
+    .unwrap()
 }
 
 pub fn decode_jwt(token: &str) -> Result<Claims, String> {
@@ -81,11 +86,7 @@ pub struct GithubUser {
     pub login: String,
 }
 
-use axum::{
-    extract::FromRequestParts,
-    http::request::Parts,
-    async_trait,
-};
+use axum::{async_trait, extract::FromRequestParts, http::request::Parts};
 
 pub struct AuthenticatedUser {
     pub id: Uuid,
@@ -102,7 +103,8 @@ where
     type Rejection = (axum::http::StatusCode, String);
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        let auth_header = parts.headers
+        let auth_header = parts
+            .headers
             .get(axum::http::header::AUTHORIZATION)
             .and_then(|h| h.to_str().ok());
 
@@ -113,7 +115,7 @@ where
                 }
             }
         }
-        
+
         Ok(OptionalUser(None))
     }
 }
@@ -126,16 +128,26 @@ where
     type Rejection = (axum::http::StatusCode, String);
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
-        let auth_header = parts.headers
+        let auth_header = parts
+            .headers
             .get(axum::http::header::AUTHORIZATION)
             .and_then(|h| h.to_str().ok())
-            .ok_or((axum::http::StatusCode::UNAUTHORIZED, "Missing authorization header".to_string()))?;
+            .ok_or((
+                axum::http::StatusCode::UNAUTHORIZED,
+                "Missing authorization header".to_string(),
+            ))?;
 
-        let token = auth_header.strip_prefix("Bearer ")
-            .ok_or((axum::http::StatusCode::UNAUTHORIZED, "Invalid authorization header".to_string()))?;
+        let token = auth_header.strip_prefix("Bearer ").ok_or((
+            axum::http::StatusCode::UNAUTHORIZED,
+            "Invalid authorization header".to_string(),
+        ))?;
 
-        let claims = decode_jwt(token)
-            .map_err(|e| (axum::http::StatusCode::UNAUTHORIZED, format!("Invalid token: {}", e)))?;
+        let claims = decode_jwt(token).map_err(|e| {
+            (
+                axum::http::StatusCode::UNAUTHORIZED,
+                format!("Invalid token: {}", e),
+            )
+        })?;
 
         Ok(AuthenticatedUser {
             id: claims.sub,

@@ -124,7 +124,10 @@
 		</button>
 		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 4 of 4</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-			<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 100%"></div>
+			<div
+				class="h-full bg-primary rounded-full transition-all duration-500"
+				style="width: 100%"
+			></div>
 		</div>
 		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
 			Review Your Style
@@ -135,8 +138,13 @@
 	</div>
 
 	<!-- Name Input -->
-	<div class="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-sm mb-8">
-		<label for="styleName" class="block text-sm font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400 mb-3">
+	<div
+		class="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-sm mb-8"
+	>
+		<label
+			for="styleName"
+			class="block text-sm font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400 mb-3"
+		>
 			Style Name
 		</label>
 		<input
@@ -155,8 +163,14 @@
 	</div>
 
 	<!-- Preview -->
-	<div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-sm mb-8">
-		<h2 class="mb-6 text-sm font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700 pb-3">Final Preview</h2>
+	<div
+		class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-sm mb-8"
+	>
+		<h2
+			class="mb-6 text-sm font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700 pb-3"
+		>
+			Final Preview
+		</h2>
 		<PreviewPane />
 	</div>
 
@@ -180,7 +194,9 @@
 	{/if}
 
 	<!-- Action Buttons -->
-	<div class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+	<div
+		class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800"
+	>
 		<!-- Download (Primary) -->
 		<button
 			onclick={downloadYaml}

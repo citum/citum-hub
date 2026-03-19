@@ -3,28 +3,33 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
+use auth::User;
 use axum::{
-    extract::{Path, State, Query},
+    extract::{Path, Query, State},
+    response::{IntoResponse, Redirect},
     routing::{get, post},
-    Router, Json,
-    response::{Redirect, IntoResponse},
+    Json, Router,
 };
-use std::collections::HashSet;
-use std::fs;
-use std::path::{Path as FsPath, PathBuf};
-use std::sync::Arc;
-use std::net::SocketAddr;
+use chrono::{DateTime, Utc};
+use citum_engine::{
+    processor::Processor, render::html::Html as HtmlRenderer, Citation, CitationItem, Reference,
+};
+use citum_schema::{
+    citation::{CitationLocator, CitationMode, LocatorSegment, LocatorType, LocatorValue},
+    CitationField, Style, TemplatePreset,
+};
+use dotenvy::dotenv;
+use intent_engine::{DecisionPackage, StyleIntent};
+use oauth2::{AuthorizationCode, TokenResponse};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
-use citum_schema::{Style, TemplatePreset, citation::{CitationMode, CitationLocator, LocatorSegment, LocatorType, LocatorValue}, CitationField};
-use citum_engine::{processor::Processor, Reference, Citation, CitationItem, render::html::Html as HtmlRenderer};
-use intent_engine::{StyleIntent, DecisionPackage};
-use sqlx::{postgres::PgPoolOptions, Pool, Postgres, FromRow};
+use sqlx::{postgres::PgPoolOptions, FromRow, Pool, Postgres};
+use std::collections::HashSet;
+use std::fs;
+use std::net::SocketAddr;
+use std::path::{Path as FsPath, PathBuf};
+use std::sync::Arc;
 use uuid::Uuid;
-use chrono::{DateTime, Utc};
-use dotenvy::dotenv;
-use oauth2::{AuthorizationCode, TokenResponse};
-use auth::User;
 
 mod auth;
 mod preview_data;
@@ -58,7 +63,7 @@ fn process_style_metadata(mut row: StyleRow) -> StyleRow {
         Ok(style) => {
             row.description = style.info.description.clone();
             row.fields = style.info.fields.clone();
-        },
+        }
         Err(e) => {
             eprintln!("ERROR: Failed to parse metadata for {}: {}", row.title, e);
         }
@@ -86,8 +91,7 @@ fn load_local_style_yaml(filename: &str) -> Option<String> {
 }
 
 fn local_styles_dir() -> PathBuf {
-    FsPath::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../../citum-core/styles")
+    FsPath::new(env!("CARGO_MANIFEST_DIR")).join("../../citum-core/styles")
 }
 
 fn is_supported_style_file(path: &FsPath) -> bool {
@@ -131,7 +135,11 @@ fn discover_local_public_styles_from_root(root: &FsPath) -> Vec<LocalStyleDefini
     styles
 }
 
-fn collect_local_public_styles(root: &FsPath, dir: &FsPath, styles: &mut Vec<LocalStyleDefinition>) {
+fn collect_local_public_styles(
+    root: &FsPath,
+    dir: &FsPath,
+    styles: &mut Vec<LocalStyleDefinition>,
+) {
     let Ok(entries) = fs::read_dir(dir) else {
         return;
     };
@@ -181,7 +189,7 @@ fn collect_local_public_styles(root: &FsPath, dir: &FsPath, styles: &mut Vec<Loc
 
 async fn ensure_system_user(db: &Pool<Postgres>) -> Option<User> {
     if let Ok(Some(user)) = sqlx::query_as::<_, User>(
-        "SELECT id, email, role FROM users WHERE email = 'system@citum.org'"
+        "SELECT id, email, role FROM users WHERE email = 'system@citum.org'",
     )
     .fetch_optional(db)
     .await
@@ -254,7 +262,12 @@ pub struct PreviewSet {
 #[serde(untagged)]
 enum PreviewRequestPayload {
     Style(Box<Style>),
-    Citum { citum: String, mode: Option<String>, test_locator: Option<String>, inject_ast_indices: Option<bool> },
+    Citum {
+        citum: String,
+        mode: Option<String>,
+        test_locator: Option<String>,
+        inject_ast_indices: Option<bool>,
+    },
     Intent(StyleIntent),
 }
 
@@ -323,7 +336,8 @@ async fn github_callback(
     State(state): State<Arc<AppState>>,
     Query(query): Query<AuthQuery>,
 ) -> impl IntoResponse {
-    let token_res = state.oauth_client
+    let token_res = state
+        .oauth_client
         .exchange_code(AuthorizationCode::new(query.code))
         .request_async(oauth2::reqwest::async_http_client)
         .await
@@ -333,7 +347,10 @@ async fn github_callback(
     let github_user: auth::GithubUser = client
         .get("https://api.github.com/user")
         .header("User-Agent", "citum-hub")
-        .header("Authorization", format!("Bearer {}", token_res.access_token().secret()))
+        .header(
+            "Authorization",
+            format!("Bearer {}", token_res.access_token().secret()),
+        )
         .send()
         .await
         .expect("Failed to get GitHub user")
@@ -341,8 +358,11 @@ async fn github_callback(
         .await
         .expect("Failed to parse GitHub user");
 
-    let user_email = github_user.email.clone().unwrap_or_else(|| github_user.login.clone());
-    
+    let user_email = github_user
+        .email
+        .clone()
+        .unwrap_or_else(|| github_user.login.clone());
+
     let user = sqlx::query_as::<_, auth::User>(
         "INSERT INTO users (email, github_id) VALUES ($1, $2) ON CONFLICT (github_id) DO UPDATE SET email = $1 RETURNING id, email, role"
     )
@@ -353,15 +373,14 @@ async fn github_callback(
     .expect("Failed to create/get user");
 
     let token = auth::create_jwt(user.id, &user.role);
-    let frontend_url = std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:5173".to_string());
+    let frontend_url =
+        std::env::var("FRONTEND_URL").unwrap_or_else(|_| "http://localhost:5173".to_string());
     Redirect::temporary(&format!("{}/auth/callback?token={}", frontend_url, token))
 }
 
 // --- Preview and Decision Handlers ---
 
-async fn preview_set_handler(
-    Json(payload): Json<PreviewRequestPayload>
-) -> impl IntoResponse {
+async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl IntoResponse {
     let (style, class, field, request_mode, test_locator, inject_ast_indices) = match payload {
         PreviewRequestPayload::Style(style) => {
             use citum_schema::options::Processing;
@@ -369,39 +388,78 @@ async fn preview_set_handler(
                 Some(Processing::Note) => "note",
                 _ => "in_text",
             };
-            (*style, class.to_string(), None, None, Some("123-125".to_string()), false)
-        },
+            (
+                *style,
+                class.to_string(),
+                None,
+                None,
+                Some("123-125".to_string()),
+                false,
+            )
+        }
         PreviewRequestPayload::Intent(intent) => {
             let class = match intent.class {
-                Some(intent_engine::CitationClass::AuthorDate) | Some(intent_engine::CitationClass::Numeric) | Some(intent_engine::CitationClass::Label) => "in_text",
-                Some(intent_engine::CitationClass::Footnote) | Some(intent_engine::CitationClass::Endnote) => "note",
+                Some(intent_engine::CitationClass::AuthorDate)
+                | Some(intent_engine::CitationClass::Numeric)
+                | Some(intent_engine::CitationClass::Label) => "in_text",
+                Some(intent_engine::CitationClass::Footnote)
+                | Some(intent_engine::CitationClass::Endnote) => "note",
                 None => "in_text",
             };
             let field = intent.field.clone();
-            (intent.to_style(), class.to_string(), field, None, Some("123-125".to_string()), false)
+            (
+                intent.to_style(),
+                class.to_string(),
+                field,
+                None,
+                Some("123-125".to_string()),
+                false,
+            )
         }
-        PreviewRequestPayload::Citum { citum, mode, test_locator, inject_ast_indices } => {
-            let style = serde_yaml_ng::from_str::<Style>(&citum)
-                .unwrap_or_else(|_| Style::default());
+        PreviewRequestPayload::Citum {
+            citum,
+            mode,
+            test_locator,
+            inject_ast_indices,
+        } => {
+            let style =
+                serde_yaml_ng::from_str::<Style>(&citum).unwrap_or_else(|_| Style::default());
             let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
                 Some(citum_schema::options::Processing::Note) => "note",
                 _ => "in_text",
             };
             let locator = test_locator.unwrap_or_else(|| "123-125".to_string());
-            (style, class.to_string(), None, mode, Some(locator), inject_ast_indices.unwrap_or(false))
+            (
+                style,
+                class.to_string(),
+                None,
+                mode,
+                Some(locator),
+                inject_ast_indices.unwrap_or(false),
+            )
         }
     };
 
-    let mut set = generate_preview_set_internal(&style, &class, field.as_deref(), test_locator.as_deref(), inject_ast_indices);    
+    let mut set = generate_preview_set_internal(
+        &style,
+        &class,
+        field.as_deref(),
+        test_locator.as_deref(),
+        inject_ast_indices,
+    );
     // If a specific mode was requested, override the set behavior
     if let Some(m) = request_mode {
         let references = preview_data::refs_for_field(field.as_deref());
         if !references.is_empty() {
             let cite_ids: Vec<String> = references.keys().cloned().collect();
-            let processor = Processor::new(style, references).with_inject_ast_indices(inject_ast_indices);
+            let processor =
+                Processor::new(style, references).with_inject_ast_indices(inject_ast_indices);
             let citation = Citation {
                 id: Some("custom-preview".to_string()),
-                items: vec![CitationItem { id: cite_ids[0].clone(), ..Default::default() }],
+                items: vec![CitationItem {
+                    id: cite_ids[0].clone(),
+                    ..Default::default()
+                }],
                 mode: match m.as_str() {
                     "Integral" => CitationMode::Integral,
                     _ => CitationMode::NonIntegral,
@@ -417,7 +475,13 @@ async fn preview_set_handler(
     Json(set)
 }
 
-fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>, test_locator: Option<&str>, inject_ast_indices: bool) -> PreviewSet {
+fn generate_preview_set_internal(
+    style: &Style,
+    class: &str,
+    field: Option<&str>,
+    test_locator: Option<&str>,
+    inject_ast_indices: bool,
+) -> PreviewSet {
     let mut set = PreviewSet::default();
 
     // Get field-specific references from Rust-constructed data
@@ -435,10 +499,16 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
     // Default to APA with parentheses so the processor always renders something useful.
     let mut effective_style = style.clone();
 
-    let processing = effective_style.options.as_ref().and_then(|o| o.processing.as_ref());
+    let processing = effective_style
+        .options
+        .as_ref()
+        .and_then(|o| o.processing.as_ref());
     let is_author_date_like = matches!(
         processing,
-        Some(citum_schema::options::Processing::AuthorDate | citum_schema::options::Processing::Label(_)) | None
+        Some(
+            citum_schema::options::Processing::AuthorDate
+                | citum_schema::options::Processing::Label(_)
+        ) | None
     );
 
     if effective_style.citation.is_none() {
@@ -471,8 +541,10 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
 
     // Force locator into the template if it's a preset or explicit template, to ensure it renders in preview
     if let Some(ref mut citation) = effective_style.citation {
-        use citum_schema::template::{TemplateComponent, TemplateVariable, SimpleVariable, Rendering};
-        
+        use citum_schema::template::{
+            Rendering, SimpleVariable, TemplateComponent, TemplateVariable,
+        };
+
         let mut template = citation.resolve_template().unwrap_or_default();
         let has_locator = template.iter().any(|c| matches!(c, TemplateComponent::Variable(v) if v.variable == SimpleVariable::Locator));
 
@@ -485,7 +557,7 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
                 },
                 ..Default::default()
             }));
-            
+
             citation.template = Some(template);
             citation.use_preset = None; // Explicit template overrides preset
         }
@@ -499,17 +571,20 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
         });
     }
 
-    let processor = Processor::new(effective_style, references).with_inject_ast_indices(inject_ast_indices);
+    let processor =
+        Processor::new(effective_style, references).with_inject_ast_indices(inject_ast_indices);
 
     // Common locator for testing
-    let locator = test_locator.map(|l| CitationLocator::Single(LocatorSegment {
-        label: LocatorType::Page,
-        value: LocatorValue::Text(l.to_string()),
-    }));
+    let locator = test_locator.map(|l| {
+        CitationLocator::Single(LocatorSegment {
+            label: LocatorType::Page,
+            value: LocatorValue::Text(l.to_string()),
+        })
+    });
 
     // 1. Non-integral (parenthetical) citation — mix of pinpoint and normal cites
     let mut parenthetical_items = Vec::new();
-    
+
     // First item ALWAYS gets the locator if provided, to ensure it's previewed
     if !cite_ids.is_empty() {
         parenthetical_items.push(CitationItem {
@@ -518,7 +593,7 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
             ..Default::default()
         });
     }
-    
+
     // Remaining items don't have locators, showing multi-cite behavior
     for id in cite_ids.iter().skip(1) {
         parenthetical_items.push(CitationItem {
@@ -544,26 +619,30 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
                     set.in_text_parenthetical = Some(res);
                 }
             }
-        },
+        }
         Err(e) => eprintln!("Parenthetical citation rendering failed: {}", e),
     }
 
     // 2. Integral (narrative) citation — also show locator here
     if class != "note" {
         // Try to find a reference with many authors for et al testing in narrative mode
-        let narrative_id = cite_ids.iter()
-            .find(|id| id.contains("lander") || id.contains("smith") || id.contains("genetics") || id.contains("vaswani"))
+        let narrative_id = cite_ids
+            .iter()
+            .find(|id| {
+                id.contains("lander")
+                    || id.contains("smith")
+                    || id.contains("genetics")
+                    || id.contains("vaswani")
+            })
             .unwrap_or(&cite_ids[0]);
 
         let narrative_citation = Citation {
             id: Some("preview-narrative".to_string()),
-            items: vec![
-                CitationItem { 
-                    id: narrative_id.clone(), 
-                    locator: locator.clone(), // Use locator here too
-                    ..Default::default() 
-                },
-            ],
+            items: vec![CitationItem {
+                id: narrative_id.clone(),
+                locator: locator.clone(), // Use locator here too
+                ..Default::default()
+            }],
             mode: CitationMode::Integral,
             ..Default::default()
         };
@@ -573,7 +652,7 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
                 if !res.trim().is_empty() {
                     set.in_text_narrative = Some(res);
                 }
-            },
+            }
             Err(e) => eprintln!("Narrative citation rendering failed: {}", e),
         }
     }
@@ -587,14 +666,13 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
     set
 }
 
-async fn decide_handler(
-    Json(intent): Json<StyleIntent>,
-) -> Json<DecisionPackage> {
+async fn decide_handler(Json(intent): Json<StyleIntent>) -> Json<DecisionPackage> {
     let mut package = intent.decide();
 
     // Determine class string for preview generation
     let class = match &intent.class {
-        Some(intent_engine::CitationClass::Footnote) | Some(intent_engine::CitationClass::Endnote) => "note",
+        Some(intent_engine::CitationClass::Footnote)
+        | Some(intent_engine::CitationClass::Endnote) => "note",
         _ => "in_text",
     };
 
@@ -618,16 +696,29 @@ async fn decide_handler(
             }
             if let Ok(temp_intent) = serde_json::from_value::<StyleIntent>(intent_val) {
                 let temp_class = match &temp_intent.class {
-                    Some(intent_engine::CitationClass::Footnote) | Some(intent_engine::CitationClass::Endnote) => "note",
+                    Some(intent_engine::CitationClass::Footnote)
+                    | Some(intent_engine::CitationClass::Endnote) => "note",
                     _ => "in_text",
                 };
                 let temp_style = temp_intent.to_style();
                 let temp_field = temp_intent.field.as_deref();
-                let p = generate_preview_set_internal(&temp_style, temp_class, temp_field, Some("123-125"), false);
+                let p = generate_preview_set_internal(
+                    &temp_style,
+                    temp_class,
+                    temp_field,
+                    Some("123-125"),
+                    false,
+                );
                 let mut html = String::new();
-                if let Some(it) = p.in_text_parenthetical { html.push_str(&format!("<div class='preview-cit'>{}</div>", it)); }
-                if let Some(n) = p.note { html.push_str(&format!("<div class='preview-note'>{}</div>", n)); }
-                if let Some(b) = p.bibliography { html.push_str(&format!("<div class='preview-bib mt-2'>{}</div>", b)); }
+                if let Some(it) = p.in_text_parenthetical {
+                    html.push_str(&format!("<div class='preview-cit'>{}</div>", it));
+                }
+                if let Some(n) = p.note {
+                    html.push_str(&format!("<div class='preview-note'>{}</div>", n));
+                }
+                if let Some(b) = p.bibliography {
+                    html.push_str(&format!("<div class='preview-bib mt-2'>{}</div>", b));
+                }
                 choice_preview.html = html;
             }
         }
@@ -646,7 +737,7 @@ async fn get_references() -> Json<Vec<Reference>> {
 
 async fn list_user_styles(
     State(state): State<Arc<AppState>>,
-    user: auth::AuthenticatedUser
+    user: auth::AuthenticatedUser,
 ) -> Json<Vec<StyleRow>> {
     let styles = sqlx::query_as::<_, StyleRow>(
         "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at FROM styles WHERE user_id = $1 ORDER BY updated_at DESC"
@@ -661,8 +752,9 @@ async fn list_user_styles(
 }
 
 async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<StyleRow>> {
-    let mut styles = if let Some(mut official_styles) = sync_local_public_style_rows(&state.db).await {
-        let custom_public_styles = sqlx::query_as::<_, StyleRow>(
+    let mut styles =
+        if let Some(mut official_styles) = sync_local_public_style_rows(&state.db).await {
+            let custom_public_styles = sqlx::query_as::<_, StyleRow>(
             "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
              FROM styles
              WHERE is_public = true
@@ -673,10 +765,10 @@ async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<Styl
         .await
         .unwrap_or_default();
 
-        official_styles.extend(custom_public_styles);
-        official_styles
-    } else {
-        sqlx::query_as::<_, StyleRow>(
+            official_styles.extend(custom_public_styles);
+            official_styles
+        } else {
+            sqlx::query_as::<_, StyleRow>(
             "SELECT id, user_id, title, filename, intent, citum, is_public, created_at, updated_at
              FROM styles
              WHERE is_public = true
@@ -686,7 +778,7 @@ async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<Styl
         .fetch_all(&state.db)
         .await
         .unwrap_or_default()
-    };
+        };
     styles.sort_by(|left, right| {
         right
             .updated_at
@@ -701,7 +793,7 @@ async fn list_public_styles(State(state): State<Arc<AppState>>) -> Json<Vec<Styl
 async fn get_style(
     State(state): State<Arc<AppState>>,
     user: auth::OptionalUser,
-    Path(id): Path<Uuid>
+    Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
     let _ = sync_local_public_style_rows(&state.db).await;
 
@@ -716,7 +808,7 @@ async fn get_style(
                is_public = true
                AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
              )
-           )"
+           )",
     )
     .bind(id)
     .bind(user_id)
@@ -733,10 +825,14 @@ async fn get_style(
 async fn create_style(
     State(state): State<Arc<AppState>>,
     user: auth::AuthenticatedUser,
-    Json(payload): Json<StyleIntent>
+    Json(payload): Json<StyleIntent>,
 ) -> Json<StyleRow> {
     let style_obj = payload.to_style();
-    let title = style_obj.info.title.clone().unwrap_or_else(|| "Untitled Style".to_string());
+    let title = style_obj
+        .info
+        .title
+        .clone()
+        .unwrap_or_else(|| "Untitled Style".to_string());
     let citum = serde_yaml_ng::to_string(&style_obj).unwrap_or_default();
     let intent_val = serde_json::to_value(&payload).unwrap();
 
@@ -758,10 +854,14 @@ async fn update_style(
     State(state): State<Arc<AppState>>,
     user: auth::AuthenticatedUser,
     Path(id): Path<Uuid>,
-    Json(payload): Json<StyleIntent>
+    Json(payload): Json<StyleIntent>,
 ) -> Json<StyleRow> {
     let style_obj = payload.to_style();
-    let title = style_obj.info.title.clone().unwrap_or_else(|| "Untitled Style".to_string());
+    let title = style_obj
+        .info
+        .title
+        .clone()
+        .unwrap_or_else(|| "Untitled Style".to_string());
     let citum = serde_yaml_ng::to_string(&style_obj).unwrap_or_default();
     let intent_val = serde_json::to_value(&payload).unwrap();
     let is_public = true;
@@ -785,7 +885,7 @@ async fn update_style(
 async fn fork_style(
     State(state): State<Arc<AppState>>,
     user: auth::AuthenticatedUser,
-    Path(id): Path<Uuid>
+    Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
     let _ = sync_local_public_style_rows(&state.db).await;
 
@@ -799,7 +899,7 @@ async fn fork_style(
                is_public = true
                AND (filename IS NULL OR filename NOT LIKE 'experimental/%')
              )
-           )"
+           )",
     )
     .bind(id)
     .bind(user.id)
@@ -825,7 +925,7 @@ async fn fork_style(
             .await
             .expect("Failed to fork style");
             Json(process_style_metadata(style)).into_response()
-        },
+        }
         None => (axum::http::StatusCode::NOT_FOUND, "Style not found").into_response(),
     }
 }
@@ -833,31 +933,27 @@ async fn fork_style(
 async fn bookmark_style(
     State(state): State<Arc<AppState>>,
     user: auth::AuthenticatedUser,
-    Path(id): Path<Uuid>
+    Path(id): Path<Uuid>,
 ) -> impl IntoResponse {
-    sqlx::query(
-        "INSERT INTO bookmarks (user_id, style_id) VALUES ($1, $2) ON CONFLICT DO NOTHING"
-    )
-    .bind(user.id)
-    .bind(id)
-    .execute(&state.db)
-    .await
-    .expect("Failed to bookmark style");
+    sqlx::query("INSERT INTO bookmarks (user_id, style_id) VALUES ($1, $2) ON CONFLICT DO NOTHING")
+        .bind(user.id)
+        .bind(id)
+        .execute(&state.db)
+        .await
+        .expect("Failed to bookmark style");
     axum::http::StatusCode::OK
 }
 
 async fn list_bookmarks(
     State(state): State<Arc<AppState>>,
-    user: auth::AuthenticatedUser
+    user: auth::AuthenticatedUser,
 ) -> Json<Vec<StyleRow>> {
-    let synced_filenames = sync_local_public_style_rows(&state.db)
-        .await
-        .map(|styles| {
-            styles
-                .into_iter()
-                .filter_map(|style| style.filename)
-                .collect::<HashSet<_>>()
-        });
+    let synced_filenames = sync_local_public_style_rows(&state.db).await.map(|styles| {
+        styles
+            .into_iter()
+            .filter_map(|style| style.filename)
+            .collect::<HashSet<_>>()
+    });
 
     let styles = sqlx::query_as::<_, StyleRow>(
         "SELECT s.id, s.user_id, s.title, s.filename, s.intent, s.citum, s.is_public, s.created_at, s.updated_at
@@ -986,7 +1082,10 @@ mod tests {
         let styles = discover_local_public_styles_from_root(&temp_root);
         fs::remove_dir_all(&temp_root).expect("temp root should be removed");
 
-        let filenames = styles.into_iter().map(|style| style.filename).collect::<Vec<_>>();
+        let filenames = styles
+            .into_iter()
+            .map(|style| style.filename)
+            .collect::<Vec<_>>();
 
         assert!(filenames.contains(&"root-style.yaml".to_string()));
         assert!(filenames.contains(&"nested/nested-style.yaml".to_string()));
@@ -1000,9 +1099,9 @@ mod tests {
             println!("Skipping test: {} not found", path.display());
             return;
         }
-        let raw = fs::read_to_string(path)
-            .expect("local chicago style should be readable");
-        let style = serde_yaml_ng::from_str::<Style>(&raw).expect("local chicago style should parse");
+        let raw = fs::read_to_string(path).expect("local chicago style should be readable");
+        let style =
+            serde_yaml_ng::from_str::<Style>(&raw).expect("local chicago style should parse");
 
         let preview = generate_preview_set_internal(&style, "in_text", None, None);
         let bibliography = preview

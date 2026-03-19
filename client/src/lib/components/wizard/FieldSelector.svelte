@@ -16,7 +16,10 @@
 	<div class="mb-8 sm:mb-12 max-w-2xl mx-auto text-center">
 		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 1 of 4</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-			<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 25%"></div>
+			<div
+				class="h-full bg-primary rounded-full transition-all duration-500"
+				style="width: 25%"
+			></div>
 		</div>
 		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
 			Select Your Academic Discipline
@@ -40,7 +43,9 @@
 						{field.icon}
 					</span>
 				</div>
-				<h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1 sm:mb-2 transition-colors">
+				<h3
+					class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white mb-1 sm:mb-2 transition-colors"
+				>
 					{field.label}
 				</h3>
 				<p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400">

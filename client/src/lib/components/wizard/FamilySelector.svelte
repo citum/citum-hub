@@ -41,7 +41,10 @@
 		</button>
 		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 2 of 4</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
-			<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 50%"></div>
+			<div
+				class="h-full bg-primary rounded-full transition-all duration-500"
+				style="width: 50%"
+			></div>
 		</div>
 		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
 			How should citations appear?
@@ -57,29 +60,39 @@
 			{@const isRecommended = isDefaultFamily(family.id)}
 			<button
 				onclick={() => selectFamily(family.id)}
-				class="group relative flex flex-col p-6 sm:p-8 bg-white dark:bg-slate-800 border-2 rounded-xl text-left transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {isRecommended ? 'border-primary dark:border-primary shadow-[0_0_15px_rgba(19,91,236,0.1)]' : 'border-slate-200 dark:border-slate-700 hover:border-primary/50 dark:hover:border-primary/50'}"
+				class="group relative flex flex-col p-6 sm:p-8 bg-white dark:bg-slate-800 border-2 rounded-xl text-left transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {isRecommended
+					? 'border-primary dark:border-primary shadow-[0_0_15px_rgba(19,91,236,0.1)]'
+					: 'border-slate-200 dark:border-slate-700 hover:border-primary/50 dark:hover:border-primary/50'}"
 			>
 				{#if isRecommended}
-					<div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap">
+					<div
+						class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap"
+					>
 						<span class="material-symbols-outlined text-[14px]">star</span>
 						Recommended format
 					</div>
 				{/if}
 
 				<div class="w-full flex justify-between items-start mb-4">
-					<h3 class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+					<h3
+						class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors"
+					>
 						{family.label}
 					</h3>
-					<span class="material-symbols-outlined text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors">
+					<span
+						class="material-symbols-outlined text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors"
+					>
 						arrow_forward
 					</span>
 				</div>
-				
+
 				<p class="text-sm text-slate-500 dark:text-slate-400 mb-6 flex-grow">
 					{family.description}
 				</p>
 
-				<div class="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-700">
+				<div
+					class="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-700"
+				>
 					<p class="font-serif text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
 						{family.exampleText}
 					</p>
