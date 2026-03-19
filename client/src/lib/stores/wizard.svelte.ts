@@ -163,6 +163,7 @@ async function fetchPreview() {
 			body: JSON.stringify({
 				citum: styleYaml,
 				test_locator: testLocator || undefined,
+				inject_ast_indices: true,
 			}),
 		});
 		if (!res.ok) throw new Error(`Preview failed: ${res.status}`);
