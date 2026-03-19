@@ -1005,7 +1005,7 @@ mod tests {
         }))
         .expect("style should deserialize");
 
-        let preview = generate_preview_set_internal(&style, "in_text", None, None);
+        let preview = generate_preview_set_internal(&style, "in_text", None, None, false);
 
         let parenthetical = preview
             .in_text_parenthetical
@@ -1103,7 +1103,7 @@ mod tests {
         let style =
             serde_yaml_ng::from_str::<Style>(&raw).expect("local chicago style should parse");
 
-        let preview = generate_preview_set_internal(&style, "in_text", None, None);
+        let preview = generate_preview_set_internal(&style, "in_text", None, None, false);
         let bibliography = preview
             .bibliography
             .expect("expected bibliography preview for chicago author-date");
