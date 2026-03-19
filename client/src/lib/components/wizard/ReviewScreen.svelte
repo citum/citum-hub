@@ -113,112 +113,124 @@
 	const authState = $derived($auth);
 </script>
 
-<div class="min-h-screen bg-background-light p-4 sm:p-6 lg:p-8">
-	<div class="mx-auto max-w-4xl space-y-6">
-		<!-- Header -->
-		<div class="space-y-2">
-			<h1 class="font-display text-3xl font-semibold text-text-main">Review Your Style</h1>
-			<p class="text-text-secondary">Give your style a name and review before saving</p>
+<div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8 w-full">
+	<!-- Progress Indicator -->
+	<div class="mb-8 sm:mb-12 text-center relative">
+		<button
+			onclick={() => history.back()}
+			class="absolute top-0 sm:top-2 left-0 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+		>
+			<span class="material-symbols-outlined">arrow_back</span>
+		</button>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 4 of 4</p>
+		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+			<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 100%"></div>
 		</div>
+		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
+			Review Your Style
+		</h2>
+		<p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-2 sm:mt-3">
+			Give your style a name and review before saving.
+		</p>
+	</div>
 
-		<!-- Name Input -->
-		<div class="rounded-lg border border-border-light bg-surface-light p-6">
-			<label for="styleName" class="block text-sm font-medium text-text-main mb-2">
-				Style Name
-			</label>
-			<input
-				id="styleName"
-				type="text"
-				placeholder="e.g., My Research Style"
-				maxlength="100"
-				value={styleName}
-				onchange={(e) => updateStyleName(e.currentTarget.value)}
-				oninput={(e) => updateStyleName(e.currentTarget.value)}
-				class="w-full rounded-lg border border-border-light bg-background-light px-4 py-2 text-text-main placeholder:text-text-secondary focus:outline-none focus:ring-2 focus:ring-primary"
-			/>
-			<p class="mt-1 text-xs text-text-secondary">
-				{styleName.length}/100
+	<!-- Name Input -->
+	<div class="rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-sm mb-8">
+		<label for="styleName" class="block text-sm font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400 mb-3">
+			Style Name
+		</label>
+		<input
+			id="styleName"
+			type="text"
+			placeholder="e.g., My Research Style"
+			maxlength="100"
+			value={styleName}
+			onchange={(e) => updateStyleName(e.currentTarget.value)}
+			oninput={(e) => updateStyleName(e.currentTarget.value)}
+			class="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-3 text-lg font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+		/>
+		<p class="mt-2 text-xs font-medium text-slate-400 text-right">
+			{styleName.length}/100
+		</p>
+	</div>
+
+	<!-- Preview -->
+	<div class="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 sm:p-8 shadow-sm mb-8">
+		<h2 class="mb-6 text-sm font-bold tracking-wide uppercase text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-700 pb-3">Final Preview</h2>
+		<PreviewPane />
+	</div>
+
+	<!-- Messages -->
+	{#if saveError}
+		<div class="rounded-xl border border-red-200 bg-red-50 p-4 mb-8">
+			<p class="text-sm font-medium text-red-700 flex items-center gap-2">
+				<span class="material-symbols-outlined text-lg">error</span>
+				{saveError}
 			</p>
 		</div>
+	{/if}
 
-		<!-- Preview -->
-		<div>
-			<h2 class="mb-4 font-semibold text-text-main">Preview</h2>
-			<PreviewPane />
+	{#if saveSuccess}
+		<div class="rounded-xl border border-green-200 bg-green-50 p-4 mb-8">
+			<p class="text-sm font-medium text-green-700 flex items-center gap-2">
+				<span class="material-symbols-outlined text-lg">check_circle</span>
+				Style saved successfully! Redirecting...
+			</p>
 		</div>
+	{/if}
 
-		<!-- Messages -->
-		{#if saveError}
-			<div class="rounded-lg bg-red-50 p-4">
-				<p class="text-sm font-medium text-red-700">
-					<span class="material-symbols-outlined align-middle text-lg">error</span>
-					{saveError}
-				</p>
-			</div>
+	<!-- Action Buttons -->
+	<div class="flex flex-col sm:flex-row flex-wrap items-center justify-center gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+		<!-- Download (Primary) -->
+		<button
+			onclick={downloadYaml}
+			class="flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 rounded-xl bg-primary px-8 py-3.5 font-bold text-white hover:bg-blue-700 focus:ring-4 focus:ring-primary/20 transition-all shadow-sm shadow-primary/20"
+		>
+			<span class="material-symbols-outlined text-xl">download</span>
+			Download YAML
+		</button>
+
+		<!-- Save to Library -->
+		{#if authState?.user}
+			<button
+				onclick={saveToLibrary}
+				disabled={isSaving}
+				class="flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 rounded-xl border-2 border-primary bg-white dark:bg-slate-900 px-8 py-3 font-bold text-primary hover:bg-primary/5 focus:ring-4 focus:ring-primary/20 transition-all disabled:opacity-50"
+			>
+				{#if isSaving}
+					<span class="material-symbols-outlined animate-spin text-xl">hourglass_empty</span>
+				{:else}
+					<span class="material-symbols-outlined text-xl">save</span>
+				{/if}
+				{isSaving ? "Saving..." : "Save to Library"}
+			</button>
+		{:else}
+			<button
+				onclick={() => (window.location.href = "/api/auth/github")}
+				class="flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-8 py-3 font-bold text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 transition-all"
+			>
+				<span class="material-symbols-outlined text-xl">login</span>
+				Sign in to Save
+			</button>
 		{/if}
 
-		{#if saveSuccess}
-			<div class="rounded-lg bg-green-50 p-4">
-				<p class="text-sm font-medium text-green-700">
-					<span class="material-symbols-outlined align-middle text-lg">check_circle</span>
-					Style saved successfully! Redirecting...
-				</p>
-			</div>
-		{/if}
+		<!-- Customize Further (Secondary) -->
+		<button
+			onclick={customizeFurther}
+			class="flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-8 py-3 font-bold text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 transition-all focus:ring-4 focus:ring-slate-100"
+		>
+			<span class="material-symbols-outlined text-xl">edit</span>
+			Component Editor
+		</button>
 
-		<!-- Action Buttons -->
-		<div class="flex flex-col gap-3 sm:flex-row">
-			<!-- Download (Primary) -->
-			<button
-				onclick={downloadYaml}
-				class="flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 font-semibold text-white hover:bg-blue-700 transition-colors"
-			>
-				<span class="material-symbols-outlined">download</span>
-				Download YAML
-			</button>
-
-			<!-- Save to Library -->
-			{#if authState?.user}
-				<button
-					onclick={saveToLibrary}
-					disabled={isSaving}
-					class="flex items-center justify-center gap-2 rounded-lg border-2 border-primary bg-surface-light px-6 py-3 font-semibold text-primary hover:bg-blue-50 transition-colors disabled:opacity-50"
-				>
-					{#if isSaving}
-						<span class="material-symbols-outlined animate-spin">hourglass</span>
-					{:else}
-						<span class="material-symbols-outlined">save</span>
-					{/if}
-					{isSaving ? "Saving..." : "Save to Library"}
-				</button>
-			{:else}
-				<button
-					onclick={() => (window.location.href = "/api/auth/github")}
-					class="flex items-center justify-center gap-2 rounded-lg border-2 border-border-light bg-surface-light px-6 py-3 font-semibold text-text-main hover:bg-background-light transition-colors"
-				>
-					<span class="material-symbols-outlined">login</span>
-					Sign in to Save
-				</button>
-			{/if}
-
-			<!-- Customize Further (Secondary) -->
-			<button
-				onclick={customizeFurther}
-				class="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-surface-light px-6 py-3 font-semibold text-text-main hover:bg-background-light transition-colors"
-			>
-				<span class="material-symbols-outlined">edit</span>
-				Customize Further
-			</button>
-
-			<!-- Start Over (Tertiary) -->
-			<button
-				onclick={startOver}
-				class="flex items-center justify-center gap-2 rounded-lg border border-border-light bg-surface-light px-6 py-3 font-semibold text-text-main hover:bg-background-light transition-colors"
-			>
-				<span class="material-symbols-outlined">restart_alt</span>
-				Start Over
-			</button>
-		</div>
+		<!-- Start Over (Tertiary) -->
+		<button
+			onclick={startOver}
+			class="flex items-center justify-center w-full sm:w-auto mt-4 sm:ml-auto text-sm font-bold text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors uppercase tracking-wider"
+		>
+			<span class="material-symbols-outlined text-sm mr-1">restart_alt</span>
+			Start Over
+		</button>
 	</div>
 </div>
 

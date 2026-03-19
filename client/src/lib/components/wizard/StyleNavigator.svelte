@@ -208,11 +208,29 @@
 	}
 </script>
 
-<div class="flex h-[calc(100vh-140px)] gap-6">
-	<!-- Left: Live Preview (Takes up 2/3 width) -->
-	<div
-		class="flex w-2/3 flex-col rounded-xl border border-border-light bg-surface-main shadow-sm overflow-hidden"
-	>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 w-full h-full flex flex-col">
+	<!-- Progress Indicator -->
+	<div class="mb-6 max-w-2xl mx-auto w-full text-center shrink-0 relative">
+		<button
+			onclick={() => history.back()}
+			class="absolute top-0 sm:top-2 left-0 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+		>
+			<span class="material-symbols-outlined">arrow_back</span>
+		</button>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 3 of 4</p>
+		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+			<div class="h-full bg-primary rounded-full transition-all duration-500" style="width: 75%"></div>
+		</div>
+		<h2 class="text-2xl font-bold mt-4 text-slate-900 dark:text-white">
+			Style Navigator
+		</h2>
+	</div>
+
+	<div class="flex flex-1 min-h-0 gap-6">
+		<!-- Left: Live Preview (Takes up 2/3 width) -->
+		<div
+			class="flex w-2/3 flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden"
+		>
 		<div
 			class="flex items-center justify-between border-b border-border-light bg-surface-light px-4 py-3"
 		>
@@ -297,4 +315,5 @@
 			{/if}
 		</div>
 	</div>
+</div>
 </div>

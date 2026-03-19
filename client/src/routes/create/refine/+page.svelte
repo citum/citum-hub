@@ -2,7 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import RefinementPanel from "$lib/components/wizard/RefinementPanel.svelte";
+	import VisualCustomizer from "$lib/components/wizard/VisualCustomizer.svelte";
 
 	onMount(() => {
 		if (!wizardStore.styleYaml) {
@@ -13,4 +13,4 @@
 	});
 </script>
 
-<RefinementPanel />
+<VisualCustomizer />
