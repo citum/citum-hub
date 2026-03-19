@@ -2,6 +2,7 @@
 	import { onMount } from "svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import WizardHeader from "$lib/components/wizard/WizardHeader.svelte";
+	import { page } from "$app/stores";
 
 	let { children } = $props();
 
@@ -10,9 +11,11 @@
 	});
 </script>
 
-<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
-	<WizardHeader />
-	<div class="mt-6">
+<div class="w-full flex flex-col h-full bg-slate-50 dark:bg-slate-950">
+	{#if !$page.url.pathname.includes("/create/refine")}
+		<WizardHeader />
+	{/if}
+	<div class="flex-1 w-full h-full">
 		{@render children()}
 	</div>
 </div>

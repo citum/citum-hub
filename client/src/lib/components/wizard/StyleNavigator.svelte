@@ -208,93 +208,113 @@
 	}
 </script>
 
-<div class="flex h-[calc(100vh-140px)] gap-6">
-	<!-- Left: Live Preview (Takes up 2/3 width) -->
-	<div
-		class="flex w-2/3 flex-col rounded-xl border border-border-light bg-surface-main shadow-sm overflow-hidden"
-	>
-		<div
-			class="flex items-center justify-between border-b border-border-light bg-surface-light px-4 py-3"
+<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 w-full h-full flex flex-col">
+	<!-- Progress Indicator -->
+	<div class="mb-6 max-w-2xl mx-auto w-full text-center shrink-0 relative">
+		<button
+			onclick={() => history.back()}
+			class="absolute top-0 sm:top-2 left-0 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
 		>
-			<h3 class="font-semibold text-text-main">Live Preview</h3>
+			<span class="material-symbols-outlined">arrow_back</span>
+		</button>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 3 of 4</p>
+		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+			<div
+				class="h-full bg-primary rounded-full transition-all duration-500"
+				style="width: 75%"
+			></div>
 		</div>
-		<div class="flex-1 overflow-auto bg-surface-main p-6">
-			{#if wizardStore.isLoading}
-				<div class="flex h-full items-center justify-center">
-					<div class="animate-pulse text-text-secondary">Generating preview...</div>
-				</div>
-			{:else if wizardStore.styleYaml}
-				<PreviewPane />
-			{:else}
-				<div class="flex h-full items-center justify-center text-text-secondary text-center p-8">
-					Make your selections on the right to see the preview update.
-				</div>
-			{/if}
-		</div>
-		<div class="border-t border-border-light bg-surface-light px-4 py-3">
-			<p class="text-sm font-medium text-text-secondary">
-				Closest match:
-				<span class="text-text-main">
-					{wizardStore.styleInfo?.short_title ??
-						wizardStore.styleInfo?.title ??
-						(wizardStore.presetId ? wizardStore.presetId.toUpperCase() : "Computing...")}
-					{wizardStore.styleInfo?.edition ? ` (${wizardStore.styleInfo.edition})` : ""}
-				</span>
-			</p>
-		</div>
+		<h2 class="text-2xl font-bold mt-4 text-slate-900 dark:text-white">Style Navigator</h2>
 	</div>
 
-	<!-- Right: Axis Cards (Takes up 1/3 width) -->
-	<div class="flex w-1/3 flex-col gap-4 overflow-y-auto pr-2 pb-8">
-		{#each axes.slice(0, currentAxisIndex + 1) as axis, i}
+	<div class="flex flex-1 min-h-0 gap-6">
+		<!-- Left: Live Preview (Takes up 2/3 width) -->
+		<div
+			class="flex w-2/3 flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden"
+		>
 			<div
-				class="rounded-lg border-2 {i === currentAxisIndex
-					? 'border-primary shadow-md'
-					: 'border-border-light opacity-60'} bg-surface-light p-4 transition-all"
+				class="flex items-center justify-between border-b border-border-light bg-surface-light px-4 py-3"
 			>
-				<h4 class="mb-3 font-semibold text-text-main">{axis.question}</h4>
-				<div class="flex flex-col gap-2">
-					{#each axis.options as option}
-						<label
-							class="flex cursor-pointer items-center gap-3 rounded-md border border-border-light bg-surface-main p-3 hover:border-primary"
-						>
-							<input
-								type="radio"
-								name={axis.id}
-								value={option.value}
-								checked={wizardStore.axisChoices[axis.id as keyof AxisChoices] === option.value}
-								onclick={() => selectOption(axis.id, option.value, i)}
-								class="h-4 w-4 text-primary focus:ring-primary"
-							/>
-							<span class="text-sm text-text-main">{option.label}</span>
-						</label>
-					{/each}
-				</div>
+				<h3 class="font-semibold text-text-main">Live Preview</h3>
 			</div>
-		{/each}
-
-		<div class="pt-4 text-center">
-			{#if currentAxisIndex === axes.length - 1 && wizardStore.axisChoices[axes[currentAxisIndex].id as keyof AxisChoices]}
-				<button
-					onclick={useThisAnyhow}
-					class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
-				>
-					Continue to Refinement
-				</button>
-			{:else}
-				<button
-					onclick={useThisAnyhow}
-					class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
-				>
-					Use these settings
-				</button>
-				{#if currentAxisIndex < axes.length - 1}
-					<p class="mt-2 text-xs text-text-secondary italic">
-						You can skip the remaining {axes.length - 1 - currentAxisIndex} questions and refine further
-						in the next step.
-					</p>
+			<div class="flex-1 overflow-auto bg-surface-main p-6">
+				{#if wizardStore.isLoading}
+					<div class="flex h-full items-center justify-center">
+						<div class="animate-pulse text-text-secondary">Generating preview...</div>
+					</div>
+				{:else if wizardStore.styleYaml}
+					<PreviewPane />
+				{:else}
+					<div class="flex h-full items-center justify-center text-text-secondary text-center p-8">
+						Make your selections on the right to see the preview update.
+					</div>
 				{/if}
-			{/if}
+			</div>
+			<div class="border-t border-border-light bg-surface-light px-4 py-3">
+				<p class="text-sm font-medium text-text-secondary">
+					Closest match:
+					<span class="text-text-main">
+						{wizardStore.styleInfo?.short_title ??
+							wizardStore.styleInfo?.title ??
+							(wizardStore.presetId ? wizardStore.presetId.toUpperCase() : "Computing...")}
+						{wizardStore.styleInfo?.edition ? ` (${wizardStore.styleInfo.edition})` : ""}
+					</span>
+				</p>
+			</div>
+		</div>
+
+		<!-- Right: Axis Cards (Takes up 1/3 width) -->
+		<div class="flex w-1/3 flex-col gap-4 overflow-y-auto pr-2 pb-8">
+			{#each axes.slice(0, currentAxisIndex + 1) as axis, i}
+				<div
+					class="rounded-lg border-2 {i === currentAxisIndex
+						? 'border-primary shadow-md'
+						: 'border-border-light opacity-60'} bg-surface-light p-4 transition-all"
+				>
+					<h4 class="mb-3 font-semibold text-text-main">{axis.question}</h4>
+					<div class="flex flex-col gap-2">
+						{#each axis.options as option}
+							<label
+								class="flex cursor-pointer items-center gap-3 rounded-md border border-border-light bg-surface-main p-3 hover:border-primary"
+							>
+								<input
+									type="radio"
+									name={axis.id}
+									value={option.value}
+									checked={wizardStore.axisChoices[axis.id as keyof AxisChoices] === option.value}
+									onclick={() => selectOption(axis.id, option.value, i)}
+									class="h-4 w-4 text-primary focus:ring-primary"
+								/>
+								<span class="text-sm text-text-main">{option.label}</span>
+							</label>
+						{/each}
+					</div>
+				</div>
+			{/each}
+
+			<div class="pt-4 text-center">
+				{#if currentAxisIndex === axes.length - 1 && wizardStore.axisChoices[axes[currentAxisIndex].id as keyof AxisChoices]}
+					<button
+						onclick={useThisAnyhow}
+						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
+					>
+						Continue to Refinement
+					</button>
+				{:else}
+					<button
+						onclick={useThisAnyhow}
+						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
+					>
+						Use these settings
+					</button>
+					{#if currentAxisIndex < axes.length - 1}
+						<p class="mt-2 text-xs text-text-secondary italic">
+							You can skip the remaining {axes.length - 1 - currentAxisIndex} questions and refine further
+							in the next step.
+						</p>
+					{/if}
+				{/if}
+			</div>
 		</div>
 	</div>
 </div>

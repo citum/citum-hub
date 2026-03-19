@@ -30,38 +30,72 @@
 	};
 </script>
 
-<div class="space-y-4 sm:space-y-6">
-	<div>
-		<h2 class="font-display text-2xl font-semibold text-text-main">How should citations appear?</h2>
-		<p class="mt-2 text-text-secondary">Choose the citation format that matches your discipline</p>
+<div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8 w-full">
+	<!-- Progress Indicator -->
+	<div class="mb-8 sm:mb-12 max-w-2xl mx-auto text-center">
+		<button
+			onclick={() => history.back()}
+			class="absolute top-4 sm:top-8 left-4 sm:left-8 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+		>
+			<span class="material-symbols-outlined">arrow_back</span>
+		</button>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 2 of 4</p>
+		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+			<div
+				class="h-full bg-primary rounded-full transition-all duration-500"
+				style="width: 50%"
+			></div>
+		</div>
+		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
+			How should citations appear?
+		</h2>
+		<p class="text-base sm:text-lg text-slate-600 dark:text-slate-300 mt-2 sm:mt-3">
+			Choose the citation format that matches your discipline.
+		</p>
 	</div>
 
-	<div class="space-y-3">
+	<!-- Family Cards -->
+	<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
 		{#each FAMILY_OPTIONS as family (family.id)}
+			{@const isRecommended = isDefaultFamily(family.id)}
 			<button
 				onclick={() => selectFamily(family.id)}
-				class="group w-full rounded-lg border-2 border-border-light bg-surface-light p-5 text-left transition-all duration-300 hover:border-primary hover:shadow-md"
+				class="group relative flex flex-col p-6 sm:p-8 bg-white dark:bg-slate-800 border-2 rounded-xl text-left transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {isRecommended
+					? 'border-primary dark:border-primary shadow-[0_0_15px_rgba(19,91,236,0.1)]'
+					: 'border-slate-200 dark:border-slate-700 hover:border-primary/50 dark:hover:border-primary/50'}"
 			>
-				<div class="flex items-start justify-between gap-3">
-					<div class="flex-1">
-						<h3 class="font-semibold text-text-main group-hover:text-primary transition-colors">
-							{family.label}
-						</h3>
-						<p class="mt-1 text-sm text-text-secondary">
-							{family.description}
-						</p>
-						<p class="mt-3 font-serif text-text-main">
-							{family.exampleText}
-						</p>
+				{#if isRecommended}
+					<div
+						class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap"
+					>
+						<span class="material-symbols-outlined text-[14px]">star</span>
+						Recommended format
 					</div>
+				{/if}
 
-					{#if isDefaultFamily(family.id)}
-						<span
-							class="mt-1 inline-block rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary"
-						>
-							Recommended
-						</span>
-					{/if}
+				<div class="w-full flex justify-between items-start mb-4">
+					<h3
+						class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors"
+					>
+						{family.label}
+					</h3>
+					<span
+						class="material-symbols-outlined text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors"
+					>
+						arrow_forward
+					</span>
+				</div>
+
+				<p class="text-sm text-slate-500 dark:text-slate-400 mb-6 flex-grow">
+					{family.description}
+				</p>
+
+				<div
+					class="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-700"
+				>
+					<p class="font-serif text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
+						{family.exampleText}
+					</p>
 				</div>
 			</button>
 		{/each}

@@ -11,12 +11,12 @@ SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 
 use citum_engine::{Bibliography, Reference};
 use citum_schema::reference::{
-    Contributor, ContributorList, EdtfString, MultilingualString, SimpleName, StructuredName,
     types::{
         Collection, CollectionComponent, CollectionType, Monograph, MonographComponentType,
         MonographType, NumOrStr, Parent, Serial, SerialComponent, SerialComponentType, SerialType,
         Title,
     },
+    Contributor, ContributorList, EdtfString, MultilingualString, SimpleName, StructuredName,
 };
 
 // ── factories ──────────────────────────────────────────────────────────
@@ -66,7 +66,12 @@ fn empty_serial(title: Title, r#type: SerialType) -> Serial {
     }
 }
 
-fn empty_serial_component(id: &str, r#type: SerialComponentType, title: Option<Title>, parent: Parent<Serial>) -> SerialComponent {
+fn empty_serial_component(
+    id: &str,
+    r#type: SerialComponentType,
+    title: Option<Title>,
+    parent: Parent<Serial>,
+) -> SerialComponent {
     SerialComponent {
         id: Some(id.to_string()),
         r#type,
@@ -112,7 +117,12 @@ fn empty_collection(r#type: CollectionType, title: Option<Title>) -> Collection 
     }
 }
 
-fn empty_collection_component(id: &str, r#type: MonographComponentType, title: Option<Title>, parent: Parent<Collection>) -> CollectionComponent {
+fn empty_collection_component(
+    id: &str,
+    r#type: MonographComponentType,
+    title: Option<Title>,
+    parent: Parent<Collection>,
+) -> CollectionComponent {
     CollectionComponent {
         id: Some(id.to_string()),
         r#type,
@@ -176,7 +186,7 @@ fn book(
     monograph.author = Some(author);
     monograph.issued = edtf(year);
     monograph.publisher = publisher;
-    
+
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
 
@@ -193,16 +203,24 @@ fn article(
     doi: Option<&str>,
 ) -> (String, Reference) {
     let parent = Parent::Embedded(empty_serial(title(journal), SerialType::AcademicJournal));
-    let mut component = empty_serial_component(id, SerialComponentType::Article, Some(title(art_title)), parent);
-    
+    let mut component = empty_serial_component(
+        id,
+        SerialComponentType::Article,
+        Some(title(art_title)),
+        parent,
+    );
+
     component.author = Some(author);
     component.issued = edtf(year);
     component.doi = doi.map(|d| d.to_string());
     component.pages = pages.map(|p| p.to_string());
     component.volume = volume.map(|v| NumOrStr::Str(v.to_string()));
     component.issue = issue.map(|i| NumOrStr::Str(i.to_string()));
-    
-    (id.to_string(), Reference::SerialComponent(Box::new(component)))
+
+    (
+        id.to_string(),
+        Reference::SerialComponent(Box::new(component)),
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -220,15 +238,23 @@ fn chapter(
     coll.editor = editors;
     coll.issued = edtf(year);
     coll.publisher = publisher;
-    
+
     let parent = Parent::Embedded(coll);
-    let mut component = empty_collection_component(id, MonographComponentType::Chapter, Some(title(ch_title)), parent);
-    
+    let mut component = empty_collection_component(
+        id,
+        MonographComponentType::Chapter,
+        Some(title(ch_title)),
+        parent,
+    );
+
     component.author = Some(author);
     component.issued = edtf(year);
     component.pages = pages.map(|p| NumOrStr::Str(p.to_string()));
-    
-    (id.to_string(), Reference::CollectionComponent(Box::new(component)))
+
+    (
+        id.to_string(),
+        Reference::CollectionComponent(Box::new(component)),
+    )
 }
 
 fn report(
@@ -242,7 +268,7 @@ fn report(
     monograph.author = Some(author);
     monograph.issued = edtf(year);
     monograph.publisher = publisher;
-    
+
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
 
@@ -459,7 +485,11 @@ pub fn science_refs() -> Bibliography {
         "2017",
         "Attention Is All You Need",
         "Advances in Neural Information Processing Systems 30",
-        Some(names(&[("Guyon", "I."), ("von Luxburg", "U."), ("Bengio", "S.")])),
+        Some(names(&[
+            ("Guyon", "I."),
+            ("von Luxburg", "U."),
+            ("Bengio", "S."),
+        ])),
         Some("5998-6008"),
         Some(org("Curran Associates")),
     );
