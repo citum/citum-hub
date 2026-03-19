@@ -254,7 +254,7 @@ pub struct PreviewSet {
 #[serde(untagged)]
 enum PreviewRequestPayload {
     Style(Box<Style>),
-    Citum { citum: String, mode: Option<String>, test_locator: Option<String> },
+    Citum { citum: String, mode: Option<String>, test_locator: Option<String>, inject_ast_indices: Option<bool> },
     Intent(StyleIntent),
 }
 
@@ -362,14 +362,14 @@ async fn github_callback(
 async fn preview_set_handler(
     Json(payload): Json<PreviewRequestPayload>
 ) -> impl IntoResponse {
-    let (style, class, field, request_mode, test_locator) = match payload {
+    let (style, class, field, request_mode, test_locator, inject_ast_indices) = match payload {
         PreviewRequestPayload::Style(style) => {
             use citum_schema::options::Processing;
             let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
                 Some(Processing::Note) => "note",
                 _ => "in_text",
             };
-            (*style, class.to_string(), None, None, Some("123-125".to_string()))
+            (*style, class.to_string(), None, None, Some("123-125".to_string()), false)
         },
         PreviewRequestPayload::Intent(intent) => {
             let class = match intent.class {
@@ -378,9 +378,9 @@ async fn preview_set_handler(
                 None => "in_text",
             };
             let field = intent.field.clone();
-            (intent.to_style(), class.to_string(), field, None, Some("123-125".to_string()))
+            (intent.to_style(), class.to_string(), field, None, Some("123-125".to_string()), false)
         }
-        PreviewRequestPayload::Citum { citum, mode, test_locator } => {
+        PreviewRequestPayload::Citum { citum, mode, test_locator, inject_ast_indices } => {
             let style = serde_yaml_ng::from_str::<Style>(&citum)
                 .unwrap_or_else(|_| Style::default());
             let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
@@ -388,17 +388,17 @@ async fn preview_set_handler(
                 _ => "in_text",
             };
             let locator = test_locator.unwrap_or_else(|| "123-125".to_string());
-            (style, class.to_string(), None, mode, Some(locator))
+            (style, class.to_string(), None, mode, Some(locator), inject_ast_indices.unwrap_or(false))
         }
     };
 
-    let mut set = generate_preview_set_internal(&style, &class, field.as_deref(), test_locator.as_deref());    
+    let mut set = generate_preview_set_internal(&style, &class, field.as_deref(), test_locator.as_deref(), inject_ast_indices);    
     // If a specific mode was requested, override the set behavior
     if let Some(m) = request_mode {
         let references = preview_data::refs_for_field(field.as_deref());
         if !references.is_empty() {
             let cite_ids: Vec<String> = references.keys().cloned().collect();
-            let processor = Processor::new(style, references);
+            let processor = Processor::new(style, references).with_inject_ast_indices(inject_ast_indices);
             let citation = Citation {
                 id: Some("custom-preview".to_string()),
                 items: vec![CitationItem { id: cite_ids[0].clone(), ..Default::default() }],
@@ -417,7 +417,7 @@ async fn preview_set_handler(
     Json(set)
 }
 
-fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>, test_locator: Option<&str>) -> PreviewSet {
+fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>, test_locator: Option<&str>, inject_ast_indices: bool) -> PreviewSet {
     let mut set = PreviewSet::default();
 
     // Get field-specific references from Rust-constructed data
@@ -499,7 +499,7 @@ fn generate_preview_set_internal(style: &Style, class: &str, field: Option<&str>
         });
     }
 
-    let processor = Processor::new(effective_style, references);
+    let processor = Processor::new(effective_style, references).with_inject_ast_indices(inject_ast_indices);
 
     // Common locator for testing
     let locator = test_locator.map(|l| CitationLocator::Single(LocatorSegment {
@@ -600,7 +600,7 @@ async fn decide_handler(
 
     let style = intent.to_style();
     let field = intent.field.as_deref();
-    let preview = generate_preview_set_internal(&style, class, field, Some("123-125"));
+    let preview = generate_preview_set_internal(&style, class, field, Some("123-125"), false);
     package.in_text_parenthetical = preview.in_text_parenthetical.clone();
     package.in_text_narrative = preview.in_text_narrative;
     package.note = preview.note;
@@ -623,7 +623,7 @@ async fn decide_handler(
                 };
                 let temp_style = temp_intent.to_style();
                 let temp_field = temp_intent.field.as_deref();
-                let p = generate_preview_set_internal(&temp_style, temp_class, temp_field, Some("123-125"));
+                let p = generate_preview_set_internal(&temp_style, temp_class, temp_field, Some("123-125"), false);
                 let mut html = String::new();
                 if let Some(it) = p.in_text_parenthetical { html.push_str(&format!("<div class='preview-cit'>{}</div>", it)); }
                 if let Some(n) = p.note { html.push_str(&format!("<div class='preview-note'>{}</div>", n)); }
