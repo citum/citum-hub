@@ -1,0 +1,219 @@
+info:
+  title: Royal Society of Chemistry (Compound)
+  description: >
+    Royal Society of Chemistry journal style with compound citation support.
+    Groups related references under a shared citation number with
+    alphabetic sub-labels. Based on the standard RSC style.
+  fields:
+  - chemistry
+  source:
+    csl-id: http://www.zotero.org/styles/royal-society-of-chemistry
+    adapted-by: citum-create
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    links:
+    - href: http://www.zotero.org/styles/royal-society-of-chemistry
+      rel: template
+    - href: http://www.rsc.org/learn-chemistry/resource/download/res00001664/cmp00004956/pdf
+      rel: documentation
+options:
+  processing: numeric
+  contributors:
+    initialize-with: ". "
+    delimiter: ", "
+    delimiter-precedes-last: never
+    demote-non-dropping-particle: sort-only
+  dates:
+    month: long
+    uncertainty-marker: "?"
+    approximation-marker: "ca. "
+    range-delimiter: –
+  titles:
+    component:
+      text-case: as-is
+    monograph:
+      text-case: as-is
+    container-monograph:
+      text-case: as-is
+    periodical: {}
+    serial:
+      text-case: as-is
+  bibliography:
+    entry-suffix: .
+    separator: ", "
+    compound-numeric:
+      collapse-subentries: true
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      initialize-with: ". "
+      delimiter: ", "
+      delimiter-precedes-last: never
+  template:
+    - number: citation-number
+      wrap: parentheses
+      suffix: " "
+    - contributor: author
+      form: long
+      name-order: given-first
+      and: text
+    - title: primary
+      wrap: quotes
+      overrides:
+        article-journal: {}
+        article-magazine: {}
+        article-newspaper: {}
+        book:
+          quote: false
+        report:
+          quote: false
+        thesis:
+          suppress: true
+        chapter:
+          suppress: true
+        paper-conference:
+          suppress: true
+        entry-encyclopedia:
+          suppress: true
+        legal_case:
+          quote: false
+        motion_picture:
+          quote: false
+    - title: parent-monograph
+      prefix: ", "
+      overrides:
+        chapter:
+          prefix: "in "
+        entry-encyclopedia:
+          prefix: "in "
+    - title: parent-serial
+      prefix: ", "
+    - contributor: editor
+      form: long
+      name-order: given-first
+      and: text
+      prefix: ", ed. "
+    - variable: genre
+      prefix: ", "
+      overrides:
+        thesis: {}
+    - date: issued
+      form: year
+      prefix: ", "
+    - variable: publisher
+      prefix: ", "
+      overrides:
+        article-journal:
+          suppress: true
+        article-magazine:
+          suppress: true
+        article-newspaper:
+          suppress: true
+        thesis:
+          suppress: true
+        report:
+          suppress: true
+    - number: volume
+      prefix: ", "
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+    - variable: doi
+      prefix: ", DOI: "
+      overrides:
+        article-journal:
+          suppress: true
+        article-magazine:
+          suppress: true
+        article-newspaper:
+          suppress: true
+    - variable: publisher-place
+      prefix: ", "
+      overrides:
+        article-journal:
+          suppress: true
+        article-magazine:
+          suppress: true
+        article-newspaper:
+          suppress: true
+        thesis:
+          suppress: true
+        legal_case:
+          suppress: true
+  type-templates:
+    webpage:
+      - number: citation-number
+        wrap: parentheses
+        suffix: " "
+      - contributor: author
+        form: long
+        and: text
+      - title: primary
+      - variable: url
+      - term: accessed
+        form: long
+      - date: accessed
+        form: full
+    thesis:
+      - number: citation-number
+        wrap: parentheses
+        suffix: " "
+      - contributor: author
+        form: long
+        and: text
+      - title: primary
+      - variable: genre
+      - date: issued
+        form: year
+    legal_case:
+      - number: citation-number
+        wrap: parentheses
+        suffix: " "
+      - contributor: author
+        form: long
+        and: text
+      - title: primary
+        overrides:
+          song:
+            emph: true
+          bill:
+            emph: true
+          legal_case:
+            emph: true
+          motion_picture:
+            emph: true
+          book:
+            emph: true
+          graphic:
+            emph: true
+          legislation:
+            emph: true
+          report:
+            emph: true
+      - variable: authority
+      - variable: publisher
+      - variable: publisher-place
+      - number: edition
+      - date: issued
+        form: year
+      - number: volume
+        prefix: "vol. "
+        suppress: true
+    patent:
+      - number: citation-number
+        wrap: parentheses
+        suffix: " "
+      - variable: publisher
+      - number: number
+      - title: parent-serial
+        emph: true
+      - date: issued
+        form: year
+      - number: volume
+      - number: pages

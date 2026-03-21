@@ -1,0 +1,77 @@
+info:
+  title: AIMS Press
+  fields:
+  - science
+  source:
+    csl-id: http://www.zotero.org/styles/aims-press
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Patrick O'Brien, PhD
+      email: obrienpat86@gmail.com
+    links:
+    - href: http://www.zotero.org/styles/aims-press
+      rel: self
+    - href: http://www.zotero.org/styles/embo-press
+      rel: template
+    - href: https://www.aimspress.com/news/140.html
+      rel: documentation
+options:
+  substitute: editor-translator-title-short
+  processing: numeric
+  contributors: numeric-medium
+  dates: long
+  titles: journal-emphasis
+  page-range-format: expanded
+  bibliography:
+    entry-suffix: .
+    separator: ", "
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ""
+      shorten:
+        min: 4
+        use-first: 3
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      delimiter-precedes-last: always
+      sort-separator: " "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 8
+        use-first: 3
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+    - title: primary
+      prefix: " "
+    - items:
+        - contributor: editor
+          form: verb
+          overrides:
+            chapter:
+              prefix: "on "
+          name-order: given-first
+          shorten:
+            min: 4
+            use-first: 3
+        - title: parent-monograph
+          emph: true
+    - title: parent-serial
+      emph: true
+    - number: volume
+    - variable: publisher-place
+    - variable: publisher
+    - number: pages
+      prefix: ": "

@@ -31,7 +31,8 @@ const configuredResourceRoot = process.env.CITUM_CORE_PATH;
 const RESOURCE_ROOT =
 	configuredResourceRoot && fs.existsSync(path.join(configuredResourceRoot, "fixtures"))
 		? configuredResourceRoot
-		: configuredResourceRoot && fs.existsSync(path.join(configuredResourceRoot, "resources", "fixtures"))
+		: configuredResourceRoot &&
+			  fs.existsSync(path.join(configuredResourceRoot, "resources", "fixtures"))
 			? path.join(configuredResourceRoot, "resources")
 			: path.join(PROJECT_ROOT, "resources");
 

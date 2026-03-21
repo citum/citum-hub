@@ -1,0 +1,112 @@
+info:
+  title: Thieme-German (Deutsch)
+  description: Modified version of the "Vancouver Bracket" for Thieme Journals
+  fields:
+  - medicine
+  source:
+    csl-id: http://www.zotero.org/styles/thieme-german
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Sebastian Karcher
+    links:
+    - href: http://www.zotero.org/styles/thieme-german
+      rel: self
+    - href: http://www.thieme.de/de/autorenlounge/fuer-zeitschriftenautoren-1789.htm
+      rel: documentation
+options:
+  substitute: editor-translator-short
+  processing: numeric
+  contributors:
+    display-as-sort: all
+    initialize-with: ""
+    shorten:
+      min: 4
+      use-first: 3
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter-precedes-last: always
+    demote-non-dropping-particle: sort-only
+    sort-separator: " "
+  dates: numeric
+  page-range-format: expanded
+  bibliography:
+    separator: ". "
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ""
+      shorten:
+        min: 4
+        use-first: 3
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter-precedes-last: always
+      sort-separator: " "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 8
+        use-first: 3
+    - title: primary
+      prefix: " "
+    - items:
+        - contributor: editor
+          form: verb
+          overrides:
+            chapter:
+              prefix: "on "
+          name-order: given-first
+          shorten:
+            min: 4
+            use-first: 3
+        - title: parent-monograph
+    - title: parent-serial
+    - number: volume
+      overrides:
+        legal-case:
+          suppress: true
+    - number: issue
+      prefix: ": "
+      overrides:
+        article-magazine:
+          suppress: true
+        legal-case:
+          suppress: true
+    - date: issued
+      form: year
+    - number: pages
+      prefix: ". 2013: "
+      overrides:
+        legal-case:
+          suppress: true
+    - variable: doi
+      overrides:
+        legal-case:
+          suppress: true
+    - variable: url
+      suppress: true
+      overrides:
+        webpage:
+          suppress: false
+          prefix: "; Im Internet: "
+    - date: accessed
+      form: full
+      suppress: true
+      overrides:
+        webpage:
+          suppress: false
+          prefix: "; Stand: "
+    - variable: publisher-place
+    - variable: publisher
+      prefix: ": "
+      overrides:
+        dataset:
+          suppress: true

@@ -1,9 +1,6 @@
 # ---- Build stage ----
 FROM oven/bun:1 AS builder
 
-RUN apt-get update && apt-get install -y git --no-install-recommends \
-    && rm -rf /var/lib/apt/lists/*
-
 WORKDIR /app/client
 COPY client/package.json client/bun.lock* ./
 RUN bun install --frozen-lockfile
@@ -11,20 +8,14 @@ RUN bun install --frozen-lockfile
 COPY client/ ./
 RUN bun run build
 
-# Clone citum-core for style assets
-ARG CITUM_CORE_REF=main
-RUN git clone https://github.com/citum-io/citum-core.git /tmp/citum-core \
-    && git -C /tmp/citum-core checkout "${CITUM_CORE_REF}"
-
 # ---- Runtime stage ----
+# Use node:22-slim (Debian) to match builder glibc — avoids native module issues on Alpine
 FROM node:22-slim AS runtime
 
 WORKDIR /app
 COPY --from=builder /app/client/build ./build
 COPY --from=builder /app/client/package.json ./
 COPY --from=builder /app/client/node_modules ./node_modules
-COPY --from=builder /app/client/migrations ./migrations
-COPY --from=builder /tmp/citum-core/styles ./citum-core/styles
 
 ENV PORT=3000
 EXPOSE 3000

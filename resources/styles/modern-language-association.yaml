@@ -1,0 +1,188 @@
+info:
+  title: Modern Language Association Handbook 9th edition (in-text citations)
+  description: MLA source citations, in-text citations system (chapter 6)
+  fields:
+  - humanities
+  - literature
+  source:
+    csl-id: http://www.zotero.org/styles/modern-language-association
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Sebastian Karcher
+      uri: https://orcid.org/0000-0001-8249-7388
+    - name: Andrew Dunning
+      uri: https://orcid.org/0000-0003-0464-5036
+    links:
+    - href: http://www.zotero.org/styles/modern-language-association
+      rel: self
+    - href: https://style.mla.org/
+      rel: documentation
+  short-name: "MLA"
+  edition: "9th"
+options:
+  locators: note
+  processing: author-date
+  substitute: standard
+  integral-names:
+    rule: full-then-short
+    scope: document
+    contexts: body-and-notes
+    subsequent-form: short
+  contributors: chicago
+  dates: long
+  titles: chicago
+  multilingual:
+    title-mode: combined
+    name-mode: primary
+    preferred-script: Latn
+  page-range-format: minimal-two
+  bibliography:
+    subsequent-author-substitute: ———
+    hanging-indent: true
+    entry-suffix: .
+    separator: ". "
+  punctuation-in-quote: true
+citation:
+  options:
+    contributors:
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-et-al: never
+  template:
+    - items:
+        - contributor: author
+          form: family-only
+        - title: primary
+          disambiguate-only: true
+          wrap: quotes
+          prefix: ", "
+    - variable: locator
+  integral:
+    template:
+      - contributor: author
+        form: long
+        name-order: given-first
+      - variable: locator
+        wrap: parentheses
+  wrap: parentheses
+  multi-cite-delimiter: "; "
+bibliography:
+  options:
+    contributors:
+      display-as-sort: first
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter-precedes-last: always
+      delimiter-precedes-et-al: always
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 3
+        use-first: 1
+    - title: primary
+    - items:
+        - contributor: editor
+          form: verb
+          name-order: given-first
+          shorten:
+            min: 4
+            use-first: 1
+        - title: parent-monograph
+          emph: true
+    - contributor: translator
+      form: verb
+      name-order: given-first
+      prefix: ". "
+    - title: parent-serial
+      emph: true
+    - number: volume
+    - number: issue
+      prefix: ", no. "
+    - variable: publisher
+    - date: issued
+      form: day-month-abbr-year
+      prefix: ", "
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        article-journal:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+        article-magazine:
+          prefix: "pp. "
+        entry-encyclopedia:
+          prefix: "pp. "
+      prefix: ", "
+    - variable: doi
+      overrides:
+        article-journal:
+          prefix: https://doi.org/
+      prefix: ", "
+    - variable: url
+  type-templates:
+    manuscript:
+      - contributor: author
+        form: long
+        name-order: family-first
+        shorten:
+          min: 3
+          use-first: 1
+      - title: primary
+        quote: true
+      - variable: genre
+        prefix: ". "
+      - date: issued
+        form: day-month-abbr-year
+        prefix: ". "
+      - variable: archive
+        prefix: ", "
+      - variable: archive-location
+        prefix: ", "
+    personal_communication:
+      - contributor: author
+        form: long
+        name-order: family-first
+        shorten:
+          min: 3
+          use-first: 1
+      - title: primary
+        quote: true
+      - variable: genre
+        prefix: ". "
+      - date: issued
+        form: day-month-abbr-year
+        prefix: ". "
+      - variable: archive
+        prefix: ", "
+    interview:
+      - contributor: author
+        form: long
+        name-order: family-first
+        shorten:
+          min: 3
+          use-first: 1
+      - title: primary
+        quote: true
+      - contributor: interviewer
+        form: long
+        name-order: given-first
+        prefix: ". Interview by "
+      - title: parent-monograph
+        emph: true
+        prefix: ". "
+      - date: issued
+        form: year
+        prefix: ", "
+      - number: pages
+        prefix: ", pp. "
+  sort: author-title-date

@@ -4,7 +4,7 @@ FROM oven/bun:1 AS builder
 
 # Install system deps for Rust build
 RUN apt-get update && apt-get install -y \
-    curl pkg-config libssl-dev git ca-certificates \
+    build-essential curl pkg-config libssl-dev git ca-certificates \
     --no-install-recommends && rm -rf /var/lib/apt/lists/*
 
 # Install Rust with wasm32 target
@@ -24,13 +24,6 @@ COPY server/ ./server/
 # Compile WASM bridge (nodejs target)
 RUN cd server/crates/wasm-bridge && wasm-pack build --target nodejs --release
 
-# Clone citum-core and checkout a pinned ref for deterministic builds.
-# CITUM_CORE_REF accepts a tag, branch, or full commit SHA.
-# Default is 'main' — override at build time with --build-arg CITUM_CORE_REF=<tag-or-sha>.
-ARG CITUM_CORE_REF=main
-RUN git clone https://github.com/citum-io/citum-core.git /tmp/citum-core && \
-    git -C /tmp/citum-core checkout "${CITUM_CORE_REF}"
-
 # Copy client source and install deps
 COPY client/ ./client/
 WORKDIR /app/client
@@ -44,11 +37,8 @@ WORKDIR /app
 # WASM bridge pkg
 COPY --from=builder /app/server/crates/wasm-bridge/pkg ./server/crates/wasm-bridge/pkg
 
-# citum-core runtime assets (all paths the API reads)
-COPY --from=builder /tmp/citum-core/tests/fixtures ./tests/fixtures
-COPY --from=builder /tmp/citum-core/styles ./styles
-COPY --from=builder /tmp/citum-core/styles-legacy ./styles-legacy
-COPY --from=builder /tmp/citum-core/registry ./registry
+# Bundled runtime assets (fixtures, styles, registries)
+COPY resources/ ./resources/
 
 # API source and deps
 COPY --from=builder /app/client/src ./client/src
@@ -60,8 +50,8 @@ COPY --from=builder /app/client/migrations ./client/migrations
 WORKDIR /app/client
 
 ENV PORT=3002
-ENV CITUM_CORE_PATH=/app
+ENV CITUM_CORE_PATH=/app/resources
 EXPOSE 3002
 
-# Run migrations then start server
-CMD ["bun", "src/api/index.ts"]
+# Run migrations, then start the API. Registry warmup happens in-process after bind.
+CMD ["sh", "-c", "bun run scripts/migrate.ts && bun src/api/index.ts"]

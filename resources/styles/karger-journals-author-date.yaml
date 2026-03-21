@@ -1,0 +1,113 @@
+info:
+  title: Karger journals (author-date)
+  description: Harvard style for journals published by Karger
+  fields:
+  - science
+  source:
+    csl-id: http://www.zotero.org/styles/karger-journals-author-date
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Sebastian Karcher
+    links:
+    - href: http://www.zotero.org/styles/karger-journals-author-date
+      rel: self
+    - href: http://www.karger.com/Journal/Guidelines/224213#04
+      rel: documentation
+options:
+  substitute:
+    contributor-role-form: long
+    template:
+      - editor
+      - title
+  processing:
+    disambiguate:
+      names: false
+      add-givenname: false
+      year-suffix: true
+  contributors:
+    display-as-sort: all
+    initialize-with: ""
+    shorten:
+      min: 7
+      use-first: 6
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter: ", "
+    delimiter-precedes-last: always
+    demote-non-dropping-particle: sort-only
+    sort-separator: " "
+  dates:
+    month: short
+    uncertainty-marker: "?"
+    approximation-marker: "ca. "
+    range-delimiter: –
+  bibliography:
+    hanging-indent: true
+    entry-suffix: .
+    separator: ". "
+  punctuation-in-quote: true
+citation:
+  options:
+    contributors:
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+  template:
+    - contributor: author
+      form: short
+      shorten:
+        min: 3
+        use-first: 1
+    - date: issued
+      form: year
+      prefix: ", "
+    - variable: locator
+      prefix: ", "
+  wrap: brackets
+  delimiter: ", "
+  multi-cite-delimiter: "; "
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ""
+      shorten:
+        min: 7
+        use-first: 6
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      delimiter-precedes-last: always
+      sort-separator: " "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 8
+        use-first: 6
+    - title: primary
+      prefix: ": "
+    - variable: publisher-place
+      prefix: ", "
+    - items:
+        - contributor: editor
+          form: verb
+          overrides:
+            chapter:
+              prefix: "on "
+          name-order: given-first
+        - title: parent-monograph
+    - title: parent-serial
+    - number: volume
+    - variable: publisher
+    - date: issued
+      form: year
+      prefix: ", "
+    - number: pages
+      prefix: ", pp "
+    - variable: url
+  sort: author-date-title

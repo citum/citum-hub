@@ -1,0 +1,93 @@
+info:
+  title: Numeric Compound
+  description: >
+    A generic numeric style with compound citation support. Groups related
+    references under a shared citation number with alphabetic sub-labels
+    (a, b, c). Analog of the biblatex numeric-comp style.
+  source:
+    csl-id: https://ctan.org/pkg/biblatex
+    adapted-by: citum-create
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    links:
+    - href: https://ctan.org/pkg/biblatex
+      rel: documentation
+options:
+  processing: numeric
+  contributors:
+    delimiter: ", "
+    delimiter-precedes-last: never
+    demote-non-dropping-particle: sort-only
+    shorten:
+      min: 4
+      use-first: 1
+  titles: scientific
+  bibliography:
+    entry-suffix: .
+    separator: ". "
+    compound-numeric:
+      collapse-subentries: true
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      delimiter: ", "
+      delimiter-precedes-last: never
+  template:
+    - number: citation-number
+      wrap: brackets
+      suffix: " "
+    - contributor: author
+      form: long
+      name-order: given-first
+      and: text
+    - title: primary
+      wrap: quotes
+      overrides:
+        article-journal: {}
+        article-magazine: {}
+        article-newspaper: {}
+        book:
+          wrap: none
+        report:
+          wrap: none
+        webpage:
+          wrap: none
+    - title: parent-serial
+      prefix: " In: "
+    - title: parent-monograph
+      prefix: " In: "
+    - contributor: editor
+      form: verb
+      name-order: given-first
+    - variable: publisher
+    - variable: publisher-place
+      prefix: ": "
+    - number: volume
+    - date: issued
+      form: year
+      wrap: parentheses
+    - number: pages
+    - variable: doi
+      prefix: " doi: "
+    - variable: url
+  type-templates:
+    patent:
+      - number: citation-number
+        wrap: brackets
+        suffix: " "
+      - contributor: author
+        form: long
+        name-order: given-first
+        and: text
+      - title: primary
+        wrap: quotes
+      - number: number
+      - contributor: author
+        form: long
+        name-order: given-first
+        and: text
+      - date: issued
+        form: year

@@ -1,0 +1,77 @@
+# yaml-language-server: $schema=https://bdarcus.github.io/csl26/schemas/style.json
+info:
+  id: jm-chicago-legal
+  title: Juris-M Chicago Legal (Experimental)
+  description: >
+    Demonstrates legal sectional bibliography groups aligned to
+    Juris-M and Bluebook-oriented workflows.
+  default-locale: en-US
+
+options:
+  processing: note
+
+citation:
+  template:
+    - title: primary
+      form: short
+
+bibliography:
+  groups:
+    - id: cases
+      heading:
+        localized:
+          en-US: Cases
+          en: Cases
+      selector:
+        type: legal-case
+      sort:
+        template:
+          - key: title
+            ascending: true
+
+    - id: statutes
+      heading:
+        localized:
+          en-US: Statutes
+          en: Statutes
+      selector:
+        type: statute
+      sort:
+        template:
+          - key: title
+            ascending: true
+
+    - id: treaties
+      heading:
+        localized:
+          en-US: Treaties and International Agreements
+          en: Treaties and International Agreements
+      selector:
+        type: treaty
+      sort:
+        template:
+          - key: issued
+            ascending: true
+
+    - id: secondary
+      heading:
+        localized:
+          en-US: Secondary Sources
+          en: Secondary Sources
+      selector:
+        not:
+          type:
+            - legal-case
+            - statute
+            - treaty
+
+  template:
+    - contributor: author
+      form: long
+    - title: primary
+      prefix: ". "
+      emph: true
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
