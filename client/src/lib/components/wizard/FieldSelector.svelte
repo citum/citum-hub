@@ -54,4 +54,23 @@
 			</button>
 		{/each}
 	</div>
+
+	<!-- Secondary Action -->
+	<div class="mt-12 text-center">
+		<button
+			onclick={async () => {
+				wizardStore.setPhase("visual-customizer");
+				// Provide a generic baseline (social sciences / author-date)
+				await wizardStore.generateFromIntent({
+					class: "author_date",
+					from_preset: "apa",
+				});
+				goto("/create/customize");
+			}}
+			class="text-sm font-medium text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
+		>
+			<span class="material-symbols-outlined text-lg">settings_suggest</span>
+			I want to customize everything from scratch
+		</button>
+	</div>
 </div>

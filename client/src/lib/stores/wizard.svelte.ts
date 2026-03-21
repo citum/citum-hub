@@ -13,6 +13,16 @@ import type {
 	AxisChoices,
 } from "$lib/types/wizard";
 import { FIELD_DEFAULTS } from "$lib/types/wizard";
+import {
+	APA_BASELINE,
+	cloneBaseTemplateIntoTypeTemplate,
+	getComponentType,
+	getLocalTemplatePath,
+	getValueAtPath,
+	getResolvedTemplateRoot as resolveTemplateRootFromStyle,
+	toScopedTemplatePath,
+	type TemplateScope,
+} from "$lib/utils/wizard-template";
 
 // Reactive state using module-level $state runes
 let phase = $state<WizardPhase>("quick-start");
@@ -64,6 +74,13 @@ function parseStyle(): Record<string, unknown> | null {
 	} catch {
 		return null;
 	}
+}
+
+function getTemplateNode(path: string): Record<string, unknown> | null {
+	const obj = parseStyle();
+	if (!obj) return null;
+	const node = getValueAtPath(obj, path);
+	return node && typeof node === "object" ? (node as Record<string, unknown>) : null;
 }
 
 /** Re-serialize a modified style object back to YAML. */
@@ -125,6 +142,45 @@ function moveComponent(templatePath: string, fromIndex: number, toIndex: number)
 	styleYaml = serializeStyle(obj);
 }
 
+/** Move a component between two potentially different arrays (e.g. into or out of a group). */
+function moveComponentCrossArray(
+	fromPath: string,
+	fromIndex: number,
+	toPath: string,
+	toIndex: number
+) {
+	if (fromPath === toPath) {
+		return moveComponent(fromPath, fromIndex, toIndex);
+	}
+
+	const obj = parseStyle();
+	if (!obj) return;
+
+	const resolveArray = (path: string) => {
+		const parts = path.split(".");
+		let cur: any = obj;
+		for (const part of parts) cur = cur[part];
+		return cur;
+	};
+
+	const fromArr = resolveArray(fromPath);
+	const toArr = resolveArray(toPath);
+
+	if (!Array.isArray(fromArr) || !Array.isArray(toArr)) return;
+
+	pushHistory();
+	const [item] = fromArr.splice(fromIndex, 1);
+
+	// If appending to the end
+	if (toIndex >= toArr.length) {
+		toArr.push(item);
+	} else {
+		toArr.splice(toIndex, 0, item);
+	}
+
+	styleYaml = serializeStyle(obj);
+}
+
 /** Delete a component from a template array. */
 function deleteComponent(templatePath: string, index: number) {
 	const obj = parseStyle();
@@ -141,6 +197,84 @@ function deleteComponent(templatePath: string, index: number) {
 	pushHistory();
 	template.splice(index, 1);
 	styleYaml = serializeStyle(obj);
+}
+
+function getResolvedTemplateRoot() {
+	const obj = parseStyle();
+	if (!obj) return null;
+	return resolveTemplateRootFromStyle(obj, activeRefType);
+}
+
+/**
+ * Ensure the current style has a literal template array instead of a shorthand preset.
+ * This is required before the user can reorder or toggle components.
+ */
+function materializeCurrentStyle() {
+	const obj = parseStyle();
+	if (!obj) return;
+
+	const bib = (obj.bibliography ??= {}) as Record<string, any>;
+	const hasLiteral =
+		Array.isArray(bib.template) ||
+		(bib["type-templates"] && Object.keys(bib["type-templates"]).length > 0);
+
+	if (!hasLiteral) {
+		console.log("[Wizard] Materializing shorthand preset into literal template...");
+		bib.template = JSON.parse(JSON.stringify(APA_BASELINE));
+		delete bib["use-preset"];
+		delete bib["from-preset"];
+		styleYaml = serializeStyle(obj);
+		persist();
+		void fetchPreview();
+	}
+}
+
+function ensureBibliographyTypeTemplate(): string | null {
+	const obj = parseStyle();
+	if (!obj) return null;
+
+	const existing = getValueAtPath(obj, getLocalTemplatePath(activeRefType));
+	if (Array.isArray(existing)) {
+		return getLocalTemplatePath(activeRefType);
+	}
+
+	pushHistory();
+	const localPath = cloneBaseTemplateIntoTypeTemplate(obj, activeRefType);
+	if (!localPath) return null;
+	styleYaml = serializeStyle(obj);
+	return localPath;
+}
+
+function getScopedTemplatePath(
+	path: string,
+	scope: TemplateScope,
+	options: { ensureLocal?: boolean } = {}
+): string | null {
+	if (scope === "local" && options.ensureLocal) {
+		ensureBibliographyTypeTemplate();
+	}
+	return toScopedTemplatePath(path, activeRefType, scope);
+}
+
+function resolvePreviewSelection(
+	componentCssType: string,
+	astIndex: number | null
+): ComponentSelection | null {
+	if (astIndex === null) return null;
+
+	const templateRoot = getResolvedTemplateRoot();
+	if (!templateRoot) return null;
+
+	const component = templateRoot.template[astIndex];
+	if (!component || typeof component !== "object") return null;
+
+	return {
+		componentType: getComponentType(component as Record<string, unknown>),
+		cssClass: `csln-${componentCssType}`,
+		astIndex,
+		templatePath: `${templateRoot.path}.${astIndex}`,
+		scope: templateRoot.scope,
+	};
 }
 
 /** Get the options block from the style. */
@@ -164,6 +298,7 @@ async function fetchPreview() {
 				citum: styleYaml,
 				test_locator: testLocator || undefined,
 				inject_ast_indices: true,
+				reference_type: activeRefType,
 			}),
 		});
 		if (!res.ok) throw new Error(`Preview failed: ${res.status}`);
@@ -230,6 +365,7 @@ function undo() {
 	if (historyIndex > 0) {
 		historyIndex--;
 		styleYaml = history[historyIndex];
+		void fetchPreview();
 	}
 }
 
@@ -237,6 +373,7 @@ function redo() {
 	if (historyIndex < history.length - 1) {
 		historyIndex++;
 		styleYaml = history[historyIndex];
+		void fetchPreview();
 	}
 }
 
@@ -410,6 +547,7 @@ export const wizardStore = {
 	},
 	setActiveRefType(t: string) {
 		activeRefType = t;
+		persist();
 	},
 	setTestLocator(l: string) {
 		testLocator = l;
@@ -419,10 +557,17 @@ export const wizardStore = {
 	// Actions
 	updateStyleField,
 	moveComponent,
+	moveComponentCrossArray,
 	deleteComponent,
 	getOptions,
 	parseStyle,
 	serializeStyle,
+	getTemplateNode,
+	getResolvedTemplateRoot,
+	getScopedTemplatePath,
+	materializeCurrentStyle,
+	ensureBibliographyTypeTemplate,
+	resolvePreviewSelection,
 	generateFromIntent,
 	fetchPreview,
 	undo,

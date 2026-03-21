@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 
 	let { editScope = "all" } = $props<{ editScope?: "all" | "local" }>();
@@ -12,40 +11,22 @@
 		}, 300);
 	}
 
+	function getSelectedPath(ensureLocal = false): string | null {
+		const selected = wizardStore.selectedComponent;
+		if (!selected) return null;
+		return wizardStore.getScopedTemplatePath(selected.templatePath, editScope, { ensureLocal });
+	}
+
 	function getTitleRendering(): Record<string, unknown> {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return {};
-
-		if (editScope === "local") {
-			const override = (obj.options as any)?.titles?.[wizardStore.activeRefType];
-			if (override && typeof override === "object") return override;
-		}
-
-		const opts = wizardStore.getOptions();
-		if (opts?.titles && typeof opts.titles === "object") {
-			const titles = opts.titles as Record<string, unknown>;
-			if (titles.default && typeof titles.default === "object") {
-				return titles.default as Record<string, unknown>;
-			}
-		}
-		return {};
+		const path = getSelectedPath();
+		if (!path) return {};
+		return wizardStore.getTemplateNode(path) ?? {};
 	}
 
 	function updateTitleRendering(path: string, value: unknown) {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return;
-
-		const currentRendering = getTitleRendering();
-		const updatedRendering = { ...currentRendering, [path]: value };
-
-		if (editScope === "all") {
-			const opts = wizardStore.getOptions();
-			let titles = (opts?.titles as Record<string, unknown>) || {};
-			wizardStore.updateStyleField("options.titles", { ...titles, default: updatedRendering });
-		} else {
-			const typePath = `options.titles.${wizardStore.activeRefType}`;
-			wizardStore.updateStyleField(typePath, updatedRendering);
-		}
+		const selectedPath = getSelectedPath(editScope === "local");
+		if (!selectedPath) return;
+		wizardStore.updateStyleField(`${selectedPath}.${path}`, value);
 		debouncedFetchPreview();
 	}
 
@@ -53,6 +34,8 @@
 	const textCase = $derived((rendering["text-case"] as string) ?? "sentence");
 	const isQuoted = $derived((rendering.quote as boolean) ?? false);
 	const isEmph = $derived((rendering.emph as boolean) ?? false);
+	const prefix = $derived((rendering.prefix as string) ?? "");
+	const suffix = $derived((rendering.suffix as string) ?? "");
 </script>
 
 <div class="space-y-4 p-6 pt-4">
@@ -98,6 +81,29 @@
 					/>
 					<span class="text-sm text-text-main">Italic</span>
 				</label>
+			</div>
+		</div>
+
+		<div class="grid grid-cols-2 gap-4">
+			<div>
+				<label for="te-prefix" class="block text-sm font-medium text-text-main mb-2">Prefix</label>
+				<input
+					id="te-prefix"
+					type="text"
+					value={prefix}
+					oninput={(e) => updateTitleRendering("prefix", e.currentTarget.value || undefined)}
+					class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+				/>
+			</div>
+			<div>
+				<label for="te-suffix" class="block text-sm font-medium text-text-main mb-2">Suffix</label>
+				<input
+					id="te-suffix"
+					type="text"
+					value={suffix}
+					oninput={(e) => updateTitleRendering("suffix", e.currentTarget.value || undefined)}
+					class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+				/>
 			</div>
 		</div>
 	</div>

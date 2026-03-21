@@ -12,7 +12,7 @@
 </script>
 
 <div class="w-full flex flex-col h-full bg-slate-50 dark:bg-slate-950">
-	{#if !$page.url.pathname.includes("/create/refine")}
+	{#if !$page.url.pathname.includes("/create/refine") && !$page.url.pathname.includes("/create/customize")}
 		<WizardHeader />
 	{/if}
 	<div class="flex-1 w-full h-full">

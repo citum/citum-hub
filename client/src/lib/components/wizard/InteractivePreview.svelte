@@ -71,12 +71,10 @@
 			tooltipPos = { x: rect.left + rect.width / 2, y: rect.top - 5 };
 		} else if (e.type === "click") {
 			e.stopPropagation();
-			wizardStore.setSelectedComponent({
-				componentType: info.type,
-				cssClass: `csln-${info.type}`,
-				element: cslnEl,
-				index: info.index,
-			});
+			const selection = wizardStore.resolvePreviewSelection(info.type, info.index);
+			if (selection) {
+				wizardStore.setSelectedComponent(selection);
+			}
 		}
 	}
 
@@ -90,12 +88,10 @@
 			.querySelectorAll(".csln-selected")
 			.forEach((el) => el.classList.remove("csln-selected"));
 
-		if (selected?.index !== null && selected?.index !== undefined) {
-			// Highlight by index to be stable across re-renders
-			const el = containerRef.querySelector(
-				`[data-index="${selected.index}"].csln-${selected.componentType}`
-			);
-			if (el) el.classList.add("csln-selected");
+		if (selected?.astIndex !== null && selected?.astIndex !== undefined) {
+			containerRef.querySelectorAll(`[data-index="${selected.astIndex}"]`).forEach((el) => {
+				el.classList.add("csln-selected");
+			});
 		}
 	});
 
@@ -132,6 +128,7 @@
 				class="space-y-6 focus:outline-none"
 				role="region"
 				aria-label="Citation Preview"
+				aria-live="polite"
 				tabindex="0"
 				onmousemove={handleInteraction}
 				onclick={handleInteraction}
@@ -224,9 +221,39 @@
 	}
 
 	:global(.csln-selected) {
-		outline: 2px solid #135bec;
-		outline-offset: 1px;
-		background: rgba(19, 91, 236, 0.1);
+		outline: 3px solid #135bec;
+		outline-offset: 2px;
+		background: rgba(19, 91, 236, 0.15);
+		box-shadow: 0 0 15px rgba(19, 91, 236, 0.2);
+	}
+
+	/* Type-specific hover colors in preview */
+	:global(.csln-author:hover),
+	:global(.csln-editor:hover),
+	:global(.csln-translator:hover) {
+		background: rgba(16, 185, 129, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-issued:hover),
+	:global(.csln-accessed:hover) {
+		background: rgba(249, 115, 22, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-title:hover),
+	:global(.csln-container-title:hover) {
+		background: rgba(168, 85, 247, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-volume:hover),
+	:global(.csln-issue:hover),
+	:global(.csln-pages:hover) {
+		background: rgba(99, 102, 241, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-doi:hover),
+	:global(.csln-url:hover) {
+		background: rgba(14, 165, 233, 0.15);
+		border-radius: 4px;
 	}
 
 	:global(.interactive-preview) {

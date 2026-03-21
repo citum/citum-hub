@@ -182,6 +182,29 @@
 		}
 	}
 
+	async function customizeFurther() {
+		// Ensure YAML is generated if missing
+		if (!wizardStore.styleYaml) {
+			const presetId =
+				wizardStore.family === "author-date"
+					? "apa"
+					: wizardStore.family === "numeric"
+						? "vancouver"
+						: "chicago-note";
+			await wizardStore.generateFromIntent({
+				class:
+					wizardStore.family === "author-date"
+						? "author_date"
+						: wizardStore.family === "numeric"
+							? "numeric"
+							: "footnote",
+				from_preset: presetId,
+			});
+		}
+		wizardStore.setPhase("visual-customizer");
+		goto("/create/customize");
+	}
+
 	async function useThisAnyhow() {
 		// Ensure we have a preview ready for the next step
 		if (!wizardStore.styleYaml) {
@@ -204,7 +227,7 @@
 			await wizardStore.fetchPreview();
 		}
 		wizardStore.setStep(4);
-		goto("/create/refine");
+		goto("/create/review");
 	}
 </script>
 
@@ -292,13 +315,13 @@
 				</div>
 			{/each}
 
-			<div class="pt-4 text-center">
+			<div class="pt-4 space-y-3">
 				{#if currentAxisIndex === axes.length - 1 && wizardStore.axisChoices[axes[currentAxisIndex].id as keyof AxisChoices]}
 					<button
 						onclick={useThisAnyhow}
 						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
 					>
-						Continue to Refinement
+						Continue to Final Review
 					</button>
 				{:else}
 					<button
@@ -314,6 +337,14 @@
 						</p>
 					{/if}
 				{/if}
+
+				<button
+					onclick={customizeFurther}
+					class="w-full rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+				>
+					<span class="material-symbols-outlined text-lg">settings_suggest</span>
+					Open Visual Editor
+				</button>
 			</div>
 		</div>
 	</div>

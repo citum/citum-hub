@@ -29,3 +29,4 @@ intent_engine = { package = "intent-engine", path = "crates/intent-engine" }
 serde_yaml = "0.9.34"
 serde_yaml_ng = "0.10"
 specta = { version = "1.0.5", features = ["serde", "typescript", "export"] }
+url = "2"

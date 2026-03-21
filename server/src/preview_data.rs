@@ -18,6 +18,7 @@ use citum_schema::reference::{
     },
     Contributor, ContributorList, EdtfString, MultilingualString, SimpleName, StructuredName,
 };
+use url::Url;
 
 // ── factories ──────────────────────────────────────────────────────────
 
@@ -268,6 +269,38 @@ fn report(
     monograph.author = Some(author);
     monograph.issued = edtf(year);
     monograph.publisher = publisher;
+
+    (id.to_string(), Reference::Monograph(Box::new(monograph)))
+}
+
+fn thesis(
+    id: &str,
+    author: Contributor,
+    year: &str,
+    thesis_title: &str,
+    publisher: Option<Contributor>,
+) -> (String, Reference) {
+    let mut monograph = empty_monograph(id, MonographType::Thesis, title(thesis_title));
+    monograph.author = Some(author);
+    monograph.issued = edtf(year);
+    monograph.publisher = publisher;
+
+    (id.to_string(), Reference::Monograph(Box::new(monograph)))
+}
+
+fn webpage(
+    id: &str,
+    author: Contributor,
+    year: &str,
+    page_title: &str,
+    url: &str,
+    accessed: &str,
+) -> (String, Reference) {
+    let mut monograph = empty_monograph(id, MonographType::Webpage, title(page_title));
+    monograph.author = Some(author);
+    monograph.issued = edtf(year);
+    monograph.url = Url::parse(url).ok();
+    monograph.accessed = Some(edtf(accessed));
 
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
@@ -607,4 +640,73 @@ pub fn refs_for_field(field: Option<&str>) -> Bibliography {
         Some("sciences") => science_refs(),
         _ => default_refs(),
     }
+}
+
+pub fn refs_for_reference_type(reference_type: Option<&str>) -> Bibliography {
+    let Some(reference_type) = reference_type else {
+        return default_refs();
+    };
+
+    let mut bib = Bibliography::new();
+
+    let maybe_reference = match reference_type {
+        "article-journal" => Some(article(
+            "preview-article-journal",
+            names(&[("Smith", "Jane"), ("Lee", "Daniel")]),
+            "2024",
+            "Previewing Interactive Bibliography Editing",
+            "Journal of Citation Design",
+            Some("42"),
+            Some("3"),
+            Some("101-124"),
+            Some("10.1234/preview.article"),
+        )),
+        "book" => Some(book(
+            "preview-book",
+            name("Adams", "Morgan"),
+            "2021",
+            "Designing Citation Workflows",
+            Some(org("Citum Press")),
+        )),
+        "chapter" => Some(chapter(
+            "preview-chapter",
+            name("Nguyen", "Alicia"),
+            "2022",
+            "Component Arrays in Practice",
+            "The Handbook of Citation Systems",
+            Some(names(&[("Patel", "Rina"), ("Cole", "Matthew")])),
+            Some("55-78"),
+            Some(org("Scholarly Press")),
+        )),
+        "report" => Some(report(
+            "preview-report",
+            org("Open Citation Initiative"),
+            "2023",
+            "State of Citation Tooling 2023",
+            Some(org("Open Citation Initiative")),
+        )),
+        "thesis" => Some(thesis(
+            "preview-thesis",
+            name("Rivera", "Lena"),
+            "2020",
+            "Patterns for Sustainable Citation Style Maintenance",
+            Some(org("Columbia University")),
+        )),
+        "webpage" => Some(webpage(
+            "preview-webpage",
+            org("Citum Project"),
+            "2025",
+            "Citum Style Builder Documentation",
+            "https://example.com/docs/style-builder",
+            "2026-03-19",
+        )),
+        _ => None,
+    };
+
+    if let Some((id, reference)) = maybe_reference {
+        bib.insert(id, reference);
+        return bib;
+    }
+
+    default_refs()
 }
