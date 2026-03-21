@@ -11,6 +11,15 @@ import {
 	render_intent_citation,
 	decide as wasm_decide,
 } from "../../../server/crates/wasm-bridge/pkg/wasm_bridge.js";
+import {
+	exportRegistryDocument,
+	getHubAliases,
+	getHubStyleDetail,
+	getRegistryRuns,
+	importRegistryDocument,
+	queryHubStyles,
+	syncRegistryData,
+} from "../lib/server/registry";
 
 const app = new Hono().basePath("/api");
 
@@ -130,14 +139,143 @@ const authMiddleware = async (c: Context, next: () => Promise<void>) => {
 	await next();
 };
 
+const requireAdmin = async (c: Context, next: () => Promise<void>) => {
+	await authMiddleware(c, async () => {
+		const user = (c as any).get("user");
+		if (!user || user.role !== "admin") {
+			c.res = c.json({ error: "Admin access required" }, 401);
+			return;
+		}
+		await next();
+	});
+};
+
 // --- API Routes ---
 
 app.get("/hub", async (c) => {
 	try {
-		const styles = await sql`SELECT * FROM styles WHERE is_public = true ORDER BY updated_at DESC`;
+		const page = Number.parseInt(c.req.query("page") || "1", 10) || 1;
+		const pageSize = Number.parseInt(c.req.query("page_size") || "24", 10) || 24;
+		const styles = await queryHubStyles({
+			q: c.req.query("q") || c.req.query("search") || undefined,
+			field: c.req.query("field") || undefined,
+			family: c.req.query("family") || undefined,
+			hasAliases: c.req.query("has_aliases") === "true",
+			page,
+			pageSize,
+		});
 		return c.json(styles);
-	} catch {
+	} catch (error) {
+		console.error("[Hub] Failed to fetch public styles", error);
 		return c.json({ error: "Failed to fetch public styles" }, 500);
+	}
+});
+
+app.get("/hub/:styleKey", async (c) => {
+	try {
+		const detail = await getHubStyleDetail(c.req.param("styleKey"));
+		if (!detail) {
+			return c.json({ error: "Style not found" }, 404);
+		}
+		return c.json(detail);
+	} catch (error) {
+		console.error("[Hub] Failed to fetch style detail", error);
+		return c.json({ error: "Failed to fetch style detail" }, 500);
+	}
+});
+
+app.get("/hub/:styleKey/aliases", async (c) => {
+	try {
+		const page = Number.parseInt(c.req.query("page") || "1", 10) || 1;
+		const pageSize = Number.parseInt(c.req.query("page_size") || "40", 10) || 40;
+		const aliases = await getHubAliases(c.req.param("styleKey"), page, pageSize);
+		if (!aliases) {
+			return c.json({ error: "Style not found" }, 404);
+		}
+		return c.json(aliases);
+	} catch (error) {
+		console.error("[Hub] Failed to fetch aliases", error);
+		return c.json({ error: "Failed to fetch aliases" }, 500);
+	}
+});
+
+app.get("/hub/:styleKey/download", async (c) => {
+	try {
+		const detail = await getHubStyleDetail(c.req.param("styleKey"));
+		if (!detail?.style.citum) {
+			return c.json({ error: "Style source not found" }, 404);
+		}
+		const slug =
+			detail.style.filename
+				?.split("/")
+				.pop()
+				?.replace(/\.(yaml|yml)$/i, "") ||
+			detail.style.short_name?.toLowerCase().replace(/\s+/g, "-") ||
+			"style";
+		c.header("Content-Type", "application/x-yaml; charset=utf-8");
+		c.header("Content-Disposition", `attachment; filename="${slug}.yaml"`);
+		return c.body(detail.style.citum);
+	} catch (error) {
+		console.error("[Hub] Failed to download style source", error);
+		return c.json({ error: "Failed to download style source" }, 500);
+	}
+});
+
+app.post("/admin/registry/sync", requireAdmin, async (c) => {
+	try {
+		const summary = await syncRegistryData();
+		return c.json(summary);
+	} catch (error) {
+		console.error("[Registry] Sync failed", error);
+		return c.json({ error: "Registry sync failed", details: String(error) }, 500);
+	}
+});
+
+app.post("/admin/registry/import", requireAdmin, async (c) => {
+	try {
+		const body = await c.req.text();
+		const requestedFormat = c.req.query("format");
+		const contentType = c.req.header("content-type") || "";
+		const format =
+			requestedFormat === "json" || contentType.includes("application/json") ? "json" : "yaml";
+		const result = await importRegistryDocument({
+			registrySlug:
+				(c.req.query("registry") as "hub-primary" | "core-default" | "hub-candidates") ||
+				"hub-primary",
+			format,
+			body,
+		});
+		return c.json(result);
+	} catch (error) {
+		console.error("[Registry] Import failed", error);
+		return c.json({ error: "Registry import failed", details: String(error) }, 500);
+	}
+});
+
+app.get("/admin/registry/export", requireAdmin, async (c) => {
+	try {
+		const format = c.req.query("format") === "json" ? "json" : "yaml";
+		const document = await exportRegistryDocument({
+			registrySlug:
+				(c.req.query("registry") as "hub-primary" | "core-default" | "hub-candidates") ||
+				"hub-primary",
+			format,
+		});
+		c.header("Content-Type", `${document.contentType}; charset=utf-8`);
+		c.header("Content-Disposition", `attachment; filename="${document.filename}"`);
+		return c.body(document.body);
+	} catch (error) {
+		console.error("[Registry] Export failed", error);
+		return c.json({ error: "Registry export failed", details: String(error) }, 500);
+	}
+});
+
+app.get("/admin/registry/runs", requireAdmin, async (c) => {
+	try {
+		return c.json(await getRegistryRuns());
+	} catch (error) {
+		console.error("[Registry] Failed to fetch runs", error);
+		return c.json({ error: "Failed to fetch registry runs" }, 500);
 	}
 });
 
@@ -154,6 +292,31 @@ app.get("/styles", authMiddleware, async (c) => {
 	}
 });
 
+app.post("/styles", authMiddleware, async (c) => {
+	const user = (c as any).get("user");
+	if (!user?.id) return c.json({ error: "Unauthorized" }, 401);
+
+	try {
+		const body = await c.req.json();
+		const title = body.title || "Untitled Style";
+		const intent = body.intent || {};
+		const citum =
+			body.citum ||
+			body.style_yaml ||
+			(Object.keys(intent).length > 0 ? generate_style(JSON.stringify(intent)) : "");
+
+		const [style] = await sql`
+            INSERT INTO styles (user_id, title, intent, citum, is_public)
+            VALUES (${user.id}, ${title}, ${JSON.stringify(intent)}, ${citum}, false)
+            RETURNING *
+        `;
+		return c.json(style, 201);
+	} catch (error) {
+		console.error("[Styles] Failed to create style", error);
+		return c.json({ error: "Failed to create style" }, 500);
+	}
+});
+
 app.get("/styles/:id", authMiddleware, async (c) => {
 	const id = c.req.param("id");
 	const user = (c as any).get("user");
@@ -166,6 +329,130 @@ app.get("/styles/:id", authMiddleware, async (c) => {
 		return c.json(style);
 	} catch {
 		return c.json({ error: "Database error" }, 500);
+	}
+});
+
+app.patch("/styles/:id", authMiddleware, async (c) => {
+	const id = c.req.param("id");
+	const user = (c as any).get("user");
+	if (!user?.id) return c.json({ error: "Unauthorized" }, 401);
+
+	try {
+		const body = await c.req.json();
+		const existing = await sql`SELECT * FROM styles WHERE id = ${id} AND user_id = ${user.id}`;
+		if (existing.length === 0) return c.json({ error: "Not found" }, 404);
+
+		const title = body.title || existing[0].title;
+		const intent = body.intent || existing[0].intent || {};
+		const citum =
+			body.citum ||
+			body.style_yaml ||
+			existing[0].citum ||
+			(Object.keys(intent).length > 0 ? generate_style(JSON.stringify(intent)) : "");
+		const isPublic = typeof body.is_public === "boolean" ? body.is_public : existing[0].is_public;
+
+		const [style] = await sql`
+            UPDATE styles
+            SET title = ${title},
+                intent = ${JSON.stringify(intent)},
+                citum = ${citum},
+                is_public = ${isPublic},
+                updated_at = NOW()
+            WHERE id = ${id}
+              AND user_id = ${user.id}
+            RETURNING *
+        `;
+		return c.json(style);
+	} catch (error) {
+		console.error("[Styles] Failed to update style", error);
+		return c.json({ error: "Failed to update style" }, 500);
+	}
+});
+
+app.post("/styles/:id/fork", authMiddleware, async (c) => {
+	const id = c.req.param("id");
+	const user = (c as any).get("user");
+	if (!user?.id) return c.json({ error: "Unauthorized" }, 401);
+
+	try {
+		const [original] = await sql`
+            SELECT *
+            FROM styles
+            WHERE id = ${id}
+              AND (is_public = true OR user_id = ${user.id})
+        `;
+		if (!original) return c.json({ error: "Not found" }, 404);
+
+		const [forked] = await sql`
+            INSERT INTO styles (user_id, title, intent, citum, is_public)
+            VALUES (
+                ${user.id},
+                ${`${original.title} (Fork)`},
+                ${JSON.stringify(original.intent || {})},
+                ${original.citum || ""},
+                false
+            )
+            RETURNING *
+        `;
+		return c.json(forked, 201);
+	} catch (error) {
+		console.error("[Styles] Failed to fork style", error);
+		return c.json({ error: "Failed to fork style" }, 500);
+	}
+});
+
+app.get("/bookmarks", authMiddleware, async (c) => {
+	const user = (c as any).get("user");
+	if (!user?.id) return c.json({ error: "Unauthorized" }, 401);
+
+	try {
+		const bookmarks = await sql`
+            SELECT s.*
+            FROM styles s
+            JOIN bookmarks b ON b.style_id = s.id
+            WHERE b.user_id = ${user.id}
+            ORDER BY s.updated_at DESC
+        `;
+		return c.json(bookmarks);
+	} catch (error) {
+		console.error("[Bookmarks] Failed to fetch bookmarks", error);
+		return c.json({ error: "Failed to fetch bookmarks" }, 500);
+	}
+});
+
+app.post("/styles/:id/bookmark", authMiddleware, async (c) => {
+	const id = c.req.param("id");
+	const user = (c as any).get("user");
+	if (!user?.id) return c.json({ error: "Unauthorized" }, 401);
+
+	try {
+		await sql`
+            INSERT INTO bookmarks (user_id, style_id)
+            VALUES (${user.id}, ${id})
+            ON CONFLICT DO NOTHING
+        `;
+		return c.body(null, 201);
+	} catch (error) {
+		console.error("[Bookmarks] Failed to create bookmark", error);
+		return c.json({ error: "Failed to bookmark style" }, 500);
+	}
+});
+
+app.delete("/styles/:id/bookmark", authMiddleware, async (c) => {
+	const id = c.req.param("id");
+	const user = (c as any).get("user");
+	if (!user?.id) return c.json({ error: "Unauthorized" }, 401);
+
+	try {
+		await sql`
+            DELETE FROM bookmarks
+            WHERE user_id = ${user.id}
+              AND style_id = ${id}
+        `;
+		return c.body(null, 204);
+	} catch (error) {
+		console.error("[Bookmarks] Failed to remove bookmark", error);
+		return c.json({ error: "Failed to remove bookmark" }, 500);
 	}
 });
 

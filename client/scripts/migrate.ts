@@ -1,5 +1,6 @@
 import path from "node:path";
-import { exists, file, sql } from "bun";
+import fs from "node:fs";
+import { file, sql } from "bun";
 
 const MIGRATIONS_DIR = path.join(process.cwd(), "migrations");
 
@@ -21,7 +22,7 @@ async function migrate() {
 		const appliedSet = new Set(appliedMigrations.map((m) => m.name));
 
 		// 3. Find all .sql files in migrations directory
-		if (!(await exists(MIGRATIONS_DIR))) {
+		if (!fs.existsSync(MIGRATIONS_DIR)) {
 			console.error(`❌ Migrations directory not found: ${MIGRATIONS_DIR}`);
 			process.exit(1);
 		}
