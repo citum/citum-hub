@@ -4,13 +4,13 @@
 	import { auth } from "$lib/stores/auth";
 	import { demoBookmarks } from "$lib/stores/demo";
 	import type { Style } from "$lib/types/style";
-	import { PUBLIC_DEMO_MODE } from "$env/static/public";
+	import { env } from "$env/dynamic/public";
 
 	let styles: Style[] = $state([]);
 	let bookmarks: Style[] = $state([]);
 	let loading = $state(true);
 	let error = $state(null);
-	let demoMode = $state(PUBLIC_DEMO_MODE === "true");
+	let demoMode = $state(env.PUBLIC_DEMO_MODE === "true");
 
 	onMount(async () => {
 		if (!$auth.user) {
