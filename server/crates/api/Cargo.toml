@@ -15,7 +15,7 @@ tracing-subscriber = "0.3"
 indexmap = "2"
 
 # Core CSL logic
-citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", rev = "61292f016dbef330ffb0fb7d46e843fb3fe5c17e" }
-citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", rev = "61292f016dbef330ffb0fb7d46e843fb3fe5c17e" }
+citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", branch = "main" }
+citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", branch = "main" }
 intent-engine = { path = "../intent-engine" }
 serde_yaml = "0.9.34"

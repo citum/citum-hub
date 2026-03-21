@@ -8,5 +8,5 @@ license = "AGPL-3.0-or-later"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 specta = { version = "1.0.5", features = ["serde", "typescript", "export"] }
-citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", rev = "61292f016dbef330ffb0fb7d46e843fb3fe5c17e" }
+citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", branch = "main" }
 serde_yaml = "0.9.34"
