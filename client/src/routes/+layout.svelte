@@ -107,8 +107,7 @@
 						<span class="text-lg font-bold text-slate-900">Citum Hub</span>
 					</div>
 					<p class="text-sm text-slate-500 leading-relaxed">
-						An open-source initiative to modernize academic referencing. Maintained by the Citation
-						Style Language community.
+						An open-source initiative to modernize academic referencing.
 					</p>
 				</div>
 				<div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
