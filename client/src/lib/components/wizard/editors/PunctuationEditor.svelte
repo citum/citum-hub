@@ -15,7 +15,7 @@
 		const path = wizardStore.getScopedTemplatePath(
 			wizardStore.selectedComponent.templatePath,
 			wizardStore.selectedComponent.scope === "local" ? "local" : "all",
-            { ensureLocal: wizardStore.selectedComponent.scope === "local" }
+			{ ensureLocal: wizardStore.selectedComponent.scope === "local" }
 		);
 		return wizardStore.getTemplateNode(path);
 	}
@@ -70,7 +70,7 @@
 						id="punc-prefix"
 						type="text"
 						value={(selectedNode.prefix as string) || ""}
-						placeholder='e.g., " ("'
+						placeholder={'e.g., " ("'}
 						oninput={(e) => updatePunctuation("prefix", e.currentTarget.value)}
 						class="w-full rounded border border-border-light bg-white px-4 py-2 text-text-main font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
 					/>
@@ -83,7 +83,7 @@
 						id="punc-suffix"
 						type="text"
 						value={(selectedNode.suffix as string) || ""}
-						placeholder='e.g., "."'
+						placeholder={'e.g., "."'}
 						oninput={(e) => updatePunctuation("suffix", e.currentTarget.value)}
 						class="w-full rounded border border-border-light bg-white px-4 py-2 text-text-main font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary shadow-sm"
 					/>
@@ -102,7 +102,9 @@
 			</div>
 		</div>
 	{:else}
-		<div class="rounded-lg border border-dashed border-border-light bg-surface-light p-8 text-center">
+		<div
+			class="rounded-lg border border-dashed border-border-light bg-surface-light p-8 text-center"
+		>
 			<span class="material-symbols-outlined text-slate-300 text-4xl mb-2">touch_app</span>
 			<p class="text-sm text-text-secondary">
 				Select a component in the Structure tab or Preview to edit its specific prefix and suffix.

@@ -228,11 +228,33 @@
 	}
 
 	/* Type-specific hover colors in preview */
-	:global(.csln-author:hover), :global(.csln-editor:hover), :global(.csln-translator:hover) { background: rgba(16, 185, 129, 0.15); border-radius: 4px; }
-	:global(.csln-issued:hover), :global(.csln-accessed:hover) { background: rgba(249, 115, 22, 0.15); border-radius: 4px; }
-	:global(.csln-title:hover), :global(.csln-container-title:hover) { background: rgba(168, 85, 247, 0.15); border-radius: 4px; }
-	:global(.csln-volume:hover), :global(.csln-issue:hover), :global(.csln-pages:hover) { background: rgba(99, 102, 241, 0.15); border-radius: 4px; }
-	:global(.csln-doi:hover), :global(.csln-url:hover) { background: rgba(14, 165, 233, 0.15); border-radius: 4px; }
+	:global(.csln-author:hover),
+	:global(.csln-editor:hover),
+	:global(.csln-translator:hover) {
+		background: rgba(16, 185, 129, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-issued:hover),
+	:global(.csln-accessed:hover) {
+		background: rgba(249, 115, 22, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-title:hover),
+	:global(.csln-container-title:hover) {
+		background: rgba(168, 85, 247, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-volume:hover),
+	:global(.csln-issue:hover),
+	:global(.csln-pages:hover) {
+		background: rgba(99, 102, 241, 0.15);
+		border-radius: 4px;
+	}
+	:global(.csln-doi:hover),
+	:global(.csln-url:hover) {
+		background: rgba(14, 165, 233, 0.15);
+		border-radius: 4px;
+	}
 
 	:global(.interactive-preview) {
 		font-family: var(--font-serif);

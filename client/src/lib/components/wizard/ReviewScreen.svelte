@@ -172,8 +172,12 @@
 			<span class="material-symbols-outlined text-lg">checklist</span> Style Summary
 		</h2>
 		<ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
-			<li class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group">
-				<div class="flex size-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary group-hover:scale-110 transition-transform">
+			<li
+				class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group"
+			>
+				<div
+					class="flex size-10 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-900/30 text-primary group-hover:scale-110 transition-transform"
+				>
 					<span class="material-symbols-outlined text-xl">architecture</span>
 				</div>
 				<div>
@@ -187,8 +191,12 @@
 					</p>
 				</div>
 			</li>
-			<li class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group">
-				<div class="flex size-10 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 group-hover:scale-110 transition-transform">
+			<li
+				class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group"
+			>
+				<div
+					class="flex size-10 items-center justify-center rounded-full bg-purple-50 dark:bg-purple-900/30 text-purple-600 group-hover:scale-110 transition-transform"
+				>
 					<span class="material-symbols-outlined text-xl">auto_awesome</span>
 				</div>
 				<div>
@@ -199,22 +207,31 @@
 				</div>
 			</li>
 			{#if wizardStore.getOptions()?.contributors}
-				{@const contrib = wizardStore.getOptions()?.contributors as import("$lib/types/wizard").ContributorConfig}
-				<li class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group">
-					<div class="flex size-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 group-hover:scale-110 transition-transform">
+				{@const contrib = wizardStore.getOptions()
+					?.contributors as import("$lib/types/wizard").ContributorConfig}
+				<li
+					class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group"
+				>
+					<div
+						class="flex size-10 items-center justify-center rounded-full bg-green-50 dark:bg-green-900/30 text-green-600 group-hover:scale-110 transition-transform"
+					>
 						<span class="material-symbols-outlined text-xl">person</span>
 					</div>
 					<div>
 						<p class="font-bold text-slate-900 dark:text-white text-sm">Name Formatting</p>
 						<p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-							{contrib["name-form"] === "initials" ? "Initial-based" : "Full Names"}, 
+							{contrib["name-form"] === "initials" ? "Initial-based" : "Full Names"},
 							{contrib["display-as-sort"] === "all" ? "Family-First" : "Given-First"}
 						</p>
 					</div>
 				</li>
 				{#if contrib.shorten}
-					<li class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group">
-						<div class="flex size-10 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 group-hover:scale-110 transition-transform">
+					<li
+						class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group"
+					>
+						<div
+							class="flex size-10 items-center justify-center rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-600 group-hover:scale-110 transition-transform"
+						>
 							<span class="material-symbols-outlined text-xl">reorder</span>
 						</div>
 						<div>
@@ -227,14 +244,20 @@
 				{/if}
 			{/if}
 			{#if wizardStore.getOptions()?.punctuation}
-				<li class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group">
-					<div class="flex size-10 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 group-hover:scale-110 transition-transform">
+				<li
+					class="flex items-start gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shadow-sm transition-all hover:border-primary/30 group"
+				>
+					<div
+						class="flex size-10 items-center justify-center rounded-full bg-red-50 dark:bg-red-900/30 text-red-600 group-hover:scale-110 transition-transform"
+					>
 						<span class="material-symbols-outlined text-xl">terminal</span>
 					</div>
 					<div>
 						<p class="font-bold text-slate-900 dark:text-white text-sm">Quote Logic</p>
 						<p class="text-xs text-slate-600 dark:text-slate-400 mt-1">
-							{wizardStore.getOptions()?.["punctuation-in-quote"] ? "Punctuation inside" : "Punctuation outside"}
+							{wizardStore.getOptions()?.["punctuation-in-quote"]
+								? "Punctuation inside"
+								: "Punctuation outside"}
 						</p>
 					</div>
 				</li>
@@ -267,7 +290,8 @@
 			>
 				<span class="material-symbols-outlined text-lg">visibility</span> Visual Preview
 			</h2>
-			<span class="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180"
+			<span
+				class="material-symbols-outlined text-slate-400 transition-transform group-open:rotate-180"
 				>expand_more</span
 			>
 		</summary>

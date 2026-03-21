@@ -198,13 +198,19 @@
 				<section class="border-r border-slate-200 bg-stone-50/30 p-6 sm:p-8">
 					<div class="max-w-md mx-auto w-full">
 						<header class="mb-8">
-							<div class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
-								<span class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700">
+							<div
+								class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2"
+							>
+								<span
+									class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
+								>
 									{activeTab}
 								</span>
 								<span class="material-symbols-outlined text-[10px]">arrow_forward</span>
-								<span class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400 border border-blue-100 dark:border-blue-800">
-									{wizardStore.activeRefType.replace('-', ' ')}
+								<span
+									class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400 border border-blue-100 dark:border-blue-800"
+								>
+									{wizardStore.activeRefType.replace("-", " ")}
 								</span>
 							</div>
 
@@ -212,12 +218,15 @@
 								{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Editor
 							</h1>
 							<p class="text-sm text-slate-500 mt-2 leading-relaxed">
-								{#if activeTab === 'structure'}
-									Arrange fields and groups to define the citation layout for <span class="font-semibold">{wizardStore.activeRefType}</span>.
-								{:else if activeTab === 'punctuation'}
+								{#if activeTab === "structure"}
+									Arrange fields and groups to define the citation layout for <span
+										class="font-semibold">{wizardStore.activeRefType}</span
+									>.
+								{:else if activeTab === "punctuation"}
 									Set rule-based punctuation like prefixes, suffixes, and quote logic.
 								{:else}
-									Refine global settings for <span class="font-semibold">{activeTab}</span> across all types.
+									Refine global settings for <span class="font-semibold">{activeTab}</span> across all
+									types.
 								{/if}
 							</p>
 						</header>

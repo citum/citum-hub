@@ -95,7 +95,8 @@
 		</div>
 
 		<div>
-			<label for="ce-initials" class="block text-sm font-semibold text-text-main mb-2">Initials Format</label
+			<label for="ce-initials" class="block text-sm font-semibold text-text-main mb-2"
+				>Initials Format</label
 			>
 			<select
 				id="ce-initials"
@@ -115,7 +116,9 @@
 
 		<div class="pt-2 border-t border-border-light">
 			<label for="ce-etal-range" class="block text-sm font-semibold text-text-main mb-3">
-				Truncate to "et al." when authors exceed <span class="text-primary text-xl ml-1">{etAlAfter}</span>
+				Truncate to "et al." when authors exceed <span class="text-primary text-xl ml-1"
+					>{etAlAfter}</span
+				>
 			</label>
 			<input
 				id="ce-etal-range"

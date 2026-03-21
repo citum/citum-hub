@@ -28,7 +28,10 @@ export const APA_BASELINE = [
 	{ date: "issued", form: "year", wrap: "parentheses", prefix: " " },
 	{ title: "primary", emph: true, prefix: " " },
 	{
-		items: [{ number: "volume", emph: true }, { number: "issue", wrap: "parentheses" }],
+		items: [
+			{ number: "volume", emph: true },
+			{ number: "issue", wrap: "parentheses" },
+		],
 		delimiter: "",
 		prefix: ", ",
 	},

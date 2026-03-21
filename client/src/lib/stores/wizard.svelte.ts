@@ -205,7 +205,7 @@ function getResolvedTemplateRoot() {
 	return resolveTemplateRootFromStyle(obj, activeRefType);
 }
 
-/** 
+/**
  * Ensure the current style has a literal template array instead of a shorthand preset.
  * This is required before the user can reorder or toggle components.
  */
@@ -214,7 +214,9 @@ function materializeCurrentStyle() {
 	if (!obj) return;
 
 	const bib = (obj.bibliography ??= {}) as Record<string, any>;
-	const hasLiteral = Array.isArray(bib.template) || (bib["type-templates"] && Object.keys(bib["type-templates"]).length > 0);
+	const hasLiteral =
+		Array.isArray(bib.template) ||
+		(bib["type-templates"] && Object.keys(bib["type-templates"]).length > 0);
 
 	if (!hasLiteral) {
 		console.log("[Wizard] Materializing shorthand preset into literal template...");

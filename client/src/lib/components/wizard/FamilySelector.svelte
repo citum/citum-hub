@@ -108,7 +108,11 @@
 				wizardStore.setPhase("visual-customizer");
 				// Generate based on current choice or default
 				await wizardStore.generateFromIntent({
-					class: wizardStore.field ? (FIELD_DEFAULTS[wizardStore.field] === 'author-date' ? 'author_date' : 'numeric') : 'author_date',
+					class: wizardStore.field
+						? FIELD_DEFAULTS[wizardStore.field] === "author-date"
+							? "author_date"
+							: "numeric"
+						: "author_date",
 					from_preset: wizardStore.presetId || "apa",
 				});
 				goto("/create/customize");

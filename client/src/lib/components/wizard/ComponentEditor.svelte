@@ -256,7 +256,9 @@
 			<div
 				class="group relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 py-10 text-center transition-all hover:border-primary/30"
 			>
-				<div class="mb-4 flex size-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-transform group-hover:scale-110">
+				<div
+					class="mb-4 flex size-12 items-center justify-center rounded-full bg-white text-slate-400 shadow-sm transition-transform group-hover:scale-110"
+				>
 					<span class="material-symbols-outlined text-2xl">add_circle</span>
 				</div>
 				<p class="text-sm font-semibold text-slate-700">Empty Group</p>
@@ -279,12 +281,12 @@
 						event.dataTransfer.effectAllowed = "move";
 					}
 					// Add a visual class for the item being dragged
-					(event.currentTarget as HTMLElement).classList.add('opacity-40');
+					(event.currentTarget as HTMLElement).classList.add("opacity-40");
 					event.stopPropagation();
 				}}
 				ondragend={(event) => {
 					draggedPath = null;
-					(event.currentTarget as HTMLElement).classList.remove('opacity-40');
+					(event.currentTarget as HTMLElement).classList.remove("opacity-40");
 				}}
 				ondragover={(event) => {
 					event.preventDefault();
@@ -333,11 +335,15 @@
 					<div
 						class="flex size-9 items-center justify-center rounded-lg shadow-sm transition-all {isSelected
 							? 'bg-primary text-white scale-110 shadow-lg shadow-primary/30 ring-2 ring-white'
-							: type === 'contributor' ? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
-							: type === 'date' ? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
-							: type === 'title' ? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
-							: type === 'number' ? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
-							: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}"
+							: type === 'contributor'
+								? 'bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300'
+								: type === 'date'
+									? 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300'
+									: type === 'title'
+										? 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300'
+										: type === 'number'
+											? 'bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300'
+											: 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'}"
 					>
 						<span class="material-symbols-outlined text-xl">
 							{#if type === "field"}
@@ -439,15 +445,17 @@
 			</div>
 
 			<div class="mb-6 rounded-lg border border-blue-100 bg-blue-50/50 p-4">
-				<h4 class="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+				<h4
+					class="mb-1 flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary"
+				>
 					<span class="material-symbols-outlined text-sm">info</span>
 					Structure Guide
 				</h4>
 				<p class="text-xs leading-relaxed text-slate-600">
 					This tree represents the order and nesting of your citation elements.
-					<strong class="text-slate-900">Drag</strong> to reorder, <strong class="text-slate-900"
-						>click</strong
-					> to customize fields, or use the <strong class="text-slate-900">Hide</strong> icon to skip variables.
+					<strong class="text-slate-900">Drag</strong> to reorder,
+					<strong class="text-slate-900">click</strong>
+					to customize fields, or use the <strong class="text-slate-900">Hide</strong> icon to skip variables.
 				</p>
 			</div>
 
@@ -484,7 +492,8 @@
 					</button>
 				</div>
 				<p class="mt-2 text-[10px] text-text-secondary">
-					Select a type and enter a variable name (like 'doi', 'url', or 'publisher') then click Append.
+					Select a type and enter a variable name (like 'doi', 'url', or 'publisher') then click
+					Append.
 				</p>
 			</div>
 		</div>
