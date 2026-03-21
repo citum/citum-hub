@@ -3,6 +3,8 @@
 	import { page } from "$app/stores";
 	import favicon from "$lib/assets/favicon.svg";
 	import { auth } from "$lib/stores/auth";
+	import DemoBanner from "$lib/components/DemoBanner.svelte";
+	import { PUBLIC_DEMO_MODE } from "$env/static/public";
 
 	let { children } = $props();
 	const isCustomizerRoute = $derived(
@@ -88,6 +90,9 @@
 				</div>
 			</div>
 		</header>
+		{#if PUBLIC_DEMO_MODE === "true"}
+			<DemoBanner />
+		{/if}
 	{/if}
 
 	<!-- Page Content -->
