@@ -64,4 +64,4 @@ ENV CITUM_CORE_PATH=/app
 EXPOSE 3002
 
 # Run migrations then start server
-CMD ["sh", "-c", "bun run scripts/migrate.ts && bun src/api/index.ts"]
+CMD ["bun", "src/api/index.ts"]
