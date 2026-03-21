@@ -2,15 +2,28 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { page } from "$app/state";
+
 	import ComprehensivePreview from "$lib/components/ComprehensivePreview.svelte";
 	import { auth } from "$lib/stores/auth";
+	import type { HubAliasRecord, HubStyleDetail, Style } from "$lib/types/style";
 
-	let style = $state(null);
+	type LegacyStyle = Style & {
+		citum?: string | null;
+		description?: string;
+		fields?: string[];
+		source?: {
+			license?: string;
+			original_authors?: Array<{ name?: string }>;
+		};
+	};
+
+	let detail: HubStyleDetail | null = $state(null);
+	let legacyStyle: LegacyStyle | null = $state(null);
 	let loading = $state(true);
 	let previewLoading = $state(false);
-	let error = $state(null);
-	let isForking = $state(false);
+	let error = $state<string | null>(null);
 	let showSource = $state(false);
+	let activeTab = $state<"overview" | "parent" | "aliases" | "history" | "permissions">("overview");
 
 	let previewSet = $state({
 		in_text_parenthetical: null,
@@ -19,14 +32,48 @@
 		bibliography: null,
 	});
 
+	const tabs = [
+		{ id: "overview", label: "Overview", icon: "info" },
+		{ id: "parent", label: "Parent Style", icon: "account_tree" },
+		{ id: "aliases", label: "Aliases", icon: "list_alt" },
+		{ id: "history", label: "History", icon: "history" },
+		{ id: "permissions", label: "Permissions", icon: "shield" },
+	] as const;
+
+	const aliasRows = $derived(detail?.aliases.items || []);
+	const styleTitle = $derived(detail?.style.title || legacyStyle?.title || "Style");
+	const styleDescription = $derived(
+		detail?.style.description ||
+			legacyStyle?.description ||
+			`Registry entry for ${detail?.style.title || legacyStyle?.title || "this style"}.`
+	);
+	const styleFields = $derived(detail?.style.fields || legacyStyle?.fields || []);
+	const styleYaml = $derived(detail?.style.citum || legacyStyle?.citum || null);
+	const styleLicense = $derived(
+		detail?.style.source_license || legacyStyle?.source?.license || "Open Source"
+	);
+	const originalAuthors = $derived(
+		detail?.style.original_authors || legacyStyle?.source?.original_authors || []
+	);
+
 	onMount(async () => {
 		try {
-			const res = await fetch(`/api/styles/${page.params.id}`, {
+			const hubRes = await fetch(`/api/hub/${page.params.id}`, {
 				headers: $auth.token ? { Authorization: `Bearer ${$auth.token}` } : {},
 			});
-			if (res.ok) {
-				style = await res.json();
-				generatePreviews();
+
+			if (hubRes.ok) {
+				detail = (await hubRes.json()) as HubStyleDetail;
+				await generatePreviews(detail.style.citum);
+				return;
+			}
+
+			const legacyRes = await fetch(`/api/styles/${page.params.id}`, {
+				headers: $auth.token ? { Authorization: `Bearer ${$auth.token}` } : {},
+			});
+			if (legacyRes.ok) {
+				legacyStyle = (await legacyRes.json()) as LegacyStyle;
+				await generatePreviews(legacyStyle.citum || null);
 			} else {
 				error = "Style not found or private";
 			}
@@ -37,26 +84,23 @@
 		}
 	});
 
-	async function generatePreviews() {
-		if (!style) return;
+	async function generatePreviews(citum: string | null) {
+		if (!citum) return;
 		previewLoading = true;
 
 		try {
-			const basePayload = style.citum ? { style_yaml: style.citum } : { intent: style.intent };
-
-			// Fetch parenthetical (default)
-			const resParen = await fetch("/api/v1/preview", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ...basePayload, mode: "NonIntegral" }),
-			});
-
-			// Fetch narrative
-			const resNarrative = await fetch("/api/v1/preview", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ ...basePayload, mode: "Integral" }),
-			});
+			const [resParen, resNarrative] = await Promise.all([
+				fetch("/api/v1/preview", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ style_yaml: citum, mode: "NonIntegral" }),
+				}),
+				fetch("/api/v1/preview", {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({ style_yaml: citum, mode: "Integral" }),
+				}),
+			]);
 
 			if (resParen.ok && resNarrative.ok) {
 				const dataParen = await resParen.json();
@@ -69,191 +113,477 @@
 					bibliography: dataParen.bibliography || null,
 				};
 			}
-		} catch (e) {
-			console.error("Failed to generate previews", e);
 		} finally {
 			previewLoading = false;
 		}
 	}
 
-	async function forkStyle() {
-		if (!$auth.user) return;
-		isForking = true;
-		try {
-			const res = await fetch(`/api/styles/${style.id}/fork`, {
-				method: "POST",
-				headers: { Authorization: `Bearer ${$auth.token}` },
-			});
-			if (res.ok) {
-				goto(`/library`);
-			}
-		} finally {
-			isForking = false;
-		}
-	}
-
 	async function bookmarkStyle() {
-		if (!$auth.user) return;
-		await fetch(`/api/styles/${style.id}/bookmark`, {
+		if (!$auth.user || !detail) return;
+		await fetch(`/api/styles/${detail.style.id}/bookmark`, {
 			method: "POST",
 			headers: { Authorization: `Bearer ${$auth.token}` },
 		});
-		alert("Bookmarked!");
+	}
+
+	async function forkStyle() {
+		if (!$auth.user || !detail) return;
+		await fetch(`/api/styles/${detail.style.id}/fork`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${$auth.token}` },
+		});
+		goto("/library");
+	}
+
+	function openTab(tabId: typeof activeTab) {
+		activeTab = tabId;
+	}
+
+	function aliasIdentifier(alias: HubAliasRecord) {
+		if (alias.issns.length > 0) return alias.issns.join(" / ");
+		if (alias.title_short) return alias.title_short;
+		return alias.entry_slug;
 	}
 </script>
 
-<div class="px-4 py-10 lg:px-10 max-w-[1000px] mx-auto">
-	{#if loading}
-		<div class="flex justify-center py-20">
-			<span class="material-symbols-outlined animate-spin text-4xl text-slate-300"
-				>progress_activity</span
-			>
-		</div>
-	{:else if error}
-		<div class="bg-red-50 text-red-600 p-4 rounded-lg border border-red-100">
-			{error}
-		</div>
-	{:else}
-		<div class="flex flex-col gap-8">
-			<div class="flex justify-between items-start">
-				<div>
-					<nav class="flex gap-2 mb-4">
-						<a href="/" class="text-slate-500 text-xs font-medium hover:underline">All Styles</a>
-						<span class="text-slate-500 text-xs">/</span>
-						<span class="text-slate-900 text-xs font-bold">{style.title}</span>
-					</nav>
-					<h1 class="text-3xl font-bold text-slate-900 mb-2">{style.title}</h1>
-					<p class="text-slate-500 text-sm">
-						Last updated {new Date(style.updated_at).toLocaleDateString()}
-					</p>
-				</div>
-
-				{#if $auth.user}
-					<div class="flex gap-3">
-						<button
-							onclick={bookmarkStyle}
-							class="flex items-center gap-2 px-4 py-2 border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-50 transition-colors"
-						>
-							<span class="material-symbols-outlined text-xl">bookmark</span>
-							Bookmark
-						</button>
-						<button
-							onclick={forkStyle}
-							disabled={isForking}
-							class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
-						>
-							<span class="material-symbols-outlined text-xl">fork_right</span>
-							{isForking ? "Forking..." : "Fork Style"}
-						</button>
-					</div>
-				{/if}
+<main
+	class="min-h-screen bg-[linear-gradient(180deg,_#f8fafc_0%,_#eef3fb_100%)] px-4 py-10 lg:px-10"
+>
+	<div class="mx-auto max-w-[1280px]">
+		{#if loading}
+			<div class="flex justify-center py-20">
+				<span class="material-symbols-outlined animate-spin text-4xl text-slate-300"
+					>progress_activity</span
+				>
 			</div>
-
-			<div
-				class="bg-white rounded-3xl border border-slate-200 shadow-sm p-8 relative overflow-hidden"
-			>
-				{#if previewLoading}
-					<div
-						class="absolute inset-0 bg-white/50 backdrop-blur-[2px] z-10 flex items-center justify-center"
-					>
-						<span class="material-symbols-outlined animate-spin text-3xl text-primary"
-							>progress_activity</span
-						>
-					</div>
-				{/if}
-
-				<ComprehensivePreview {previewSet} />
-			</div>
-
-			<div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-				<div class="lg:col-span-2 flex flex-col gap-8">
-					<section class="bg-white rounded-3xl border border-slate-200 p-8">
-						<h2 class="text-xl font-bold text-slate-900 mb-4">About this Style</h2>
-						<p class="text-slate-600 leading-relaxed mb-6">
-							{style.description ||
-								`Official citation style for ${style.title}. Fully compliant with Citum requirements.`}
-						</p>
-
-						{#if style.fields?.length}
-							<div class="flex flex-wrap gap-2">
-								{#each style.fields as field}
-									<a
-										href="/?searchQuery={field}"
-										class="bg-slate-50 text-slate-500 border border-slate-100 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider hover:bg-slate-100 hover:text-primary transition-colors"
-										>{field}</a
-									>
-								{/each}
-							</div>
-						{/if}
-					</section>
-
-					<section class="bg-slate-900 rounded-3xl p-8 text-white relative overflow-hidden group">
-						<div class="flex justify-between items-center mb-6">
-							<div class="flex items-center gap-3">
-								<span class="material-symbols-outlined text-primary">code</span>
-								<h2 class="text-xl font-bold">Citum Source</h2>
-							</div>
-							<button
-								onclick={() => (showSource = !showSource)}
-								class="bg-white/10 hover:bg-white/20 px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+		{:else if error}
+			<div class="rounded-[2rem] border border-red-100 bg-red-50 p-6 text-red-600">{error}</div>
+		{:else}
+			<div class="space-y-8">
+				<section
+					class="rounded-[2.4rem] border border-slate-200 bg-white/85 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.06)] backdrop-blur lg:p-8"
+				>
+					<div class="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
+						<div class="max-w-3xl">
+							<nav
+								class="mb-4 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.18em] text-slate-400"
 							>
-								{showSource ? "Hide Source" : "View YAML"}
-							</button>
+								<a href="/" class="transition hover:text-primary">Registry</a>
+								<span>/</span>
+								<span class="text-slate-900">{styleTitle}</span>
+							</nav>
+							<div class="flex flex-wrap items-center gap-3">
+								<span
+									class="rounded-full bg-primary/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-primary"
+								>
+									Primary
+								</span>
+								{#if detail}
+									<span
+										class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500"
+									>
+										{detail.style.alias_count} active aliases linked
+									</span>
+								{/if}
+							</div>
+							<h1 class="mt-4 text-4xl font-black tracking-[-0.04em] text-slate-950 lg:text-5xl">
+								{styleTitle}
+							</h1>
+							<p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">{styleDescription}</p>
 						</div>
 
-						{#if showSource}
-							<pre
-								class="bg-black/30 p-6 rounded-2xl text-xs font-mono overflow-x-auto border border-white/5 text-slate-300 max-h-[600px]">{style.citum ||
-									JSON.stringify(style.intent, null, 2)}</pre>
-						{:else}
-							<div
-								class="flex items-center justify-center py-10 opacity-40 italic text-sm text-slate-400"
-							>
-								Click 'View YAML' to see the full style definition.
-							</div>
-						{/if}
-					</section>
-				</div>
-
-				<aside class="flex flex-col gap-6">
-					<div class="bg-white rounded-3xl border border-slate-200 p-6">
-						<h3 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">
-							Original Authors
-						</h3>
-						<div class="flex flex-col gap-4">
-							{#if style.source?.original_authors?.length}
-								{#each style.source.original_authors as author}
-									<div class="flex items-center gap-3">
-										<div
-											class="size-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-400"
+						<div
+							class="grid gap-4 rounded-[2rem] border border-slate-200 bg-slate-50 p-5 lg:min-w-[320px]"
+						>
+							<div>
+								<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+									Registry Details
+								</p>
+								<div class="mt-4 space-y-3 text-sm text-slate-600">
+									<div class="flex items-center justify-between gap-4">
+										<span>Version</span>
+										<span class="font-bold text-slate-900"
+											>{detail?.permissions.is_primary ? "1.0" : "Draft"}</span
 										>
-											<span class="material-symbols-outlined text-lg">person</span>
-										</div>
-										<div class="flex flex-col">
-											<span class="text-sm font-bold text-slate-900">{author.name}</span>
-										</div>
 									</div>
-								{/each}
-							{:else}
-								<div class="flex items-center gap-3 opacity-50">
-									<div class="size-8 bg-slate-50 rounded-full"></div>
-									<span class="text-xs italic">Community contribution</span>
+									<div class="flex items-center justify-between gap-4">
+										<span>Family</span>
+										<span class="font-bold text-slate-900">
+											{detail?.style.family || "Custom"}
+										</span>
+									</div>
+									<div class="flex items-center justify-between gap-4">
+										<span>Last Updated</span>
+										<span class="font-bold text-slate-900">
+											{new Date(
+												(detail?.style.updated_at || legacyStyle?.updated_at) ?? Date.now()
+											).toLocaleDateString()}
+										</span>
+									</div>
 								</div>
+							</div>
+
+							{#if detail}
+								<div class="flex flex-wrap gap-3">
+									<a
+										href={`/api/hub/${detail.style.id}/download`}
+										class="inline-flex flex-1 items-center justify-center gap-2 rounded-[1.2rem] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+									>
+										<span class="material-symbols-outlined text-lg">download</span>
+										Download Style
+									</a>
+									{#if $auth.user}
+										<button
+											class="inline-flex flex-1 items-center justify-center gap-2 rounded-[1.2rem] bg-slate-950 px-4 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
+											onclick={forkStyle}
+										>
+											<span class="material-symbols-outlined text-lg">fork_right</span>
+											Customize
+										</button>
+									{/if}
+								</div>
+								{#if $auth.user}
+									<button
+										class="inline-flex items-center justify-center gap-2 rounded-[1.2rem] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-primary/30 hover:text-primary"
+										onclick={bookmarkStyle}
+									>
+										<span class="material-symbols-outlined text-lg">bookmark</span>
+										Save to Library
+									</button>
+								{/if}
 							{/if}
 						</div>
 					</div>
 
-					<div class="bg-white rounded-3xl border border-slate-200 p-6">
-						<h3 class="text-sm font-black uppercase tracking-widest text-slate-400 mb-4">Meta</h3>
-						<div class="flex flex-col gap-4">
-							<div class="flex items-center gap-3 text-slate-600">
-								<span class="material-symbols-outlined text-lg text-slate-300">verified_user</span>
-								<span class="text-sm font-medium">{style.source?.license || "Open Source"}</span>
-							</div>
-						</div>
+					<div class="mt-8 flex flex-wrap gap-2">
+						{#each tabs as tab}
+							<button
+								class={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold transition ${activeTab === tab.id ? "bg-slate-950 text-white" : "bg-slate-100 text-slate-600 hover:text-slate-950"}`}
+								onclick={() => openTab(tab.id)}
+							>
+								<span class="material-symbols-outlined text-lg">{tab.icon}</span>
+								{tab.label}
+							</button>
+						{/each}
 					</div>
-				</aside>
+				</section>
+
+				<section class="grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
+					<div class="space-y-8">
+						<section
+							class="relative overflow-hidden rounded-[2.4rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] lg:p-8"
+						>
+							{#if previewLoading}
+								<div
+									class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 backdrop-blur-sm"
+								>
+									<span class="material-symbols-outlined animate-spin text-3xl text-primary"
+										>progress_activity</span
+									>
+								</div>
+							{/if}
+							<ComprehensivePreview
+								{previewSet}
+								title="Reference Preview"
+								subtitle="See how the parent style renders before you inspect its alias mappings."
+							/>
+						</section>
+
+						<section
+							class="rounded-[2.4rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)] lg:p-8"
+						>
+							{#if activeTab === "overview"}
+								<div class="space-y-6">
+									<div>
+										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+											Overview
+										</p>
+										<h2 class="mt-3 text-2xl font-black text-slate-950">Style Registry</h2>
+										<p class="mt-4 text-sm leading-7 text-slate-600">
+											This parent style anchors a family of dependent journal aliases. Child aliases
+											inherit the parent formatting target, while locale-specific variants are
+											intentionally excluded from the registry because Citum now models those
+											through presets and locale overrides instead.
+										</p>
+									</div>
+
+									<div class="grid gap-4 md:grid-cols-2">
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Active Aliases
+											</p>
+											<p class="mt-3 text-4xl font-black tracking-[-0.04em] text-slate-950">
+												{detail?.aliases.total || 0}
+											</p>
+										</div>
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Download Format
+											</p>
+											<p class="mt-3 text-lg font-bold text-slate-950">Citum YAML</p>
+											<p class="mt-2 text-sm text-slate-600">
+												Public export stays core-compatible and registry metadata remains internal.
+											</p>
+										</div>
+									</div>
+								</div>
+							{/if}
+
+							{#if activeTab === "parent"}
+								<div class="space-y-6">
+									<div>
+										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+											Parent Style
+										</p>
+										<h2 class="mt-3 text-2xl font-black text-slate-950">
+											Canonical metadata and inheritance model
+										</h2>
+									</div>
+									<div class="grid gap-4 md:grid-cols-2">
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Family
+											</p>
+											<p class="mt-2 text-lg font-bold text-slate-950">
+												{detail?.style.family || "Custom"}
+											</p>
+										</div>
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												License
+											</p>
+											<p class="mt-2 text-sm font-bold break-words text-slate-950">
+												{styleLicense}
+											</p>
+										</div>
+									</div>
+									<div class="rounded-[1.6rem] border border-slate-200 bg-white p-5">
+										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+											Style Mapping Rules
+										</p>
+										<p class="mt-3 text-sm leading-7 text-slate-600">
+											Aliases map back to this parent through explicit registry targets.
+											Journal-specific names stay in the registry layer, while true behavior changes
+											belong in standalone styles or future preset-backed variants.
+										</p>
+									</div>
+								</div>
+							{/if}
+
+							{#if activeTab === "aliases"}
+								<div id="aliases" class="space-y-6">
+									<div class="flex items-start justify-between gap-4">
+										<div>
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Aliases
+											</p>
+											<h2 class="mt-3 text-2xl font-black text-slate-950">
+												Journals and publications using this parent style
+											</h2>
+										</div>
+										<span
+											class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500"
+										>
+											{aliasRows.length} shown
+										</span>
+									</div>
+
+									<div class="overflow-hidden rounded-[1.6rem] border border-slate-200">
+										<table class="min-w-full divide-y divide-slate-200 text-left">
+											<thead class="bg-slate-50">
+												<tr class="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
+													<th class="px-5 py-4">Journal Title</th>
+													<th class="px-5 py-4">Identifier</th>
+													<th class="px-5 py-4">Status</th>
+													<th class="px-5 py-4">Last Synced</th>
+												</tr>
+											</thead>
+											<tbody class="divide-y divide-slate-100 bg-white">
+												{#each aliasRows as alias}
+													<tr class="align-top">
+														<td class="px-5 py-4">
+															<div class="font-bold text-slate-950">{alias.title}</div>
+															<div class="mt-1 text-sm text-slate-500">{alias.entry_slug}</div>
+														</td>
+														<td class="px-5 py-4 text-sm text-slate-600">
+															{aliasIdentifier(alias)}
+														</td>
+														<td class="px-5 py-4">
+															<span
+																class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700"
+															>
+																{alias.status}
+															</span>
+														</td>
+														<td class="px-5 py-4 text-sm text-slate-600">
+															{alias.last_synced_at
+																? new Date(alias.last_synced_at).toLocaleDateString()
+																: "Pending"}
+														</td>
+													</tr>
+												{/each}
+											</tbody>
+										</table>
+									</div>
+								</div>
+							{/if}
+
+							{#if activeTab === "history"}
+								<div class="space-y-6">
+									<div>
+										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+											History
+										</p>
+										<h2 class="mt-3 text-2xl font-black text-slate-950">
+											Recent registry sync activity
+										</h2>
+									</div>
+
+									<div class="space-y-4">
+										{#each detail?.history || [] as run}
+											<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+												<div class="flex flex-wrap items-center justify-between gap-3">
+													<div>
+														<p class="text-sm font-bold text-slate-950">
+															{run.action} • {run.status}
+														</p>
+														<p class="mt-1 text-sm text-slate-500">
+															{new Date(run.started_at).toLocaleString()}
+														</p>
+													</div>
+													<div
+														class="flex flex-wrap gap-3 text-xs font-bold uppercase tracking-[0.14em] text-slate-500"
+													>
+														<span>{run.entries_seen} seen</span>
+														<span>{run.entries_upserted} upserted</span>
+														<span>{run.entries_hidden} hidden</span>
+														<span>{run.entries_skipped} skipped</span>
+													</div>
+												</div>
+												{#if run.message}
+													<p class="mt-3 text-sm text-slate-600">{run.message}</p>
+												{/if}
+											</div>
+										{/each}
+									</div>
+								</div>
+							{/if}
+
+							{#if activeTab === "permissions"}
+								<div class="space-y-6">
+									<div>
+										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+											Permissions
+										</p>
+										<h2 class="mt-3 text-2xl font-black text-slate-950">
+											System registry controls
+										</h2>
+									</div>
+									<div class="grid gap-4 md:grid-cols-3">
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Registry
+											</p>
+											<p class="mt-2 text-lg font-bold text-slate-950">
+												{detail?.permissions.registry_name || "Custom"}
+											</p>
+										</div>
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Scope
+											</p>
+											<p class="mt-2 text-lg font-bold text-slate-950">
+												{detail?.permissions.scope || "user"}
+											</p>
+										</div>
+										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
+											<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+												Visibility
+											</p>
+											<p class="mt-2 text-lg font-bold text-slate-950">
+												{detail?.permissions.visibility || "private"}
+											</p>
+										</div>
+									</div>
+								</div>
+							{/if}
+						</section>
+					</div>
+
+					<aside class="space-y-8">
+						<section
+							class="rounded-[2.4rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)]"
+						>
+							<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">Fields</p>
+							<div class="mt-4 flex flex-wrap gap-2">
+								{#each styleFields as field}
+									<a
+										href={`/library/browse?field=${encodeURIComponent(field)}`}
+										class="rounded-full border border-slate-200 px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-slate-500 transition hover:border-primary/30 hover:text-primary"
+									>
+										{field}
+									</a>
+								{/each}
+							</div>
+						</section>
+
+						<section
+							class="rounded-[2.4rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)]"
+						>
+							<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+								Original Authors
+							</p>
+							<div class="mt-4 space-y-3">
+								{#if originalAuthors.length > 0}
+									{#each originalAuthors as author}
+										<div class="flex items-center gap-3">
+											<div
+												class="flex size-10 items-center justify-center rounded-full bg-slate-100 text-slate-400"
+											>
+												<span class="material-symbols-outlined text-lg">person</span>
+											</div>
+											<span class="text-sm font-bold text-slate-900"
+												>{author.name || "Unknown"}</span
+											>
+										</div>
+									{/each}
+								{:else}
+									<p class="text-sm text-slate-500">Community maintained registry entry.</p>
+								{/if}
+							</div>
+						</section>
+
+						<section
+							class="overflow-hidden rounded-[2.4rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
+						>
+							<div class="flex items-center justify-between gap-4">
+								<div>
+									<p class="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
+										Citum Source
+									</p>
+									<h2 class="mt-2 text-xl font-black">Registry-backed YAML</h2>
+								</div>
+								<button
+									class="rounded-[1rem] bg-white/10 px-4 py-2 text-sm font-bold transition hover:bg-white/15"
+									onclick={() => (showSource = !showSource)}
+								>
+									{showSource ? "Hide YAML" : "View YAML"}
+								</button>
+							</div>
+
+							{#if showSource}
+								<pre
+									class="mt-5 max-h-[600px] overflow-auto rounded-[1.4rem] bg-black/30 p-5 text-xs leading-6 text-slate-300">{styleYaml ||
+										"No YAML available."}</pre>
+							{:else}
+								<p class="mt-5 text-sm leading-7 text-slate-300">
+									Inspect the full style definition that powers previews and registry exports.
+								</p>
+							{/if}
+						</section>
+					</aside>
+				</section>
 			</div>
-		</div>
-	{/if}
-</div>
+		{/if}
+	</div>
+</main>

@@ -1,5 +1,6 @@
 import path from "node:path";
-import { exists, file, sql } from "bun";
+import fs from "node:fs";
+import { file, sql } from "bun";
 import yaml from "js-yaml";
 
 const LOCAL_STYLES_DIR = "/Users/brucedarcus/Code/citum/citum-core/styles";
@@ -11,7 +12,7 @@ function shouldSyncStyle(filename: string) {
 async function sync() {
 	console.log("Connecting to DB with Bun.sql...");
 
-	if (!(await exists(LOCAL_STYLES_DIR))) {
+	if (!fs.existsSync(LOCAL_STYLES_DIR)) {
 		console.error(`Error: Local styles directory not found at ${LOCAL_STYLES_DIR}`);
 		process.exit(1);
 	}
