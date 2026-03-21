@@ -1,0 +1,120 @@
+info:
+  title: Trends journals
+  description: Style for the "Trends" journals by Cell Press
+  fields:
+  - biology
+  - medicine
+  source:
+    csl-id: http://www.zotero.org/styles/trends-journals
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Adam Zeilinger
+      email: arzeilinger@gmail.com
+    links:
+    - href: http://www.zotero.org/styles/trends-journals
+      rel: self
+    - href: http://www.cell.com/trends/ecology-evolution/authors
+      rel: documentation
+    - href: http://www.cell.com/cellpress/trends
+      rel: documentation
+options:
+  substitute: editor-translator-short
+  processing: numeric
+  contributors:
+    display-as-sort: all
+    initialize-with: .
+    shorten:
+      min: 3
+      use-first: 1
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter: ", "
+    demote-non-dropping-particle: sort-only
+    sort-separator: ", "
+  dates: long
+  titles: humanities
+  bibliography:
+    separator: ", "
+  punctuation-in-quote: true
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: .
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      sort-separator: ", "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 3
+        use-first: 1
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+    - title: primary
+      prefix: " "
+    - title: parent-monograph
+      emph: true
+    - title: parent-serial
+      emph: true
+    - contributor: editor
+      form: verb
+      name-order: family-first
+      shorten:
+        min: 4
+        use-first: 1
+    - number: volume
+    - variable: publisher
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+  type-templates:
+    patent:
+      - number: citation-number
+        suffix: .
+      - contributor: author
+        form: long
+        sort-separator: ", "
+        shorten:
+          min: 3
+          use-first: 1
+          and-others: et-al
+          delimiter-precedes-last: contextual
+        and: text
+      - date: issued
+        form: year
+        wrap: parentheses
+      - title: primary
+        overrides:
+          legal_case:
+            emph: true
+          legislation:
+            emph: true
+          report:
+            emph: true
+          song:
+            emph: true
+          book:
+            emph: true
+          bill:
+            emph: true
+          motion_picture:
+            emph: true
+          graphic:
+            emph: true

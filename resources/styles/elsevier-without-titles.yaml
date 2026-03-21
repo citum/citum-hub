@@ -1,0 +1,130 @@
+info:
+  title: Elsevier (numeric, without titles)
+  description: A style for many of Elsevier's journals that does not include article titles in the reference list
+  source:
+    csl-id: http://www.zotero.org/styles/elsevier-without-titles
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Richard Karnesky
+      email: karnesky+zotero@gmail.com
+      uri: http://arc.nucapt.northwestern.edu/Richard_Karnesky
+    links:
+    - href: http://www.zotero.org/styles/elsevier-without-titles
+      rel: self
+    - href: http://www.elsevier.com/journals/the-journal-of-chemical-thermodynamics/0021-9614/guide-for-authors#68000
+      rel: documentation
+options:
+  substitute: editor-translator-short
+  processing: numeric
+  contributors: numeric-given-dot
+  dates: long
+  bibliography:
+    entry-suffix: .
+    separator: ", "
+  punctuation-in-quote: true
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      initialize-with: .
+      delimiter: ", "
+      delimiter-precedes-last: always
+  template:
+    - contributor: author
+      form: long
+      overrides:
+        personal_communication:
+          prefix: "pp. "
+      name-order: given-first
+    - title: parent-monograph
+    - title: parent-serial
+    - number: volume
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+      prefix: " "
+    - title: primary
+      suppress: true
+      overrides:
+        book:
+          suppress: false
+        chapter:
+          suppress: false
+        paper-conference:
+          suppress: false
+    - variable: publisher
+      overrides:
+        entry-encyclopedia:
+          suppress: true
+        report:
+          suppress: true
+        article-journal:
+          suppress: true
+    - variable: publisher-place
+      overrides:
+        article-journal:
+          suppress: true
+  type-templates:
+    chapter:
+      - contributor: author
+        form: long
+        name-order: given-first
+      - title: parent-monograph
+      - contributor: editor
+        form: verb
+      - variable: publisher
+      - date: issued
+        form: year
+      - number: pages
+        prefix: "pp. "
+    report:
+      - contributor: author
+        form: long
+        name-order: given-first
+      - title: primary
+      - variable: publisher
+      - variable: publisher-place
+      - date: issued
+        form: year
+    thesis:
+      - contributor: author
+        form: long
+        name-order: given-first
+      - title: primary
+      - variable: genre
+      - variable: publisher
+      - date: issued
+        form: year
+    legal-case:
+      - title: primary
+      - date: issued
+        form: year
+    motion-picture:
+      - contributor: author
+        form: long
+        name-order: given-first
+      - title: primary
+      - date: issued
+        form: year
+    broadcast:
+      - contributor: author
+        form: long
+        name-order: given-first
+      - title: primary
+      - date: issued
+        form: year
+    patent:
+      - number: patent-number
+      - date: issued
+        form: year

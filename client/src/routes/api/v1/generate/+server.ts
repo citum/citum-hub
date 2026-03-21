@@ -1,7 +1,8 @@
 import { error, type NumericRange } from "@sveltejs/kit";
 import type { RequestHandler } from "./$types";
 
-const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3002";
+const BACKEND_URL =
+	process.env.BACKEND_INTERNAL_URL || process.env.BACKEND_URL || "http://localhost:3002";
 
 export const POST: RequestHandler = async ({ request, fetch, url }) => {
 	try {

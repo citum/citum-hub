@@ -1,0 +1,172 @@
+info:
+  title: American Fisheries Society
+  fields:
+  - biology
+  source:
+    csl-id: http://www.zotero.org/styles/american-fisheries-society
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Sebastian Karcher
+    links:
+    - href: http://www.zotero.org/styles/american-fisheries-society
+      rel: self
+    - href: http://www.zotero.org/styles/ecology
+      rel: template
+    - href: http://fisheries.org/docs/pub_stylefl.pdf
+      rel: documentation
+options:
+  substitute:
+    template:
+      - editor
+      - translator
+      - title
+  processing:
+    sort:
+      shorten-names: false
+      render-substitutions: false
+      template:
+        - key: year
+          ascending: true
+        - key: author
+          ascending: true
+    group:
+      template:
+        - year
+        - author
+    disambiguate:
+      names: false
+      add-givenname: false
+      year-suffix: true
+  contributors:
+    display-as-sort: first
+    initialize-with: ". "
+    shorten:
+      min: 3
+      use-first: 1
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter: ", "
+    delimiter-precedes-last: always
+    demote-non-dropping-particle: sort-only
+    sort-separator: ", "
+  dates:
+    month: long
+    uncertainty-marker: "?"
+    approximation-marker: "ca. "
+    range-delimiter: –
+  bibliography:
+    hanging-indent: true
+    entry-suffix: .
+    separator: ". "
+  punctuation-in-quote: true
+citation:
+  options:
+    contributors:
+      initialize-with: ". "
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 3
+        use-first: 1
+    - date: issued
+      form: year
+      prefix: " "
+    - variable: locator
+      prefix: " "
+  wrap: parentheses
+  delimiter: ". "
+  multi-cite-delimiter: "; "
+bibliography:
+  options:
+    contributors:
+      display-as-sort: first
+      initialize-with: ". "
+      delimiter: ", "
+      delimiter-precedes-last: always
+      sort-separator: ", "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+    - date: issued
+      form: year
+      prefix: " "
+    - title: primary
+    - title: parent-monograph
+    - title: parent-serial
+    - variable: publisher-place
+    - number: pages
+    - contributor: editor
+      form: verb
+      overrides:
+        chapter:
+          prefix: "in "
+      name-order: given-first
+      prefix: " in "
+    - variable: publisher
+      prefix: ", editor. "
+    - items:
+        - number: volume
+        - number: issue
+          wrap: parentheses
+          overrides: {}
+  type-templates:
+    legal_case:
+      - contributor: author
+        form: long
+        sort-separator: ", "
+        and: text
+      - date: issued
+        form: year
+      - term: no-date
+        form: short
+        inner-prefix: " "
+        inner-suffix: .
+        wrap: parentheses
+      - title: primary
+      - variable: authority
+      - number: pages
+        label-form: long
+        suppress: true
+      - number: pages
+        suppress: true
+      - contributor: editor
+        form: long
+        delimiter: ", "
+        and: text
+      - title: parent-serial
+      - number: edition
+        prefix: ", "
+      - term: edition
+        form: long
+        prefix: " "
+        suffix: .
+      - variable: genre
+      - variable: publisher
+      - variable: publisher-place
+    entry-encyclopedia:
+      - contributor: author
+        form: long
+        sort-separator: ", "
+        and: text
+      - date: issued
+        form: year
+      - term: no-date
+        form: short
+        inner-prefix: " "
+        inner-suffix: .
+        wrap: parentheses
+      - title: primary
+      - variable: genre
+      - variable: publisher
+      - variable: publisher-place
+  sort: author-date-title

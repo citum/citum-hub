@@ -1,0 +1,90 @@
+info:
+  title: BMJ
+  description: Vancouver style adapted for BMJ journals
+  fields:
+  - medicine
+  source:
+    csl-id: http://www.zotero.org/styles/bmj
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Sebastian Karcher
+    links:
+    - href: http://www.zotero.org/styles/bmj
+      rel: self
+    - href: http://group.bmj.com/products/journals/instructions-for-authors/formatting#references
+      rel: documentation
+    - href: https://authors.bmj.com/writing-and-formatting/formatting-your-paper/
+      rel: documentation
+options:
+  substitute: editor-long
+  processing: numeric
+  contributors: numeric-medium
+  dates: long
+  titles: humanities
+  page-range-format: minimal
+  bibliography:
+    separator: ". "
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ""
+      shorten:
+        min: 4
+        use-first: 3
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      delimiter-precedes-last: always
+      sort-separator: " "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 8
+        use-first: 3
+    - title: primary
+      prefix: " "
+    - items:
+        - contributor: editor
+          form: verb
+          overrides:
+            chapter:
+              prefix: "on "
+          name-order: given-first
+          shorten:
+            min: 4
+            use-first: 3
+        - title: parent-monograph
+          emph: true
+    - title: parent-serial
+      emph: true
+    - date: issued
+      form: year
+      overrides:
+        article-journal:
+          suppress: true
+        chapter:
+          suppress: true
+        article-magazine:
+          suppress: true
+        entry-encyclopedia:
+          suppress: true
+    - number: volume
+    - number: issue
+      prefix: ":"
+      overrides:
+        article-magazine:
+          suppress: true
+    - number: pages
+      prefix: ":"
+    - variable: doi
+    - variable: publisher-place
+    - variable: publisher
+      prefix: ": "
