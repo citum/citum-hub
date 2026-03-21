@@ -20,6 +20,7 @@ import {
 	queryHubStyles,
 	syncRegistryData,
 } from "../lib/server/registry";
+import { normalizeStyleYamlForPreview } from "../lib/utils/preview-style";
 
 const app = new Hono().basePath("/api");
 
@@ -530,6 +531,8 @@ app.post("/v1/preview", async (c) => {
 	try {
 		const body = await c.req.json();
 		const style_yaml = body.style_yaml || body.citum;
+		const previewStyleYaml =
+			typeof style_yaml === "string" ? normalizeStyleYamlForPreview(style_yaml) : style_yaml;
 		const test_locator = body.test_locator || "123-125";
 
 		let fixtureType = "expanded";
@@ -558,19 +561,28 @@ app.post("/v1/preview", async (c) => {
 			bib = "";
 
 		try {
-			if (style_yaml && typeof style_yaml === "string" && style_yaml.trim().length > 0) {
+			if (
+				previewStyleYaml &&
+				typeof previewStyleYaml === "string" &&
+				previewStyleYaml.trim().length > 0
+			) {
 				const renderedNonIntegral = render_citation(
-					style_yaml,
+					previewStyleYaml,
 					refsStr,
 					citeNonIntegralStr,
 					"NonIntegral"
 				);
-				const renderedIntegral = render_citation(style_yaml, refsStr, citeIntegralStr, "Integral");
+				const renderedIntegral = render_citation(
+					previewStyleYaml,
+					refsStr,
+					citeIntegralStr,
+					"Integral"
+				);
 
 				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;
 				htmlNarrative = `According to ${renderedIntegral}, the implications are broad and warrant further research in the field.`;
 
-				bib = render_bibliography(style_yaml, refsStr);
+				bib = render_bibliography(previewStyleYaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
 				const intentStr = JSON.stringify(body.intent || body);
 				const renderedNonIntegral = render_intent_citation(

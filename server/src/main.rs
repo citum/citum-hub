@@ -384,67 +384,67 @@ async fn github_callback(
 async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl IntoResponse {
     let (style, class, field, request_mode, test_locator, inject_ast_indices, reference_type) =
         match payload {
-        PreviewRequestPayload::Style(style) => {
-            use citum_schema::options::Processing;
-            let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
-                Some(Processing::Note) => "note",
-                _ => "in_text",
-            };
-            (
-                *style,
-                class.to_string(),
-                None,
-                None,
-                Some("123-125".to_string()),
-                false,
-                None,
-            )
-        }
-        PreviewRequestPayload::Intent(intent) => {
-            let class = match intent.class {
-                Some(intent_engine::CitationClass::AuthorDate)
-                | Some(intent_engine::CitationClass::Numeric)
-                | Some(intent_engine::CitationClass::Label) => "in_text",
-                Some(intent_engine::CitationClass::Footnote)
-                | Some(intent_engine::CitationClass::Endnote) => "note",
-                None => "in_text",
-            };
-            let field = intent.field.clone();
-            (
-                intent.to_style(),
-                class.to_string(),
-                field,
-                None,
-                Some("123-125".to_string()),
-                false,
-                None,
-            )
-        }
-        PreviewRequestPayload::Citum {
-            citum,
-            mode,
-            test_locator,
-            inject_ast_indices,
-            reference_type,
-        } => {
-            let style =
-                serde_yaml_ng::from_str::<Style>(&citum).unwrap_or_else(|_| Style::default());
-            let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
-                Some(citum_schema::options::Processing::Note) => "note",
-                _ => "in_text",
-            };
-            let locator = test_locator.unwrap_or_else(|| "123-125".to_string());
-            (
-                style,
-                class.to_string(),
-                None,
+            PreviewRequestPayload::Style(style) => {
+                use citum_schema::options::Processing;
+                let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
+                    Some(Processing::Note) => "note",
+                    _ => "in_text",
+                };
+                (
+                    *style,
+                    class.to_string(),
+                    None,
+                    None,
+                    Some("123-125".to_string()),
+                    false,
+                    None,
+                )
+            }
+            PreviewRequestPayload::Intent(intent) => {
+                let class = match intent.class {
+                    Some(intent_engine::CitationClass::AuthorDate)
+                    | Some(intent_engine::CitationClass::Numeric)
+                    | Some(intent_engine::CitationClass::Label) => "in_text",
+                    Some(intent_engine::CitationClass::Footnote)
+                    | Some(intent_engine::CitationClass::Endnote) => "note",
+                    None => "in_text",
+                };
+                let field = intent.field.clone();
+                (
+                    intent.to_style(),
+                    class.to_string(),
+                    field,
+                    None,
+                    Some("123-125".to_string()),
+                    false,
+                    None,
+                )
+            }
+            PreviewRequestPayload::Citum {
+                citum,
                 mode,
-                Some(locator),
-                inject_ast_indices.unwrap_or(false),
+                test_locator,
+                inject_ast_indices,
                 reference_type,
-            )
-        }
-    };
+            } => {
+                let style =
+                    serde_yaml_ng::from_str::<Style>(&citum).unwrap_or_else(|_| Style::default());
+                let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
+                    Some(citum_schema::options::Processing::Note) => "note",
+                    _ => "in_text",
+                };
+                let locator = test_locator.unwrap_or_else(|| "123-125".to_string());
+                (
+                    style,
+                    class.to_string(),
+                    None,
+                    mode,
+                    Some(locator),
+                    inject_ast_indices.unwrap_or(false),
+                    reference_type,
+                )
+            }
+        };
 
     let mut set = generate_preview_set_internal(
         &style,
@@ -636,8 +636,8 @@ fn generate_preview_set_internal(
 
     // 2. Integral (narrative) citation — also show locator here
     if class != "note" {
-        // Try to find a reference with many authors for et al testing in narrative mode
-        let narrative_id = cite_ids
+        // Try to find a reference with many authors for et al testing in narrative mode.
+        let narrative_primary = cite_ids
             .iter()
             .find(|id| {
                 id.contains("lander")
@@ -646,14 +646,24 @@ fn generate_preview_set_internal(
                     || id.contains("vaswani")
             })
             .unwrap_or(&cite_ids[0]);
+        let narrative_secondary = cite_ids.iter().find(|id| *id != narrative_primary);
+
+        let mut narrative_items = vec![CitationItem {
+            id: narrative_primary.clone(),
+            locator: locator.clone(),
+            ..Default::default()
+        }];
+        if let Some(secondary) = narrative_secondary {
+            narrative_items.push(CitationItem {
+                id: secondary.clone(),
+                locator: None,
+                ..Default::default()
+            });
+        }
 
         let narrative_citation = Citation {
             id: Some("preview-narrative".to_string()),
-            items: vec![CitationItem {
-                id: narrative_id.clone(),
-                locator: locator.clone(), // Use locator here too
-                ..Default::default()
-            }],
+            items: narrative_items,
             mode: CitationMode::Integral,
             ..Default::default()
         };
@@ -1036,6 +1046,14 @@ mod tests {
         assert!(
             !narrative.trim().is_empty(),
             "narrative preview should not be empty"
+        );
+        assert!(
+            narrative.contains(" and "),
+            "narrative preview should use prose joining for multi-item integral cites: {narrative}"
+        );
+        assert!(
+            !narrative.contains(";"),
+            "narrative preview should not use semicolon-separated clustering: {narrative}"
         );
         assert!(
             !bibliography.trim().is_empty(),
