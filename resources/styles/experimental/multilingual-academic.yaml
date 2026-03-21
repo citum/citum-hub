@@ -1,0 +1,66 @@
+# yaml-language-server: $schema=https://bdarcus.github.io/csl26/schemas/style.json
+info:
+  id: multilingual-academic
+  title: Multilingual Academic Citation (Juris-M Style)
+  description: >
+    Demonstrates per-group sorting for multilingual bibliographies.
+    Vietnamese references use given-family ordering, Western
+    references use family-given ordering.
+  default-locale: en-US
+
+options:
+  processing: author-date
+
+citation:
+  template:
+    - contributor: author
+      form: short
+    - date: issued
+      form: year
+      prefix: " "
+
+bibliography:
+  groups:
+    - id: vietnamese
+      heading:
+        localized:
+          vi: "Tài liệu tiếng Việt"
+          en-US: "Vietnamese Sources"
+      selector:
+        field:
+          language: vi
+      sort:
+        template:
+          - key: author
+            ascending: true
+            sort-order: given-family  # Vietnamese convention
+          - key: issued
+            ascending: false
+      disambiguate: locally
+
+    - id: western
+      heading:
+        literal: "Western Sources"
+      selector:
+        not:
+          field:
+            language: vi
+      sort:
+        template:
+          - key: author
+            ascending: true
+            sort-order: family-given  # Western convention
+          - key: issued
+            ascending: false
+      disambiguate: locally
+
+  template:
+    - contributor: author
+      form: long
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+    - title: primary
+      emph: true
+      prefix: ". "

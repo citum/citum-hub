@@ -1,0 +1,209 @@
+info:
+  title: Oxford University Standard for Citation of Legal Authorities 4th edition
+  description: 'Oxford University Standard for Citation of Legal Authorities, notes system. For a Zotero group showing data entry: https://zotero.org/groups/2205533/collections/AC7ETLN4'
+  fields:
+  - law
+  source:
+    csl-id: http://www.zotero.org/styles/oscola
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Sebastian Karcher
+      uri: https://orcid.org/0000-0001-8249-7388
+    - name: Andrew Dunning
+      uri: https://orcid.org/0000-0003-0464-5036
+    links:
+    - href: http://www.zotero.org/styles/oscola
+      rel: self
+    - href: https://www.law.ox.ac.uk/oscola
+      rel: documentation
+  short-name: "OSCOLA"
+  edition: "4th edition"
+options:
+  locators:
+    strip-label-periods: true
+  substitute:
+    contributor-role-form: short
+    template:
+      - editor
+      - translator
+  processing: note
+  contributors:
+    display-as-sort: all
+    initialize-with: ""
+    shorten:
+      min: 5
+      use-first: 3
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter: ", "
+    and: none
+    delimiter-precedes-last: always
+    sort-separator: " "
+  dates:
+    month: numeric
+    uncertainty-marker: "?"
+    approximation-marker: "ca. "
+    range-delimiter: –
+  titles:
+    component: {}
+    monograph:
+      emph: true
+    periodical:
+      emph: true
+  bibliography:
+    subsequent-author-substitute: ——
+    separator: " "
+citation:
+  options:
+    contributors:
+      name-form: full
+      shorten:
+        min: 4
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      delimiter-precedes-last: never
+  template:
+    - contributor: author
+      form: long
+      name-order: given-first
+      and: text
+      shorten:
+        min: 8
+        use-first: 1
+    - title: primary
+      wrap: quotes
+      prefix: ", "
+    - date: issued
+      form: year
+      wrap: parentheses
+      overrides:
+        patent:
+          suppress: true
+    - number: volume
+    - title: parent-monograph
+    - title: parent-serial
+    - variable: url
+  suffix: .
+  delimiter: " "
+  multi-cite-delimiter: "; "
+  subsequent:
+    options:
+      contributors:
+        initialize-with: ""
+        shorten:
+          min: 4
+          use-first: 1
+          and-others: et-al
+          delimiter-precedes-last: never
+    template:
+      - contributor: author
+        form: short
+        name-order: given-first
+      - title: primary
+        form: short
+        wrap: quotes
+        prefix: ", "
+      - variable: locator
+        prefix: " "
+  ibid:
+    note-start-text-case: lowercase
+    delimiter: " "
+    template:
+      - term: ibid
+        form: long
+        strip-periods: true
+      - variable: locator
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ""
+      shorten:
+        min: 4
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      delimiter-precedes-last: never
+      sort-separator: " "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 5
+        use-first: 1
+    - title: primary
+      wrap: quotes
+      prefix: ", "
+    - variable: publisher
+      prefix: " ("
+    - date: issued
+      form: year
+      overrides:
+        patent:
+          suppress: true
+        dataset:
+          suppress: true
+    - number: volume
+    - variable: url
+    - title: parent-monograph
+    - title: parent-serial
+  type-templates:
+    interview:
+      - variable: note
+      - contributor: author
+        form: long
+        name-order: given-first
+        prefix: ", Interview with "
+      - title: primary
+        wrap: quotes
+        prefix: ", "
+      - date: issued
+        form: full
+        wrap: parentheses
+        prefix: " "
+      - variable: url
+        prefix: " &#60;"
+        suffix: "&#62;"
+    personal_communication:
+      - contributor: author
+        form: long
+        sort-separator: " "
+        shorten:
+          min: 4
+          use-first: 1
+          and-others: et-al
+          delimiter-precedes-last: never
+        and: text
+      - variable: genre
+      - contributor: recipient
+        form: long
+        shorten:
+          min: 4
+          use-first: 1
+          and-others: et-al
+          delimiter-precedes-last: never
+        and: text
+      - title: primary
+        quote: true
+        wrap: quotes
+      - date: issued
+        form: full
+    legal_case:
+      - title: primary
+        emph: true
+      - date: issued
+        form: year
+        wrap: parentheses
+        prefix: " "
+      - number: volume
+      - title: parent-serial
+      - number: number
+      - variable: authority
+        wrap: parentheses
+        prefix: " "
+  sort: author-date-title

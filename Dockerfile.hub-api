@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1.4
+# ---- Build stage: Rust + wasm-pack + Bun ----
+FROM oven/bun:1 AS builder
+
+# Install system deps for Rust build
+RUN apt-get update && apt-get install -y \
+    build-essential curl pkg-config libssl-dev git ca-certificates \
+    --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+# Install Rust with wasm32 target
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal \
+    --target wasm32-unknown-unknown
+ENV PATH="/root/.cargo/bin:$PATH"
+
+# Install wasm-pack
+RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
+
+WORKDIR /app
+
+# Copy Cargo workspace files first for layer caching
+COPY Cargo.toml Cargo.lock ./
+COPY server/ ./server/
+
+# Compile WASM bridge (nodejs target)
+RUN cd server/crates/wasm-bridge && wasm-pack build --target nodejs --release
+
+# Copy client source and install deps
+COPY client/ ./client/
+WORKDIR /app/client
+RUN bun install --frozen-lockfile
+
+# ---- Runtime stage ----
+FROM oven/bun:1-slim AS runtime
+
+WORKDIR /app
+
+# WASM bridge pkg
+COPY --from=builder /app/server/crates/wasm-bridge/pkg ./server/crates/wasm-bridge/pkg
+
+# Bundled runtime assets (fixtures, styles, registries)
+COPY resources/ ./resources/
+
+# API source and deps
+COPY --from=builder /app/client/src ./client/src
+COPY --from=builder /app/client/node_modules ./client/node_modules
+COPY --from=builder /app/client/package.json ./client/package.json
+COPY --from=builder /app/client/scripts ./client/scripts
+COPY --from=builder /app/client/migrations ./client/migrations
+
+WORKDIR /app/client
+
+ENV PORT=3002
+ENV CITUM_CORE_PATH=/app/resources
+EXPOSE 3002
+
+# Run migrations, then start the API. Registry warmup happens in-process after bind.
+CMD ["sh", "-c", "bun run scripts/migrate.ts && bun src/api/index.ts"]

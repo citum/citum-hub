@@ -1,0 +1,137 @@
+info:
+  title: ACS Chemistry (Compound)
+  description: >
+    American Chemical Society style with compound citation support.
+    Groups related references under a shared citation number with
+    alphabetic sub-labels. Based on the ACS Guide 2022 revision.
+  fields:
+  - chemistry
+  source:
+    csl-id: http://www.zotero.org/styles/american-chemical-society
+    adapted-by: citum-create
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    links:
+    - href: http://www.zotero.org/styles/american-chemical-society
+      rel: template
+    - href: https://doi.org/10.1021/acsguide.40303
+      rel: documentation
+    - href: https://doi.org/10.1021/acsguide
+      rel: documentation
+options:
+  processing: numeric
+  contributors:
+    display-as-sort: all
+    initialize-with: ". "
+    delimiter: "; "
+    delimiter-precedes-last: always
+    demote-non-dropping-particle: sort-only
+    sort-separator: ", "
+  dates: long
+  titles: humanities
+  page-range-format: expanded
+  bibliography:
+    entry-suffix: .
+    separator: ". "
+    compound-numeric:
+      collapse-subentries: true
+  punctuation-in-quote: true
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ". "
+      delimiter: "; "
+      delimiter-precedes-last: always
+      sort-separator: ", "
+  template:
+    - number: citation-number
+      wrap: parentheses
+      suffix: " "
+    - contributor: author
+      form: long
+      name-order: family-first
+    - title: primary
+      prefix: " "
+      suffix: "."
+    - title: parent-monograph
+      emph: true
+      prefix: " In "
+    - title: parent-serial
+      emph: true
+      prefix: " "
+    - contributor: editor
+      form: long
+      name-order: family-first
+      suffix: ", Eds."
+      prefix: ", "
+      overrides:
+        book:
+          prefix: "; "
+    - variable: publisher
+      prefix: "; "
+    - variable: publisher-place
+      prefix: ": "
+    - date: issued
+      form: year
+      prefix: " "
+      overrides:
+        book:
+          prefix: ", "
+        report:
+          prefix: ", "
+        thesis:
+          prefix: ", "
+        chapter:
+          prefix: ": "
+        paper-conference:
+          prefix: ", "
+    - items:
+        - number: volume
+        - number: issue
+          overrides:
+            article-journal:
+              suppress: true
+            article-magazine:
+              suppress: true
+      prefix: ", "
+    - number: pages
+      prefix: ", "
+      overrides:
+        chapter:
+          prefix: ", pp "
+        paper-conference:
+          prefix: ", pp "
+    - variable: doi
+      prefix: ", DOI: "
+    - variable: url
+  type-templates:
+    patent:
+      - number: citation-number
+        wrap: parentheses
+      - contributor: author
+        form: long
+        sort-separator: ", "
+      - title: primary
+        overrides:
+          graphic:
+            emph: true
+          motion_picture:
+            emph: true
+          legislation:
+            emph: true
+          report:
+            emph: true
+          legal_case:
+            emph: true
+          song:
+            emph: true
+          bill:
+            emph: true
+          book:
+            emph: true
+      - date: issued
+        form: full

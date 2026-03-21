@@ -1,0 +1,126 @@
+info:
+  title: Springer - SocPsych (numeric, brackets)
+  fields:
+  - psychology
+  source:
+    csl-id: http://www.zotero.org/styles/springer-socpsych-brackets
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Charles Parnot
+      email: charles.parnot@gmail.com
+      uri: http://twitter.com/cparnot
+    links:
+    - href: http://www.zotero.org/styles/springer-socpsych-brackets
+      rel: self
+    - href: http://www.zotero.org/styles/apa
+      rel: template
+    - href: http://www.springer.com/cda/content/document/cda_downloaddocument/instruct-authors-e.pdf
+      rel: documentation
+    - href: http://www.springer.com/cda/content/document/cda_downloaddocument/manuscript-guidelines-1.0.pdf
+      rel: documentation
+    - href: http://www.springer.com/cda/content/document/cda_downloaddocument/Key_Style_Points_1.0.pdf
+      rel: documentation
+options:
+  substitute:
+    contributor-role-form: short
+    template:
+      - editor
+      - translator
+    overrides:
+      report: []
+  processing: numeric
+  contributors:
+    display-as-sort: all
+    initialize-with: ". "
+    shorten:
+      min: 8
+      use-first: 6
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter: ", "
+    delimiter-precedes-last: always
+    demote-non-dropping-particle: never
+    sort-separator: ", "
+  dates: long
+  titles: humanities
+  bibliography:
+    separator: ". "
+  punctuation-in-quote: true
+  volume-pages-delimiter: comma
+citation:
+  use-preset: numeric-citation
+  wrap: brackets
+  multi-cite-delimiter: ", "
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ". "
+      shorten:
+        min: 8
+        use-first: 6
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+      delimiter-precedes-last: always
+      sort-separator: ", "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+      shorten:
+        min: 8
+        use-first: 7
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+      overrides:
+        article-newspaper:
+          suppress: true
+        article-magazine:
+          suppress: true
+        patent:
+          suppress: true
+        broadcast:
+          suppress: true
+        interview:
+          suppress: true
+        personal_communication:
+          suppress: true
+    - title: primary
+    - items:
+        - contributor: editor
+          form: verb
+          overrides:
+            chapter:
+              prefix: "In "
+          name-order: given-first
+        - title: parent-monograph
+          emph: true
+      prefix: ". In "
+    - title: parent-serial
+      emph: true
+    - items:
+        - number: volume
+        - number: issue
+          wrap: parentheses
+          overrides: {}
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+          wrap: parentheses
+        paper-conference:
+          prefix: "pp. "
+          wrap: parentheses
+      prefix: ", "
+    - variable: publisher
+      prefix: "). "
+    - variable: doi
+      overrides:
+        article-journal:
+          prefix: https://doi.org/
+    - variable: publisher-place
+    - variable: url

@@ -1,0 +1,80 @@
+info:
+  title: The Optical Society
+  description: Common style use by OSA publications.
+  fields:
+  - physics
+  source:
+    csl-id: http://www.zotero.org/styles/the-optical-society
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Barbara Williams
+      email: bwilli@osa.org
+    links:
+    - href: http://www.zotero.org/styles/the-optical-society
+      rel: self
+    - href: http://www.zotero.org/styles/ieee
+      rel: template
+    - href: http://www.zotero.org/styles/american-physics-society
+      rel: template
+    - href: http://www.opticsinfobase.org/author/author.cfm
+      rel: documentation
+options:
+  substitute: editor-translator-short
+  processing: numeric
+  contributors: physics-numeric
+  dates: long
+  titles: humanities
+  bibliography:
+    entry-suffix: .
+    separator: ", "
+  punctuation-in-quote: true
+citation:
+  use-preset: numeric-citation
+  prefix: "\_["
+  suffix: "]"
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      initialize-with: ". "
+      delimiter: ", "
+  template:
+    - contributor: author
+      form: long
+      overrides:
+        personal_communication:
+          prefix: "pp. "
+      name-order: given-first
+    - title: primary
+      wrap: quotes
+      overrides:
+        personal_communication:
+          suppress: true
+    - title: parent-monograph
+    - title: parent-serial
+    - variable: publisher
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+  type-templates:
+    patent:
+      - number: citation-number
+        suffix: ". "
+      - contributor: author
+        form: long
+        and: text
+      - title: primary
+        prefix: "\""
+        suffix: ",\" "
+      - date: issued
+        form: year
+      - term: no-date
+        form: short

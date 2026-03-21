@@ -1,0 +1,104 @@
+info:
+  title: American Physical Society
+  description: Common style use by APS publications.
+  fields:
+  - physics
+  source:
+    csl-id: http://www.zotero.org/styles/american-physics-society
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: Richard Karnesky
+      email: karnesky+zotero@gmail.com
+      uri: http://arc.nucapt.northwestern.edu/Richard_Karnesky
+    - name: Brenton M. Wiernik
+    links:
+    - href: http://www.zotero.org/styles/american-physics-society
+      rel: self
+    - href: http://www.zotero.org/styles/american-institute-of-physics
+      rel: template
+    - href: https://journals.aps.org/prl/authors#techformat
+      rel: documentation
+options:
+  substitute: editor-translator-long
+  processing: numeric
+  contributors: physics-numeric
+  dates: long
+  titles: humanities
+  bibliography:
+    entry-suffix: .
+    separator: ", "
+  punctuation-in-quote: true
+citation:
+  use-preset: numeric-citation
+  prefix: "\_["
+  suffix: "]"
+  collapse: citation-number
+  multi-cite-delimiter: ","
+bibliography:
+  options:
+    contributors:
+      initialize-with: ". "
+      delimiter: ", "
+  template:
+    - contributor: author
+      form: long
+      overrides:
+        personal_communication:
+          prefix: "pp. "
+      name-order: given-first
+    - title: primary
+      emph: true
+    - title: parent-monograph
+    - title: parent-serial
+    - variable: publisher-place
+    - variable: publisher
+    - variable: url
+    - date: issued
+      form: year
+      wrap: parentheses
+      overrides:
+        dataset:
+          suppress: true
+        interview:
+          suppress: true
+        personal_communication:
+          suppress: true
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+        entry-encyclopedia:
+          prefix: "pp. "
+      prefix: "), "
+  type-templates:
+    software:
+      - number: citation-number
+        wrap: brackets
+      - contributor: author
+        form: long
+        name-order: given-first
+      - title: primary
+        emph: true
+      - date: issued
+        form: year
+        wrap: parentheses
+    patent:
+      - number: citation-number
+        wrap: brackets
+      - contributor: author
+        form: long
+        shorten:
+          min: 11
+          use-first: 1
+          and-others: et-al
+          delimiter-precedes-last: contextual
+        and: text
+      - title: primary
+        emph: true
+      - date: issued
+        form: year
+      - term: no-date
+        form: short

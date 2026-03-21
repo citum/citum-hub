@@ -1,0 +1,132 @@
+info:
+  title: International Journal of Wildland Fire
+  description: |-
+    This style produces the CSIRO style used in the International Journal of Wildland Fire,
+          the Australian Journal of Botany and several other Australian journals.  It has been
+          validated for the journal, book, book chapter, report, and conference paper citation
+          styles.  This style is in the public domain.
+  fields:
+  - science
+  source:
+    csl-id: http://www.zotero.org/styles/international-journal-of-wildland-fire
+    adapted-by: citum-migrate
+    license: http://creativecommons.org/licenses/by-sa/3.0/
+    original-authors:
+    - name: David Weise
+      email: dweise@fs.fed.us
+    links:
+    - href: http://www.zotero.org/styles/international-journal-of-wildland-fire
+      rel: self
+    - href: http://www.zotero.org/styles/springer-basic-author-date
+      rel: template
+    - href: http://www.publish.csiro.au/nid/117/aid/424.htm
+      rel: documentation
+options:
+  substitute: editor-translator-title-short
+  processing:
+    sort:
+      shorten-names: false
+      render-substitutions: false
+      template:
+        - key: year
+          ascending: true
+        - key: author
+          ascending: true
+    group:
+      template:
+        - year
+        - author
+    disambiguate:
+      names: true
+      add-givenname: false
+      year-suffix: true
+  contributors:
+    display-as-sort: all
+    initialize-with: ""
+    shorten:
+      min: 3
+      use-first: 1
+      and-others: et-al
+      delimiter-precedes-last: contextual
+    delimiter: ", "
+    delimiter-precedes-last: always
+    demote-non-dropping-particle: sort-only
+    sort-separator: " "
+  dates: long
+  titles: journal-emphasis
+  bibliography:
+    hanging-indent: true
+    separator: ". "
+  punctuation-in-quote: true
+citation:
+  options:
+    contributors:
+      initialize-with: ""
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+      delimiter: ", "
+  template:
+    - contributor: author
+      form: short
+      name-order: family-first
+      shorten:
+        min: 3
+        use-first: 1
+        and-others: et-al
+        delimiter-precedes-last: contextual
+    - date: issued
+      form: year
+      prefix: " "
+    - variable: locator
+  wrap: parentheses
+  delimiter: ". "
+  multi-cite-delimiter: "; "
+bibliography:
+  options:
+    contributors:
+      display-as-sort: all
+      initialize-with: ""
+      delimiter: ", "
+      delimiter-precedes-last: always
+      sort-separator: " "
+  template:
+    - contributor: author
+      form: long
+      name-order: family-first
+    - date: issued
+      form: year
+      wrap: parentheses
+      prefix: " "
+    - title: primary
+      prefix: " "
+    - items:
+        - contributor: editor
+          form: verb
+          name-order: given-first
+        - title: parent-monograph
+          emph: true
+    - title: parent-serial
+      emph: true
+    - items:
+        - number: volume
+        - number: issue
+          wrap: parentheses
+          overrides: {}
+    - number: pages
+      overrides:
+        chapter:
+          prefix: "pp. "
+        paper-conference:
+          prefix: "pp. "
+      prefix: ", "
+    - variable: publisher
+      prefix: . (
+    - variable: publisher-place
+      prefix: ": "
+    - variable: doi
+      overrides:
+        article-journal:
+          prefix: https://doi.org/

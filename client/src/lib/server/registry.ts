@@ -10,12 +10,18 @@ const configuredResourceRoot = process.env.CITUM_CORE_PATH;
 const RESOURCE_ROOT =
 	configuredResourceRoot && syncFs.existsSync(path.join(configuredResourceRoot, "styles"))
 		? configuredResourceRoot
-		: configuredResourceRoot && syncFs.existsSync(path.join(configuredResourceRoot, "resources", "styles"))
+		: configuredResourceRoot &&
+			  syncFs.existsSync(path.join(configuredResourceRoot, "resources", "styles"))
 			? path.join(configuredResourceRoot, "resources")
 			: path.join(PROJECT_ROOT, "resources");
 const CORE_STYLES_DIR = path.join(RESOURCE_ROOT, "styles");
 const CORE_DEFAULT_REGISTRY_PATH = path.join(RESOURCE_ROOT, "registry", "default.yaml");
-const HUB_PRIMARY_REGISTRY_PATH = path.join(PROJECT_ROOT, "resources", "registry", "hub-primary.yaml");
+const HUB_PRIMARY_REGISTRY_PATH = path.join(
+	PROJECT_ROOT,
+	"resources",
+	"registry",
+	"hub-primary.yaml"
+);
 const SYSTEM_USER_EMAIL = "system@citum.org";
 
 type RegistrySlug = "core-default" | "hub-primary" | "hub-candidates";
@@ -705,7 +711,9 @@ async function seedHubPrimaryRegistryFromBundle(
 			displayTitle: entry.title || humanizeSlug(entry.id),
 			description:
 				entry.description ||
-				(targetRef ? `Alias of ${humanizeSlug(path.basename(targetRef, path.extname(targetRef)))}.` : null),
+				(targetRef
+					? `Alias of ${humanizeSlug(path.basename(targetRef, path.extname(targetRef)))}.`
+					: null),
 			fields: (entry.fields || []).map(String),
 			citationFormat: null,
 			targetKind: entry.builtin ? "builtin" : entry.path ? "path" : null,
@@ -725,9 +733,9 @@ async function seedHubPrimaryRegistryFromBundle(
 		const names = [
 			{ kind: "title" as const, value: entry.title || humanizeSlug(entry.id) },
 			{ kind: "legacy_slug" as const, value: entry.id },
-			...((entry.title_short ? [{ kind: "title_short" as const, value: entry.title_short }] : [])),
-			...((entry.issns || []).map((issn) => ({ kind: "issn" as const, value: issn }))),
-			...((entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias }))),
+			...(entry.title_short ? [{ kind: "title_short" as const, value: entry.title_short }] : []),
+			...(entry.issns || []).map((issn) => ({ kind: "issn" as const, value: issn })),
+			...(entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias })),
 		];
 		await replaceEntryNames(entryId, names);
 		entriesUpserted += 1;
@@ -1178,18 +1186,13 @@ export async function importRegistryDocument({
 			lastSyncedAt: new Date().toISOString(),
 			metadata: {},
 		});
-		await replaceEntryNames(
-			entryId,
-			[
-				{ kind: "title" as const, value: entry.title || humanizeSlug(entry.id) },
-				{ kind: "legacy_slug" as const, value: entry.id },
-				...(entry.title_short
-					? [{ kind: "title_short" as const, value: entry.title_short }]
-					: []),
-				...((entry.issns || []).map((issn) => ({ kind: "issn" as const, value: issn }))),
-				...((entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias }))),
-			]
-		);
+		await replaceEntryNames(entryId, [
+			{ kind: "title" as const, value: entry.title || humanizeSlug(entry.id) },
+			{ kind: "legacy_slug" as const, value: entry.id },
+			...(entry.title_short ? [{ kind: "title_short" as const, value: entry.title_short }] : []),
+			...(entry.issns || []).map((issn) => ({ kind: "issn" as const, value: issn })),
+			...(entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias })),
+		]);
 		entriesUpserted += 1;
 	}
 
