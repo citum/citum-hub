@@ -1,5 +1,6 @@
 import { writable } from "svelte/store";
 import { browser } from "$app/environment";
+import { PUBLIC_DEMO_MODE } from "$env/static/public";
 
 export interface User {
 	id: string;
@@ -8,13 +9,29 @@ export interface User {
 }
 
 function createAuthStore() {
-	const { subscribe, set } = writable<{
-		token: string | null;
-		user: User | null;
-	}>({
-		token: browser ? localStorage.getItem("auth_token") : null,
-		user: browser ? JSON.parse(localStorage.getItem("auth_user") || "null") : null,
-	});
+	// In demo mode, automatically populate a demo user
+	let initialState = {
+		token: null as string | null,
+		user: null as User | null,
+	};
+
+	if (PUBLIC_DEMO_MODE === "true") {
+		initialState = {
+			token: "demo-token",
+			user: {
+				id: "demo",
+				email: "demo@citum.local",
+				role: "demo",
+			},
+		};
+	} else if (browser) {
+		initialState = {
+			token: localStorage.getItem("auth_token"),
+			user: JSON.parse(localStorage.getItem("auth_user") || "null"),
+		};
+	}
+
+	const { subscribe, set } = writable(initialState);
 
 	return {
 		subscribe,
