@@ -11,7 +11,7 @@
 	let error = $state<string | null>(null);
 	let disciplines: string[] = $state([]);
 	let families: string[] = $state([]);
-	let selectedField = $state("");
+	let selectedFields: string[] = $state([]);
 	let selectedFamily = $state("");
 
 	async function loadStyles() {
@@ -21,7 +21,7 @@
 		try {
 			const params = new URLSearchParams();
 			if (searchQuery.trim()) params.set("q", searchQuery.trim());
-			if (selectedField) params.set("field", selectedField);
+			for (const field of selectedFields) params.append("field", field);
 			if (selectedFamily) params.set("family", selectedFamily);
 			params.set("page_size", "36");
 
@@ -43,7 +43,7 @@
 
 	onMount(async () => {
 		searchQuery = page.url.searchParams.get("q") || "";
-		selectedField = page.url.searchParams.get("field") || "";
+		selectedFields = page.url.searchParams.getAll("field");
 		selectedFamily = page.url.searchParams.get("family") || "";
 		await loadStyles();
 	});
@@ -51,7 +51,7 @@
 	function applyFilters() {
 		const params = new URLSearchParams();
 		if (searchQuery.trim()) params.set("q", searchQuery.trim());
-		if (selectedField) params.set("field", selectedField);
+		for (const field of selectedFields) params.append("field", field);
 		if (selectedFamily) params.set("family", selectedFamily);
 		goto(`/library/browse${params.toString() ? `?${params.toString()}` : ""}`, {
 			replaceState: true,
@@ -60,9 +60,16 @@
 		loadStyles();
 	}
 
+	function toggleField(field: string) {
+		selectedFields = selectedFields.includes(field)
+			? selectedFields.filter((value) => value !== field)
+			: [...selectedFields, field];
+		applyFilters();
+	}
+
 	function resetFilters() {
 		searchQuery = "";
-		selectedField = "";
+		selectedFields = [];
 		selectedFamily = "";
 		applyFilters();
 	}
@@ -82,7 +89,7 @@
 						Find and manage citation formatting for your manuscripts.
 					</h1>
 					<p class="mt-4 text-base leading-7 text-slate-600">
-						Search canonical parent styles, scan alias-heavy families, and jump straight into a
+						Search canonical styles, scan alias-heavy results, and jump straight into a
 						customization flow when a journal match is close but not perfect.
 					</p>
 				</div>
@@ -138,9 +145,9 @@
 					</p>
 					<div class="flex flex-wrap gap-2">
 						<button
-							class={`rounded-full px-3 py-2 text-sm font-bold transition ${selectedField === "" ? "bg-primary text-white" : "bg-white text-slate-600 hover:text-primary"}`}
+							class={`rounded-full px-3 py-2 text-sm font-bold transition ${selectedFields.length === 0 ? "bg-primary text-white" : "bg-white text-slate-600 hover:text-primary"}`}
 							onclick={() => {
-								selectedField = "";
+								selectedFields = [];
 								applyFilters();
 							}}
 						>
@@ -148,11 +155,8 @@
 						</button>
 						{#each disciplines as field}
 							<button
-								class={`rounded-full px-3 py-2 text-sm font-bold transition ${selectedField === field ? "bg-primary text-white" : "bg-white text-slate-600 hover:text-primary"}`}
-								onclick={() => {
-									selectedField = field;
-									applyFilters();
-								}}
+								class={`rounded-full px-3 py-2 text-sm font-bold transition ${selectedFields.includes(field) ? "bg-primary text-white" : "bg-white text-slate-600 hover:text-primary"}`}
+								onclick={() => toggleField(field)}
 							>
 								{field}
 							</button>

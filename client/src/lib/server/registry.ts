@@ -197,7 +197,7 @@ export type HubStyleDetail = {
 
 type QueryHubStylesOptions = {
 	q?: string;
-	field?: string;
+	fields?: string[];
 	family?: string;
 	hasAliases?: boolean;
 	page?: number;
@@ -1041,7 +1041,12 @@ export async function queryHubStyles(
 	});
 
 	const filtered = styleSummaries
-		.filter((style) => !options.field || style.fields.includes(options.field))
+		.filter(
+			(style) =>
+				!options.fields ||
+				options.fields.length === 0 ||
+				style.fields.some((field) => options.fields!.includes(field))
+		)
 		.filter((style) => !options.family || style.family === options.family)
 		.filter((style) => !options.hasAliases || style.alias_count > 0)
 		.filter((style) => {

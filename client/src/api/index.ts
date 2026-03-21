@@ -157,9 +157,10 @@ app.get("/hub", async (c) => {
 	try {
 		const page = Number.parseInt(c.req.query("page") || "1", 10) || 1;
 		const pageSize = Number.parseInt(c.req.query("page_size") || "24", 10) || 24;
+		const fields = c.req.queries("field").filter(Boolean);
 		const styles = await queryHubStyles({
 			q: c.req.query("q") || c.req.query("search") || undefined,
-			field: c.req.query("field") || undefined,
+			fields: fields.length > 0 ? fields : undefined,
 			family: c.req.query("family") || undefined,
 			hasAliases: c.req.query("has_aliases") === "true",
 			page,
