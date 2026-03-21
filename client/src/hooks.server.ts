@@ -1,10 +1,6 @@
-import { runMigrations } from "$lib/server/db";
-
-// Run migrations on startup
-// In SvelteKit, this code runs when the server starts up.
-runMigrations().catch((err) => {
-	console.error("Failed to run database migrations on startup:", err);
-});
+// Migration ownership moved to hub-api startup (Dockerfile.hub-api CMD).
+// hub-api runs migrations once before binding the Hono server.
+// hub-web does not run migrations to prevent race conditions in multi-service deployments.
 
 export async function handle({ event, resolve }) {
 	const response = await resolve(event);
