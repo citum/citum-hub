@@ -2,27 +2,16 @@
 	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
 	import { auth } from "$lib/stores/auth";
-	import { demoBookmarks } from "$lib/stores/demo";
 	import type { Style } from "$lib/types/style";
-	import { env } from "$env/dynamic/public";
 
 	let styles: Style[] = $state([]);
 	let bookmarks: Style[] = $state([]);
 	let loading = $state(true);
 	let error = $state(null);
-	let demoMode = $state(env.PUBLIC_DEMO_MODE === "true");
 
 	onMount(async () => {
 		if (!$auth.user) {
 			goto("/");
-			return;
-		}
-
-		// In demo mode, show empty styles and demo bookmarks
-		if (demoMode) {
-			styles = [];
-			bookmarks = [];
-			loading = false;
 			return;
 		}
 
@@ -50,11 +39,6 @@
 	});
 
 	async function handleRemoveBookmark(id: string) {
-		if (demoMode) {
-			demoBookmarks.remove(id);
-			return;
-		}
-
 		const res = await fetch(`/api/styles/${id}/bookmark`, {
 			method: "DELETE",
 			headers: { Authorization: `Bearer ${$auth.token}` },

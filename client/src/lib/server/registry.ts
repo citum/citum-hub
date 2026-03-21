@@ -1,26 +1,22 @@
 import path from "node:path";
 import fs from "node:fs/promises";
+import syncFs from "node:fs";
 import yaml from "js-yaml";
 // @ts-expect-error - Bun is the runtime for the API and scripts that import this module.
 import { file, sql } from "bun";
 
 const PROJECT_ROOT = path.resolve(process.cwd(), "..");
-const CITUM_CORE_PATH =
-	process.env.CITUM_CORE_PATH || path.resolve(PROJECT_ROOT, "..", "citum-core");
-const CORE_STYLES_DIR = path.join(CITUM_CORE_PATH, "styles");
-const CORE_DEPENDENT_DIR = path.join(CITUM_CORE_PATH, "styles-legacy", "dependent");
-const CORE_DEFAULT_REGISTRY_PATH = path.join(CITUM_CORE_PATH, "registry", "default.yaml");
+const configuredResourceRoot = process.env.CITUM_CORE_PATH;
+const RESOURCE_ROOT =
+	configuredResourceRoot && syncFs.existsSync(path.join(configuredResourceRoot, "styles"))
+		? configuredResourceRoot
+		: configuredResourceRoot && syncFs.existsSync(path.join(configuredResourceRoot, "resources", "styles"))
+			? path.join(configuredResourceRoot, "resources")
+			: path.join(PROJECT_ROOT, "resources");
+const CORE_STYLES_DIR = path.join(RESOURCE_ROOT, "styles");
+const CORE_DEFAULT_REGISTRY_PATH = path.join(RESOURCE_ROOT, "registry", "default.yaml");
+const HUB_PRIMARY_REGISTRY_PATH = path.join(PROJECT_ROOT, "resources", "registry", "hub-primary.yaml");
 const SYSTEM_USER_EMAIL = "system@citum.org";
-
-const TOOL_ALIASES_BY_TARGET: Record<string, string[]> = {
-	"apa-7th": ["apa 7", "apa 7th edition", "pandoc apa", "zotero apa", "mendeley apa"],
-	"american-medical-association": ["ama", "mendeley ama"],
-	"chicago-shortened-notes-bibliography": ["chicago notes", "turabian notes"],
-	"elsevier-vancouver": ["vancouver", "mendeley vancouver"],
-	ieee: ["ieee references", "pandoc ieee", "zotero ieee"],
-	"modern-language-association": ["mla", "mla works cited"],
-	"taylor-and-francis-chicago-author-date": ["chicago author date"],
-};
 
 type RegistrySlug = "core-default" | "hub-primary" | "hub-candidates";
 type TargetKind = "builtin" | "path";
@@ -93,30 +89,8 @@ type ParsedStyleMetadata = {
 	slugCandidates: string[];
 };
 
-type ParsedDependentStyle = {
-	entrySlug: string;
-	title: string;
-	titleShort: string | null;
-	description: string | null;
-	fields: string[];
-	citationFormat: string | null;
-	parentStyleSlug: string | null;
-	issns: string[];
-	sourceRef: string;
-};
-
-type ResolvedTarget = {
-	targetKind: TargetKind;
-	targetRef: string;
-	targetStyleId: string | null;
-	resolvedSlug: string;
-};
-
 type ResolutionContext = {
-	byParentSlug: Map<string, ResolvedTarget>;
-	stylesById: Map<string, StyleRow>;
 	stylesByKey: Map<string, StyleRow>;
-	metadataByStyleId: Map<string, ParsedStyleMetadata>;
 };
 
 type SyncSummary = {
@@ -219,6 +193,9 @@ type CoreRegistryDocument = {
 	version: string;
 	styles: Array<{
 		id: string;
+		title?: string;
+		title_short?: string;
+		issns?: string[];
 		aliases?: string[];
 		builtin?: string;
 		path?: string;
@@ -226,6 +203,8 @@ type CoreRegistryDocument = {
 		fields?: string[];
 	}>;
 };
+
+let bootstrapPromise: Promise<SyncSummary> | null = null;
 
 function normalizeText(value: string) {
 	return value
@@ -249,50 +228,6 @@ function humanizeSlug(slug: string) {
 		.filter(Boolean)
 		.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
 		.join(" ");
-}
-
-function decodeXmlEntities(value: string) {
-	return value
-		.replace(/&amp;/g, "&")
-		.replace(/&quot;/g, '"')
-		.replace(/&#39;/g, "'")
-		.replace(/&apos;/g, "'")
-		.replace(/&lt;/g, "<")
-		.replace(/&gt;/g, ">");
-}
-
-function stripXmlTags(value: string) {
-	return decodeXmlEntities(
-		value
-			.replace(/<[^>]+>/g, " ")
-			.replace(/\s+/g, " ")
-			.trim()
-	);
-}
-
-function parseXmlAttributes(tag: string) {
-	const attrs: Record<string, string> = {};
-	const attrRegex = /([A-Za-z_:][A-Za-z0-9_.:-]*)\s*=\s*"([^"]*)"/g;
-	for (const match of tag.matchAll(attrRegex)) {
-		attrs[match[1]] = decodeXmlEntities(match[2]);
-	}
-	return attrs;
-}
-
-function getFirstTagContent(block: string, tagName: string) {
-	const match = block.match(new RegExp(`<${tagName}\\b[^>]*>([\\s\\S]*?)<\\/${tagName}>`, "i"));
-	return match ? stripXmlTags(match[1]) : null;
-}
-
-function getSelfClosingTags(block: string, tagName: string) {
-	return Array.from(block.matchAll(new RegExp(`<${tagName}\\b[^>]*/>`, "gi")), (match) => match[0]);
-}
-
-function getOpeningClosingTags(block: string, tagName: string) {
-	return Array.from(
-		block.matchAll(new RegExp(`<${tagName}\\b[^>]*>[\\s\\S]*?<\\/${tagName}>`, "gi")),
-		(match) => match[0]
-	);
 }
 
 function familyLabelFromProcessing(processing: unknown) {
@@ -498,93 +433,31 @@ async function getRegistries() {
 async function ensureRegistrySeeded() {
 	const [existing] = await sql`
         SELECT COUNT(*)::int AS count
-        FROM registry_entries
-        WHERE source_kind = 'csl-dependent'
+        FROM registry_entries re
+        JOIN registries r ON r.id = re.registry_id
+        WHERE r.slug = 'hub-primary'
+          AND re.status = 'active'
     `;
 	if ((existing?.count as number) > 0) {
+		return;
+	}
+	if (bootstrapPromise) {
+		await bootstrapPromise;
 		return;
 	}
 	await syncRegistryData();
 }
 
-function parseDependentStyleXml(xml: string, relativePath: string): ParsedDependentStyle | null {
-	const infoMatch = xml.match(/<info\b[^>]*>([\s\S]*?)<\/info>/i);
-	if (!infoMatch) return null;
-
-	const infoBlock = infoMatch[1];
-	const title =
-		getFirstTagContent(infoBlock, "title") || humanizeSlug(path.basename(relativePath, ".csl"));
-	const titleShort = getFirstTagContent(infoBlock, "title-short");
-	const description = getFirstTagContent(infoBlock, "summary");
-	const linkTags = [
-		...getSelfClosingTags(infoBlock, "link"),
-		...getOpeningClosingTags(infoBlock, "link"),
-	];
-	let parentStyleSlug: string | null = null;
-
-	for (const tag of linkTags) {
-		const attrs = parseXmlAttributes(tag);
-		if (attrs.rel === "independent-parent" && attrs.href) {
-			parentStyleSlug = attrs.href.split("/").pop() || attrs.href;
-			break;
-		}
-	}
-
-	const fields = new Set<string>();
-	let citationFormat: string | null = null;
-	for (const tag of [
-		...getSelfClosingTags(infoBlock, "category"),
-		...getOpeningClosingTags(infoBlock, "category"),
-	]) {
-		const attrs = parseXmlAttributes(tag);
-		if (attrs.field) fields.add(attrs.field);
-		if (!citationFormat && attrs["citation-format"]) {
-			citationFormat = attrs["citation-format"];
-		}
-	}
-
-	const issns = new Set<string>();
-	for (const tag of getOpeningClosingTags(infoBlock, "issn")) {
-		const content = stripXmlTags(tag.replace(/^<issn\b[^>]*>/i, "").replace(/<\/issn>$/i, ""));
-		if (content) issns.add(content);
-	}
-
-	return {
-		entrySlug: path.basename(relativePath, ".csl"),
-		title,
-		titleShort,
-		description,
-		fields: Array.from(fields),
-		citationFormat,
-		parentStyleSlug,
-		issns: Array.from(issns),
-		sourceRef: relativePath,
-	};
-}
-
-function isLocaleVariantEntry(entrySlug: string, parentStyleSlug: string | null) {
-	if (!parentStyleSlug) return false;
-	if (!entrySlug.startsWith(`${parentStyleSlug}-`)) return false;
-
-	const suffix = entrySlug.slice(parentStyleSlug.length + 1);
-	return /^[a-z]{2}(?:-[A-Za-z]{2,4})?$/.test(suffix);
-}
-
 async function buildResolutionContext(): Promise<ResolutionContext> {
 	const styles = (await syncCoreStyles()) as StyleRow[];
-	const stylesById = new Map<string, StyleRow>();
 	const stylesByKey = new Map<string, StyleRow>();
-	const metadataByStyleId = new Map<string, ParsedStyleMetadata>();
-	const byParentSlug = new Map<string, ResolvedTarget>();
 	const defaultRegistry = (yaml.load(await file(CORE_DEFAULT_REGISTRY_PATH).text()) || {
 		version: "1",
 		styles: [],
 	}) as CoreRegistryDocument;
 
 	for (const style of styles) {
-		stylesById.set(style.id, style);
 		const metadata = parseStyleYamlMetadata(style.citum, style.title, style.filename);
-		metadataByStyleId.set(style.id, metadata);
 		stylesByKey.set(style.id, style);
 		if (style.filename) {
 			stylesByKey.set(style.filename, style);
@@ -592,12 +465,6 @@ async function buildResolutionContext(): Promise<ResolutionContext> {
 		}
 		for (const slug of metadata.slugCandidates) {
 			stylesByKey.set(slug, style);
-			byParentSlug.set(slug, {
-				targetKind: "path",
-				targetRef: style.filename || `${slug}.yaml`,
-				targetStyleId: style.id,
-				resolvedSlug: slug,
-			});
 		}
 	}
 
@@ -605,19 +472,15 @@ async function buildResolutionContext(): Promise<ResolutionContext> {
 		const targetRef = entry.builtin || entry.path;
 		if (!targetRef) continue;
 		const targetStyle = stylesByKey.get(entry.id) || stylesByKey.get(targetRef);
-		const resolvedTarget: ResolvedTarget = {
-			targetKind: entry.builtin ? "builtin" : "path",
-			targetRef,
-			targetStyleId: targetStyle?.id ?? null,
-			resolvedSlug: entry.id,
-		};
-		byParentSlug.set(entry.id, resolvedTarget);
-		for (const alias of entry.aliases || []) {
-			byParentSlug.set(alias, resolvedTarget);
+		if (targetStyle) {
+			stylesByKey.set(entry.id, targetStyle);
+			for (const alias of entry.aliases || []) {
+				stylesByKey.set(alias, targetStyle);
+			}
 		}
 	}
 
-	return { byParentSlug, stylesById, stylesByKey, metadataByStyleId };
+	return { stylesByKey };
 }
 
 async function createSyncRun(
@@ -808,6 +671,74 @@ async function syncCoreDefaultRegistry(coreRegistryId: string, context: Resoluti
 	return entriesUpserted;
 }
 
+async function resetRegistryEntries(registryId: string) {
+	await sql`
+        DELETE FROM registry_entry_names
+        WHERE entry_id IN (
+            SELECT id FROM registry_entries WHERE registry_id = ${registryId}
+        )
+    `;
+	await sql`DELETE FROM registry_entries WHERE registry_id = ${registryId}`;
+}
+
+async function seedHubPrimaryRegistryFromBundle(
+	primaryRegistryId: string,
+	context: ResolutionContext
+) {
+	const raw = await file(HUB_PRIMARY_REGISTRY_PATH).text();
+	const doc = (yaml.load(raw) || { version: "1", styles: [] }) as CoreRegistryDocument;
+	if (!Array.isArray(doc.styles) || doc.styles.length === 0) {
+		throw new Error(`Static hub registry is empty: ${HUB_PRIMARY_REGISTRY_PATH}`);
+	}
+
+	await resetRegistryEntries(primaryRegistryId);
+
+	let entriesUpserted = 0;
+	const nowIso = new Date().toISOString();
+	for (const entry of doc.styles) {
+		const targetRef = entry.builtin || entry.path || null;
+		const targetStyle = targetRef
+			? context.stylesByKey.get(entry.id) || context.stylesByKey.get(targetRef)
+			: null;
+		const entryId = await upsertRegistryEntry(primaryRegistryId, {
+			entrySlug: entry.id,
+			displayTitle: entry.title || humanizeSlug(entry.id),
+			description:
+				entry.description ||
+				(targetRef ? `Alias of ${humanizeSlug(path.basename(targetRef, path.extname(targetRef)))}.` : null),
+			fields: (entry.fields || []).map(String),
+			citationFormat: null,
+			targetKind: entry.builtin ? "builtin" : entry.path ? "path" : null,
+			targetRef,
+			targetStyleId: targetStyle?.id ?? null,
+			parentStyleSlug: entry.id,
+			status: "active",
+			sourceKind: "manual",
+			sourceRef: "resources/registry/hub-primary.yaml",
+			lastSyncedAt: nowIso,
+			metadata: {
+				title_short: entry.title_short || null,
+				issns: entry.issns || [],
+			},
+		});
+
+		const names = [
+			{ kind: "title" as const, value: entry.title || humanizeSlug(entry.id) },
+			{ kind: "legacy_slug" as const, value: entry.id },
+			...((entry.title_short ? [{ kind: "title_short" as const, value: entry.title_short }] : [])),
+			...((entry.issns || []).map((issn) => ({ kind: "issn" as const, value: issn }))),
+			...((entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias }))),
+		];
+		await replaceEntryNames(entryId, names);
+		entriesUpserted += 1;
+	}
+
+	return {
+		entriesSeen: doc.styles.length,
+		entriesUpserted,
+	};
+}
+
 export async function syncRegistryData(): Promise<SyncSummary> {
 	const context = await buildResolutionContext();
 	const registries = await getRegistries();
@@ -820,97 +751,30 @@ export async function syncRegistryData(): Promise<SyncSummary> {
 	}
 
 	const defaultEntriesUpserted = await syncCoreDefaultRegistry(coreDefaultRegistry.id, context);
+	const primarySummary = await seedHubPrimaryRegistryFromBundle(primaryRegistry.id, context);
+	await resetRegistryEntries(candidateRegistry.id);
 
-	const dependentAbsolutePaths = await getFilesByExtension(CORE_DEPENDENT_DIR, [".csl"]);
-	let entriesSeen = 0;
-	let entriesUpserted = defaultEntriesUpserted;
-	let entriesHidden = 0;
-	let entriesSkipped = 0;
-	let activeCount = 0;
-	let candidateCount = 0;
-	const nowIso = new Date().toISOString();
-
-	for (const absolutePath of dependentAbsolutePaths) {
-		const relativePath = path.relative(CORE_DEPENDENT_DIR, absolutePath).replaceAll("\\", "/");
-		const parsed = parseDependentStyleXml(await file(absolutePath).text(), relativePath);
-		if (!parsed) {
-			entriesSkipped += 1;
-			continue;
-		}
-
-		if (isLocaleVariantEntry(parsed.entrySlug, parsed.parentStyleSlug)) {
-			entriesSkipped += 1;
-			continue;
-		}
-
-		entriesSeen += 1;
-		const resolved = parsed.parentStyleSlug
-			? context.byParentSlug.get(parsed.parentStyleSlug)
-			: null;
-		const status: EntryStatus = resolved ? "active" : "candidate";
-		const registryId = resolved ? primaryRegistry.id : candidateRegistry.id;
-		const metadata: Record<string, unknown> = {
-			title_short: parsed.titleShort,
-			issns: parsed.issns,
-		};
-		const entryId = await upsertRegistryEntry(registryId, {
-			entrySlug: parsed.entrySlug,
-			displayTitle: parsed.title,
-			description:
-				parsed.description ||
-				(parsed.parentStyleSlug
-					? `Alias of ${humanizeSlug(resolved?.resolvedSlug || parsed.parentStyleSlug)}.`
-					: "Imported dependent style alias."),
-			fields: parsed.fields,
-			citationFormat: parsed.citationFormat,
-			targetKind: resolved?.targetKind ?? null,
-			targetRef: resolved?.targetRef ?? null,
-			targetStyleId: resolved?.targetStyleId ?? null,
-			parentStyleSlug: parsed.parentStyleSlug,
-			status,
-			sourceKind: "csl-dependent",
-			sourceRef: parsed.sourceRef,
-			lastSyncedAt: nowIso,
-			metadata,
-		});
-
-		const names = [
-			{ kind: "title" as const, value: parsed.title },
-			{ kind: "legacy_slug" as const, value: parsed.entrySlug },
-			...(parsed.titleShort ? [{ kind: "title_short" as const, value: parsed.titleShort }] : []),
-			...parsed.issns.map((issn) => ({ kind: "issn" as const, value: issn })),
-			...((resolved?.targetRef && TOOL_ALIASES_BY_TARGET[resolved.targetRef]) || []).map(
-				(alias) => ({
-					kind: "tool_alias" as const,
-					value: alias,
-				})
-			),
-		];
-		await replaceEntryNames(entryId, names);
-		entriesUpserted += 1;
-
-		if (status === "active") {
-			activeCount += 1;
-		} else {
-			candidateCount += 1;
-			entriesHidden += 1;
-		}
-	}
+	const entriesSeen = defaultEntriesUpserted + primarySummary.entriesSeen;
+	const entriesUpserted = defaultEntriesUpserted + primarySummary.entriesUpserted;
+	const entriesHidden = 0;
+	const entriesSkipped = 0;
+	const activeCount = primarySummary.entriesUpserted;
+	const candidateCount = 0;
 
 	await createSyncRun(primaryRegistry.id, "sync", "completed", {
 		entriesSeen,
-		entriesUpserted: activeCount,
+		entriesUpserted: primarySummary.entriesUpserted,
 		entriesHidden: 0,
 		entriesSkipped,
-		message: "Primary registry sync completed.",
+		message: "Primary registry loaded from bundled YAML.",
 		metadata: { activeCount },
 	});
 	await createSyncRun(candidateRegistry.id, "sync", "completed", {
-		entriesSeen,
-		entriesUpserted: candidateCount,
+		entriesSeen: 0,
+		entriesUpserted: 0,
 		entriesHidden,
 		entriesSkipped,
-		message: "Candidate registry sync completed.",
+		message: "Candidate registry cleared; static bundle contains resolved aliases only.",
 		metadata: { candidateCount },
 	});
 
@@ -1238,6 +1102,13 @@ export async function exportRegistryDocument({
 			.filter((entry) => entry.target_kind && entry.target_ref)
 			.map((entry) => ({
 				id: entry.entry_slug,
+				title: entry.display_title,
+				title_short:
+					(namesByEntry.get(entry.id) || []).find((name) => name.kind === "title_short")?.value ||
+					undefined,
+				issns: (namesByEntry.get(entry.id) || [])
+					.filter((name) => name.kind === "issn")
+					.map((name) => name.value),
 				aliases: (namesByEntry.get(entry.id) || [])
 					.filter(
 						(name) => name.is_public && (name.kind === "title_short" || name.kind === "tool_alias")
@@ -1273,6 +1144,7 @@ export async function importRegistryDocument({
 	format = "yaml",
 	body,
 }: ImportRegistryOptions) {
+	const context = await buildResolutionContext();
 	const registries = await getRegistries();
 	const registry = registries.get(registrySlug);
 	if (!registry) {
@@ -1286,15 +1158,19 @@ export async function importRegistryDocument({
 
 	let entriesUpserted = 0;
 	for (const entry of parsed.styles) {
+		const targetRef = entry.builtin || entry.path || null;
+		const targetStyle = targetRef
+			? context.stylesByKey.get(entry.id) || context.stylesByKey.get(targetRef)
+			: null;
 		const entryId = await upsertRegistryEntry(registry.id, {
 			entrySlug: entry.id,
-			displayTitle: humanizeSlug(entry.id),
+			displayTitle: entry.title || humanizeSlug(entry.id),
 			description: entry.description || null,
 			fields: (entry.fields || []).map(String),
 			citationFormat: null,
 			targetKind: entry.builtin ? "builtin" : entry.path ? "path" : null,
-			targetRef: entry.builtin || entry.path || null,
-			targetStyleId: null,
+			targetRef,
+			targetStyleId: targetStyle?.id ?? null,
 			parentStyleSlug: entry.id,
 			status: "active",
 			sourceKind: "manual",
@@ -1304,7 +1180,15 @@ export async function importRegistryDocument({
 		});
 		await replaceEntryNames(
 			entryId,
-			(entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias }))
+			[
+				{ kind: "title" as const, value: entry.title || humanizeSlug(entry.id) },
+				{ kind: "legacy_slug" as const, value: entry.id },
+				...(entry.title_short
+					? [{ kind: "title_short" as const, value: entry.title_short }]
+					: []),
+				...((entry.issns || []).map((issn) => ({ kind: "issn" as const, value: issn }))),
+				...((entry.aliases || []).map((alias) => ({ kind: "tool_alias" as const, value: alias }))),
+			]
 		);
 		entriesUpserted += 1;
 	}
@@ -1330,4 +1214,13 @@ export async function getRegistryRuns() {
         ORDER BY rsr.started_at DESC
         LIMIT 30
     `) as Array<Record<string, unknown>>;
+}
+
+export async function bootstrapHubApiData() {
+	if (!bootstrapPromise) {
+		bootstrapPromise = syncRegistryData().finally(() => {
+			bootstrapPromise = null;
+		});
+	}
+	return bootstrapPromise;
 }

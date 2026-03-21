@@ -5,12 +5,6 @@ const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3002";
 
 export const GET: RequestHandler = async ({ fetch, request, url }) => {
 	try {
-		// In demo mode, return empty bookmarks array
-		const demoMode = process.env.PUBLIC_DEMO_MODE === "true";
-		if (demoMode) {
-			return json([]);
-		}
-
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
 		};
