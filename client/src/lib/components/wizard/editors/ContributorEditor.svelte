@@ -1,7 +1,5 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
 	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import type { ContributorConfig } from "$lib/types/wizard";
 
 	let { editScope = "all" } = $props<{ editScope?: "all" | "local" }>();
 	let debounceTimer: number | undefined;
@@ -13,64 +11,34 @@
 		}, 300);
 	}
 
-	function getContributorConfig(): ContributorConfig {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return {};
-
-		if (editScope === "local") {
-			const bibliography = obj.bibliography as any;
-			const override = bibliography?.["type-templates"]?.[wizardStore.activeRefType]?.contributors;
-			if (override && typeof override === "object") {
-				return override;
-			}
-		}
-
-		const opts = wizardStore.getOptions();
-		if (opts?.contributors && typeof opts.contributors === "object") {
-			return opts.contributors;
-		}
-		return {};
+	function getSelectedPath(ensureLocal = false): string | null {
+		const selected = wizardStore.selectedComponent;
+		if (!selected) return null;
+		return wizardStore.getScopedTemplatePath(selected.templatePath, editScope, { ensureLocal });
 	}
 
-	function updateContributor(path: keyof ContributorConfig, value: unknown) {
-		const current = getContributorConfig();
-		const updated = { ...current } as Record<string, unknown>;
-		if (value === undefined) {
-			delete updated[path];
-		} else {
-			updated[path] = value;
-		}
+	function getContributorConfig(): Record<string, unknown> {
+		const path = getSelectedPath();
+		if (!path) return {};
+		return wizardStore.getTemplateNode(path) ?? {};
+	}
 
-		if (editScope === "all") {
-			wizardStore.updateStyleField("options.contributors", updated);
-		} else {
-			const typePath = `bibliography.type-templates.${wizardStore.activeRefType}.contributors`;
-			wizardStore.updateStyleField(typePath, updated);
-		}
+	function updateContributor(path: string, value: unknown) {
+		const selectedPath = getSelectedPath(editScope === "local");
+		if (!selectedPath) return;
+		wizardStore.updateStyleField(`${selectedPath}.${path}`, value);
 		debouncedFetchPreview();
 	}
 
 	function updateShorten(minValue: number) {
 		if (minValue < 1 || minValue > 20) return;
-		const current = getContributorConfig();
-		const useFirst = current.shorten?.["use-first"] ?? 1;
-		const updated = {
-			...current,
-			shorten: { min: minValue, "use-first": useFirst },
-		};
-
-		if (editScope === "all") {
-			wizardStore.updateStyleField("options.contributors", updated);
-		} else {
-			const typePath = `bibliography.type-templates.${wizardStore.activeRefType}.contributors`;
-			wizardStore.updateStyleField(typePath, updated);
-		}
+		updateContributor("shorten", { min: minValue, "use-first": 1 });
 		debouncedFetchPreview();
 	}
 
 	const config = $derived(getContributorConfig());
-	const nameOrder = $derived(config["display-as-sort"] === "all" ? "family-first" : "given-first");
-	const andConnector = $derived(config.and === "text" ? "text" : "symbol");
+	const nameOrder = $derived((config["name-order"] as string) ?? "family-first");
+	const andConnector = $derived((config.and as string) ?? "symbol");
 	const initials = $derived(
 		config["initialize-with"] === ". "
 			? "abbreviated"
@@ -78,25 +46,31 @@
 				? "compact"
 				: "full"
 	);
-	const etAlAfter = $derived(config.shorten?.min ?? 3);
+	const etAlAfter = $derived(
+		((config.shorten as { min?: number } | undefined)?.min ?? 3) as number
+	);
 </script>
 
-<div class="space-y-4 p-6 pt-4">
-	<h3 class="font-semibold text-text-main mb-4">Name Formatting</h3>
+<div class="space-y-6">
+	<div class="mb-4">
+		<h3 class="font-semibold text-text-main flex items-center gap-2 text-lg">
+			<span class="material-symbols-outlined text-primary">person_edit</span>
+			Name Formatting
+		</h3>
+		<p class="text-sm text-text-secondary mt-1">
+			Configure how contributor names appear in your citations.
+		</p>
+	</div>
 
-	<div class="space-y-4">
+	<div class="space-y-5 rounded-lg border border-border-light bg-surface-light p-6 shadow-sm">
 		<div>
-			<label for="ce-name-order" class="block text-sm font-medium text-text-main mb-2"
-				>Name Order</label
+			<label for="ce-name-order" class="block text-sm font-semibold text-text-main mb-2"
+				>Name Display Order</label
 			>
 			<select
 				id="ce-name-order"
 				value={nameOrder}
-				onchange={(e) =>
-					updateContributor(
-						"display-as-sort",
-						e.currentTarget.value === "family-first" ? "all" : undefined
-					)}
+				onchange={(e) => updateContributor("name-order", e.currentTarget.value)}
 				class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 			>
 				<option value="family-first">Family-first (Smith, John)</option>
@@ -105,23 +79,23 @@
 		</div>
 
 		<div>
-			<label for="ce-and-connector" class="block text-sm font-medium text-text-main mb-2"
-				>And Connector</label
+			<label for="ce-and-connector" class="block text-sm font-semibold text-text-main mb-2"
+				>Last Author Connector</label
 			>
 			<select
 				id="ce-and-connector"
 				value={andConnector}
-				onchange={(e) =>
-					updateContributor("and", e.currentTarget.value === "text" ? "text" : "symbol")}
+				onchange={(e) => updateContributor("and", e.currentTarget.value)}
 				class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 			>
 				<option value="symbol">Symbol (&)</option>
 				<option value="text">Word (and)</option>
+				<option value="none">None</option>
 			</select>
 		</div>
 
 		<div>
-			<label for="ce-initials" class="block text-sm font-medium text-text-main mb-2">Initials</label
+			<label for="ce-initials" class="block text-sm font-semibold text-text-main mb-2">Initials Format</label
 			>
 			<select
 				id="ce-initials"
@@ -129,7 +103,7 @@
 				onchange={(e) => {
 					const val = e.currentTarget.value;
 					const initVal = val === "abbreviated" ? ". " : val === "compact" ? "" : undefined;
-					if (initVal !== undefined) updateContributor("initialize-with", initVal);
+					updateContributor("initialize-with", initVal);
 				}}
 				class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 			>
@@ -139,9 +113,9 @@
 			</select>
 		</div>
 
-		<div>
-			<label for="ce-etal-range" class="block text-sm font-medium text-text-main mb-2">
-				Et al. after <span class="text-primary font-semibold">{etAlAfter}</span> authors
+		<div class="pt-2 border-t border-border-light">
+			<label for="ce-etal-range" class="block text-sm font-semibold text-text-main mb-3">
+				Truncate to "et al." when authors exceed <span class="text-primary text-xl ml-1">{etAlAfter}</span>
 			</label>
 			<input
 				id="ce-etal-range"

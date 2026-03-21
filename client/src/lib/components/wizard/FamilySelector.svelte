@@ -100,4 +100,23 @@
 			</button>
 		{/each}
 	</div>
+
+	<!-- Secondary Action -->
+	<div class="mt-12 text-center">
+		<button
+			onclick={async () => {
+				wizardStore.setPhase("visual-customizer");
+				// Generate based on current choice or default
+				await wizardStore.generateFromIntent({
+					class: wizardStore.field ? (FIELD_DEFAULTS[wizardStore.field] === 'author-date' ? 'author_date' : 'numeric') : 'author_date',
+					from_preset: wizardStore.presetId || "apa",
+				});
+				goto("/create/customize");
+			}}
+			class="text-sm font-medium text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
+		>
+			<span class="material-symbols-outlined text-lg">settings_suggest</span>
+			I want to customize this further
+		</button>
+	</div>
 </div>

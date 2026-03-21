@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 
 	let { editScope = "all" } = $props<{ editScope?: "all" | "local" }>();
@@ -12,83 +11,32 @@
 		}, 300);
 	}
 
-	const componentType = $derived(wizardStore.selectedComponent?.componentType ?? "number");
+	function getSelectedPath(ensureLocal = false): string | null {
+		const selected = wizardStore.selectedComponent;
+		if (!selected) return null;
+		return wizardStore.getScopedTemplatePath(selected.templatePath, editScope, { ensureLocal });
+	}
 
 	function getNumberConfig(): Record<string, unknown> {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return {};
-
-		const type = wizardStore.activeRefType;
-		const field = componentType;
-
-		if (editScope === "local") {
-			const bibliography = obj.bibliography as any;
-			const template = bibliography?.["type-templates"]?.[type]?.template;
-			if (Array.isArray(template)) {
-				const component = template.find(
-					(c: any) => c.number === field || (c.variable === field && c.component === "number")
-				);
-				if (component) return component;
-			}
-		}
-
-		const bibliography = (obj as any).bibliography;
-		const template = bibliography?.template;
-		if (Array.isArray(template)) {
-			const component = template.find(
-				(c: any) => c.number === field || (c.variable === field && c.component === "number")
-			);
-			if (component) return component;
-		}
-
-		return {};
+		const path = getSelectedPath();
+		if (!path) return {};
+		return wizardStore.getTemplateNode(path) ?? {};
 	}
 
 	function updateNumberProperty(path: string, value: unknown) {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return;
-
-		const field = componentType;
-
-		if (editScope === "all") {
-			const bibliography = obj.bibliography as any;
-			const template = bibliography?.template;
-			if (Array.isArray(template)) {
-				const index = template.findIndex((c: any) => c.number === field);
-				if (index !== -1) {
-					wizardStore.updateStyleField(`bibliography.template.${index}.${path}`, value);
-				}
-			}
-		} else {
-			const type = wizardStore.activeRefType;
-			const bibliography = obj.bibliography as any;
-			let typeTemplates = bibliography?.["type-templates"] || {};
-			let typeTemplate = typeTemplates[type];
-
-			if (!typeTemplate) {
-				typeTemplate = { template: JSON.parse(JSON.stringify(bibliography.template)) };
-				wizardStore.updateStyleField(`bibliography.type-templates.${type}`, typeTemplate);
-			}
-
-			const template = typeTemplate.template;
-			if (Array.isArray(template)) {
-				const index = template.findIndex((c: any) => c.number === field);
-				if (index !== -1) {
-					wizardStore.updateStyleField(
-						`bibliography.type-templates.${type}.template.${index}.${path}`,
-						value
-					);
-				}
-			}
-		}
+		const selectedPath = getSelectedPath(editScope === "local");
+		if (!selectedPath) return;
+		wizardStore.updateStyleField(`${selectedPath}.${path}`, value);
 		debouncedFetchPreview();
 	}
 
+	const componentType = $derived(wizardStore.selectedComponent?.componentType ?? "number");
 	const config = $derived(getNumberConfig());
 	const prefix = $derived((config.prefix as string) ?? "");
 	const suffix = $derived((config.suffix as string) ?? "");
 	const isEmph = $derived((config.emph as boolean) ?? false);
 	const isStrong = $derived((config.strong as boolean) ?? false);
+	const wrap = $derived((config.wrap as string) ?? "none");
 </script>
 
 <div class="space-y-4 p-6 pt-4">
@@ -119,6 +67,20 @@
 				class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 			/>
 		</div>
+	</div>
+
+	<div>
+		<label for="ne-wrap" class="block text-sm font-medium text-text-main mb-2">Wrap</label>
+		<select
+			id="ne-wrap"
+			value={wrap}
+			onchange={(e) => updateNumberProperty("wrap", e.currentTarget.value)}
+			class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+		>
+			<option value="none">None</option>
+			<option value="parentheses">Parentheses</option>
+			<option value="brackets">Brackets</option>
+		</select>
 	</div>
 
 	<div>

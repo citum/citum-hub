@@ -1,9 +1,14 @@
 <script lang="ts">
 	import "../index.css";
+	import { page } from "$app/stores";
 	import favicon from "$lib/assets/favicon.svg";
 	import { auth } from "$lib/stores/auth";
 
 	let { children } = $props();
+	const isCustomizerRoute = $derived(
+		$page.url.pathname.startsWith("/create/customize") ||
+			$page.url.pathname.startsWith("/create/refine")
+	);
 
 	function handleLogin() {
 		window.location.href = "/api/auth/github";
@@ -31,54 +36,59 @@
 
 <div class="min-h-screen flex flex-col bg-background-light">
 	<!-- Shared Header -->
-	<header
-		class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-10"
-	>
-		<a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
-			<div class="size-8 text-primary flex items-center justify-center">
-				<span class="material-symbols-outlined text-3xl">school</span>
-			</div>
-			<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-slate-900">Citum Hub</h2>
-		</a>
-		<div class="hidden md:flex flex-1 justify-end gap-8">
-			<nav class="flex items-center gap-9">
-				<a
-					class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-					href="/library/browse">Browse</a
-				>
-				<a
-					class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-					href="/create">Style Builder</a
-				>
-				{#if $auth.user}
+	{#if !isCustomizerRoute}
+		<header
+			class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-10"
+		>
+			<a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+				<div class="size-8 text-primary flex items-center justify-center">
+					<span class="material-symbols-outlined text-3xl">school</span>
+				</div>
+				<h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-slate-900">
+					Citum Hub
+				</h2>
+			</a>
+			<div class="hidden md:flex flex-1 justify-end gap-8">
+				<nav class="flex items-center gap-9">
 					<a
 						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-						href="/library">My Library</a
+						href="/library/browse">Browse</a
 					>
-				{/if}
-				<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/"
-					>Docs</a
-				>
-			</nav>
-			<div class="flex gap-2">
-				{#if $auth.user}
-					<button
-						onclick={handleLogout}
-						class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm font-bold transition-colors"
+					<a
+						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+						href="/create">Style Builder</a
 					>
-						Sign Out
-					</button>
-				{:else}
-					<button
-						onclick={handleLogin}
-						class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white hover:bg-primary-dark text-sm font-bold transition-colors"
+					{#if $auth.user}
+						<a
+							class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+							href="/library">My Library</a
+						>
+					{/if}
+					<a
+						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+						href="/">Docs</a
 					>
-						Sign In
-					</button>
-				{/if}
+				</nav>
+				<div class="flex gap-2">
+					{#if $auth.user}
+						<button
+							onclick={handleLogout}
+							class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm font-bold transition-colors"
+						>
+							Sign Out
+						</button>
+					{:else}
+						<button
+							onclick={handleLogin}
+							class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white hover:bg-primary-dark text-sm font-bold transition-colors"
+						>
+							Sign In
+						</button>
+					{/if}
+				</div>
 			</div>
-		</div>
-	</header>
+		</header>
+	{/if}
 
 	<!-- Page Content -->
 	<div class="flex-grow">
@@ -86,38 +96,40 @@
 	</div>
 
 	<!-- Shared Footer -->
-	<footer class="border-t border-slate-100 bg-white px-10 py-16">
-		<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between gap-12">
-			<div class="flex flex-col gap-4 max-w-sm">
-				<div class="flex items-center gap-3">
-					<div class="size-6 text-primary flex items-center justify-center">
-						<span class="material-symbols-outlined text-2xl">school</span>
+	{#if !isCustomizerRoute}
+		<footer class="border-t border-slate-100 bg-white px-10 py-16">
+			<div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between gap-12">
+				<div class="flex flex-col gap-4 max-w-sm">
+					<div class="flex items-center gap-3">
+						<div class="size-6 text-primary flex items-center justify-center">
+							<span class="material-symbols-outlined text-2xl">school</span>
+						</div>
+						<span class="text-lg font-bold text-slate-900">Citum Hub</span>
 					</div>
-					<span class="text-lg font-bold text-slate-900">Citum Hub</span>
+					<p class="text-sm text-slate-500 leading-relaxed">
+						An open-source initiative to modernize academic referencing. Maintained by the Citation
+						Style Language community.
+					</p>
 				</div>
-				<p class="text-sm text-slate-500 leading-relaxed">
-					An open-source initiative to modernize academic referencing. Maintained by the Citation
-					Style Language community.
+				<div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
+					<div class="flex flex-col gap-4">
+						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4>
+						<a class="text-sm text-slate-500 hover:text-primary" href="/library/browse">Browse</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="/create">Style Builder</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="/">API</a>
+					</div>
+					<div class="flex flex-col gap-4">
+						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Help</h4>
+						<a class="text-sm text-slate-500 hover:text-primary" href="/">Docs</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="/">Forum</a>
+					</div>
+				</div>
+			</div>
+			<div class="mt-16 pt-8 border-t border-slate-100 text-center">
+				<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+					© 2024 Citum Hub. All rights reserved.
 				</p>
 			</div>
-			<div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
-				<div class="flex flex-col gap-4">
-					<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4>
-					<a class="text-sm text-slate-500 hover:text-primary" href="/library/browse">Browse</a>
-					<a class="text-sm text-slate-500 hover:text-primary" href="/create">Style Builder</a>
-					<a class="text-sm text-slate-500 hover:text-primary" href="/">API</a>
-				</div>
-				<div class="flex flex-col gap-4">
-					<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Help</h4>
-					<a class="text-sm text-slate-500 hover:text-primary" href="/">Docs</a>
-					<a class="text-sm text-slate-500 hover:text-primary" href="/">Forum</a>
-				</div>
-			</div>
-		</div>
-		<div class="mt-16 pt-8 border-t border-slate-100 text-center">
-			<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-				© 2024 Citum Hub. All rights reserved.
-			</p>
-		</div>
-	</footer>
+		</footer>
+	{/if}
 </div>

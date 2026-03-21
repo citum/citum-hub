@@ -2,5 +2,6 @@
 	"extends": "./.svelte-kit/tsconfig.json",
 	"compilerOptions": {
 		"moduleResolution": "bundler"
-	}
+	},
+	"exclude": ["src/lib/utils/**/*.test.ts"]
 }

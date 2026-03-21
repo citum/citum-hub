@@ -2,6 +2,7 @@
 	import type { WizardStyleOptions, ContributorConfig, LocatorConfig } from "$lib/types/wizard";
 
 	interface Props {
+		activeTab?: string;
 		currentOptions: WizardStyleOptions | null;
 		onUpdateContributors: (path: string, value: unknown) => void;
 		onUpdateDates: (form: string) => void;
@@ -12,6 +13,7 @@
 	}
 
 	const {
+		activeTab,
 		currentOptions,
 		onUpdateContributors,
 		onUpdateDates,
@@ -120,6 +122,7 @@
 </script>
 
 <div class="space-y-4">
+	{#if !activeTab || activeTab === "punctuation"}
 	<!-- Citations Section -->
 	<div class="overflow-hidden rounded-lg border border-border-light bg-surface-light">
 		<button
@@ -160,6 +163,8 @@
 		{/if}
 	</div>
 
+	{/if}
+	{#if !activeTab || activeTab === "authors"}
 	<!-- Names Section -->
 	<div class="overflow-hidden rounded-lg border border-border-light bg-surface-light">
 		<button
@@ -244,6 +249,8 @@
 		{/if}
 	</div>
 
+	{/if}
+	{#if !activeTab || activeTab === "dates"}
 	<!-- Dates Section -->
 	<div class="overflow-hidden rounded-lg border border-border-light bg-surface-light">
 		<button
@@ -312,6 +319,8 @@
 		{/if}
 	</div>
 
+	{/if}
+	{#if !activeTab || activeTab === "titles"}
 	<!-- Titles Section -->
 	<div class="overflow-hidden rounded-lg border border-border-light bg-surface-light">
 		<button
@@ -347,4 +356,5 @@
 			</div>
 		{/if}
 	</div>
+	{/if}
 </div>

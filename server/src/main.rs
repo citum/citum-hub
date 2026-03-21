@@ -267,6 +267,7 @@ enum PreviewRequestPayload {
         mode: Option<String>,
         test_locator: Option<String>,
         inject_ast_indices: Option<bool>,
+        reference_type: Option<String>,
     },
     Intent(StyleIntent),
 }
@@ -381,7 +382,8 @@ async fn github_callback(
 // --- Preview and Decision Handlers ---
 
 async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl IntoResponse {
-    let (style, class, field, request_mode, test_locator, inject_ast_indices) = match payload {
+    let (style, class, field, request_mode, test_locator, inject_ast_indices, reference_type) =
+        match payload {
         PreviewRequestPayload::Style(style) => {
             use citum_schema::options::Processing;
             let class = match style.options.as_ref().and_then(|o| o.processing.as_ref()) {
@@ -395,6 +397,7 @@ async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl
                 None,
                 Some("123-125".to_string()),
                 false,
+                None,
             )
         }
         PreviewRequestPayload::Intent(intent) => {
@@ -414,6 +417,7 @@ async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl
                 None,
                 Some("123-125".to_string()),
                 false,
+                None,
             )
         }
         PreviewRequestPayload::Citum {
@@ -421,6 +425,7 @@ async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl
             mode,
             test_locator,
             inject_ast_indices,
+            reference_type,
         } => {
             let style =
                 serde_yaml_ng::from_str::<Style>(&citum).unwrap_or_else(|_| Style::default());
@@ -436,6 +441,7 @@ async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl
                 mode,
                 Some(locator),
                 inject_ast_indices.unwrap_or(false),
+                reference_type,
             )
         }
     };
@@ -446,6 +452,7 @@ async fn preview_set_handler(Json(payload): Json<PreviewRequestPayload>) -> impl
         field.as_deref(),
         test_locator.as_deref(),
         inject_ast_indices,
+        reference_type.as_deref(),
     );
     // If a specific mode was requested, override the set behavior
     if let Some(m) = request_mode {
@@ -481,11 +488,15 @@ fn generate_preview_set_internal(
     field: Option<&str>,
     test_locator: Option<&str>,
     inject_ast_indices: bool,
+    reference_type: Option<&str>,
 ) -> PreviewSet {
     let mut set = PreviewSet::default();
 
-    // Get field-specific references from Rust-constructed data
-    let references = preview_data::refs_for_field(field);
+    let references = if reference_type.is_some() {
+        preview_data::refs_for_reference_type(reference_type)
+    } else {
+        preview_data::refs_for_field(field)
+    };
 
     if references.is_empty() {
         eprintln!("WARNING: No references available for preview generation");
@@ -678,7 +689,7 @@ async fn decide_handler(Json(intent): Json<StyleIntent>) -> Json<DecisionPackage
 
     let style = intent.to_style();
     let field = intent.field.as_deref();
-    let preview = generate_preview_set_internal(&style, class, field, Some("123-125"), false);
+    let preview = generate_preview_set_internal(&style, class, field, Some("123-125"), false, None);
     package.in_text_parenthetical = preview.in_text_parenthetical.clone();
     package.in_text_narrative = preview.in_text_narrative;
     package.note = preview.note;
@@ -708,6 +719,7 @@ async fn decide_handler(Json(intent): Json<StyleIntent>) -> Json<DecisionPackage
                     temp_field,
                     Some("123-125"),
                     false,
+                    None,
                 );
                 let mut html = String::new();
                 if let Some(it) = p.in_text_parenthetical {
@@ -1005,7 +1017,7 @@ mod tests {
         }))
         .expect("style should deserialize");
 
-        let preview = generate_preview_set_internal(&style, "in_text", None, None, false);
+        let preview = generate_preview_set_internal(&style, "in_text", None, None, false, None);
 
         let parenthetical = preview
             .in_text_parenthetical
@@ -1103,7 +1115,7 @@ mod tests {
         let style =
             serde_yaml_ng::from_str::<Style>(&raw).expect("local chicago style should parse");
 
-        let preview = generate_preview_set_internal(&style, "in_text", None, None, false);
+        let preview = generate_preview_set_internal(&style, "in_text", None, None, false, None);
         let bibliography = preview
             .bibliography
             .expect("expected bibliography preview for chicago author-date");
@@ -1115,6 +1127,94 @@ mod tests {
         assert!(
             !bibliography.contains(". ."),
             "bibliography should not contain repeated sentence separators: {bibliography}"
+        );
+    }
+
+    #[test]
+    fn reference_type_preview_renders_requested_fixture_shape() {
+        let style: Style = serde_json::from_value(json!({
+            "info": {
+                "title": "Reference Type Fixture Test"
+            },
+            "options": {
+                "processing": "author-date"
+            },
+            "bibliography": {
+                "use-preset": "apa"
+            }
+        }))
+        .expect("style should deserialize");
+
+        let article_preview = generate_preview_set_internal(
+            &style,
+            "in_text",
+            None,
+            None,
+            false,
+            Some("article-journal"),
+        );
+        let book_preview =
+            generate_preview_set_internal(&style, "in_text", None, None, false, Some("book"));
+
+        let article_bibliography = article_preview
+            .bibliography
+            .expect("article preview should render bibliography");
+        let book_bibliography = book_preview
+            .bibliography
+            .expect("book preview should render bibliography");
+
+        assert!(
+            article_bibliography.contains("Journal of Citation Design"),
+            "article preview should render the journal fixture: {article_bibliography}"
+        );
+        assert!(
+            book_bibliography.contains("Citum Press"),
+            "book preview should render the book fixture: {book_bibliography}"
+        );
+        assert_ne!(
+            article_bibliography, book_bibliography,
+            "reference type previews should not collapse to the same bibliography output"
+        );
+    }
+
+    #[test]
+    fn annotated_reference_type_preview_preserves_template_indices() {
+        let style: Style = serde_json::from_value(json!({
+            "info": {
+                "title": "Annotated Fixture Test"
+            },
+            "options": {
+                "processing": "author-date"
+            },
+            "bibliography": {
+                "template": [
+                    { "contributor": "author", "form": "long" },
+                    { "variable": "doi", "prefix": " " },
+                    { "title": "primary", "prefix": ". " }
+                ]
+            }
+        }))
+        .expect("style should deserialize");
+
+        let preview = generate_preview_set_internal(
+            &style,
+            "in_text",
+            None,
+            None,
+            true,
+            Some("article-journal"),
+        );
+        let bibliography = preview
+            .bibliography
+            .expect("annotated preview should render bibliography");
+
+        assert!(
+            bibliography.contains(r#"class="csln-author" data-index="0""#),
+            "annotated bibliography should include the first component index: {bibliography}"
+        );
+        assert!(
+            bibliography.contains(r#"class="csln-title" data-index="2""#),
+            "annotated bibliography should preserve sparse template indices: {bibliography}"
         );
     }
 }

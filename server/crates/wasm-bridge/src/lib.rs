@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
-use citum_schema::{Style, TemplatePreset, citation::{CitationMode, CitationLocator, LocatorSegment, LocatorType, LocatorValue}, CitationSpec};
-use citum_engine::{processor::Processor, Reference, Citation, CitationItem, render::html::Html as HtmlRenderer};
+use citum_schema::{Style, TemplatePreset, CitationSpec};
+use citum_engine::{processor::Processor, Reference, Citation, render::html::Html as HtmlRenderer};
 use intent_engine::StyleIntent;
 use indexmap::IndexMap;
 use serde_json::Value;
@@ -35,10 +35,16 @@ fn ensure_style_has_templates(style: &mut Style) {
         }
     }
 
-    // Also ensure bibliography if it's supposed to have one
-    if style.bibliography.is_none() {
-         style.bibliography = Some(citum_schema::BibliographySpec {
-            use_preset: Some(TemplatePreset::Apa),
+    // Materialize bibliography template if using a preset
+    if let Some(ref mut bib) = style.bibliography {
+        let template = bib.resolve_template().unwrap_or_default();
+        if !template.is_empty() && bib.template.as_ref().is_none_or(|t| t.is_empty()) {
+            bib.template = Some(template);
+            bib.use_preset = None;
+        }
+    } else {
+        style.bibliography = Some(citum_schema::BibliographySpec {
+            template: Some(citum_schema::TemplatePreset::Apa.bibliography_template()),
             ..Default::default()
         });
     }
@@ -53,14 +59,14 @@ fn parse_references(refs_json: &str) -> Result<IndexMap<String, Reference>, Stri
     for (key, val) in raw_refs {
         // Try parsing as the new InputReference first
         if let Ok(new_ref) = serde_json::from_value::<citum_schema::reference::InputReference>(val.clone()) {
-            mapped_refs.insert(key, new_ref.into());
+            mapped_refs.insert(key, new_ref);
             continue;
         }
 
         // Fallback: try parsing as legacy CSL-JSON
         if let Ok(legacy_ref) = serde_json::from_value::<csl_legacy::csl_json::Reference>(val) {
             let new_ref: citum_schema::reference::InputReference = legacy_ref.into();
-            mapped_refs.insert(key, new_ref.into());
+            mapped_refs.insert(key, new_ref);
             continue;
         }
 
@@ -134,7 +140,19 @@ pub fn generate_style(intent_json: &str) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
         .map_err(|e| JsValue::from_str(&format!("Intent parse error: {}", e)))?;
     
-    let style = intent.to_style();
+    let mut style = intent.to_style();
+    ensure_style_has_templates(&mut style);
+    
+    serde_yaml_ng::to_string(&style)
+        .map_err(|e| JsValue::from_str(&format!("YAML Serialization error: {}", e)))
+}
+
+#[wasm_bindgen]
+pub fn materialize_style(style_yaml: &str) -> Result<String, JsValue> {
+    let mut style: Style = serde_yaml_ng::from_str(style_yaml)
+        .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
+    
+    ensure_style_has_templates(&mut style);
     
     serde_yaml_ng::to_string(&style)
         .map_err(|e| JsValue::from_str(&format!("YAML Serialization error: {}", e)))
@@ -200,11 +218,11 @@ mod tests {
         let narrative_cite_json = serde_json::to_string(&narrative_cite).unwrap();
 
         println!("Rendering Parenthetical...");
-        let paren_res = render_citation(&yaml, refs_json, &paren_cite_json).unwrap();
+        let paren_res = render_citation(&yaml, refs_json, &paren_cite_json, None).unwrap();
         println!("Parenthetical: {}", paren_res);
 
         println!("Rendering Narrative...");
-        let narrative_res = render_citation(&yaml, refs_json, &narrative_cite_json).unwrap();
+        let narrative_res = render_citation(&yaml, refs_json, &narrative_cite_json, None).unwrap();
         println!("Narrative: {}", narrative_res);
 
         assert_ne!(paren_res, narrative_res, "Parenthetical and Narrative renderings should be different!");

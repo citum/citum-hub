@@ -1,5 +1,4 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 
 	let { editScope = "all" } = $props<{ editScope?: "all" | "local" }>();
@@ -12,74 +11,26 @@
 		}, 300);
 	}
 
-	const componentType = $derived(wizardStore.selectedComponent?.componentType ?? "variable");
+	function getSelectedPath(ensureLocal = false): string | null {
+		const selected = wizardStore.selectedComponent;
+		if (!selected) return null;
+		return wizardStore.getScopedTemplatePath(selected.templatePath, editScope, { ensureLocal });
+	}
 
 	function getVariableConfig(): Record<string, unknown> {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return {};
-
-		const type = wizardStore.activeRefType;
-		const field = componentType;
-
-		if (editScope === "local") {
-			const bibliography = obj.bibliography as any;
-			const template = bibliography?.["type-templates"]?.[type]?.template;
-			if (Array.isArray(template)) {
-				const component = template.find((c: any) => c.variable === field);
-				if (component) return component;
-			}
-		}
-
-		const bibliography = (obj as any).bibliography;
-		const template = bibliography?.template;
-		if (Array.isArray(template)) {
-			const component = template.find((c: any) => c.variable === field);
-			if (component) return component;
-		}
-
-		return {};
+		const path = getSelectedPath();
+		if (!path) return {};
+		return wizardStore.getTemplateNode(path) ?? {};
 	}
 
 	function updateVariableProperty(path: string, value: unknown) {
-		const obj = wizardStore.parseStyle();
-		if (!obj) return;
-
-		const field = componentType;
-
-		if (editScope === "all") {
-			const bibliography = obj.bibliography as any;
-			const template = bibliography?.template;
-			if (Array.isArray(template)) {
-				const index = template.findIndex((c: any) => c.variable === field);
-				if (index !== -1) {
-					wizardStore.updateStyleField(`bibliography.template.${index}.${path}`, value);
-				}
-			}
-		} else {
-			const type = wizardStore.activeRefType;
-			const bibliography = obj.bibliography as any;
-			let typeTemplates = bibliography?.["type-templates"] || {};
-			let typeTemplate = typeTemplates[type];
-
-			if (!typeTemplate) {
-				typeTemplate = { template: JSON.parse(JSON.stringify(bibliography.template)) };
-				wizardStore.updateStyleField(`bibliography.type-templates.${type}`, typeTemplate);
-			}
-
-			const template = typeTemplate.template;
-			if (Array.isArray(template)) {
-				const index = template.findIndex((c: any) => c.variable === field);
-				if (index !== -1) {
-					wizardStore.updateStyleField(
-						`bibliography.type-templates.${type}.template.${index}.${path}`,
-						value
-					);
-				}
-			}
-		}
+		const selectedPath = getSelectedPath(editScope === "local");
+		if (!selectedPath) return;
+		wizardStore.updateStyleField(`${selectedPath}.${path}`, value);
 		debouncedFetchPreview();
 	}
 
+	const componentType = $derived(wizardStore.selectedComponent?.componentType ?? "variable");
 	const config = $derived(getVariableConfig());
 	const prefix = $derived((config.prefix as string) ?? "");
 	const suffix = $derived((config.suffix as string) ?? "");

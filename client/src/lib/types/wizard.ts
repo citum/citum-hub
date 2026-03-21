@@ -106,6 +106,7 @@ export interface WizardStyleOptions {
 	dates?: string | DateConfig;
 	titles?: string | TitleConfig;
 	locators?: string | LocatorConfig;
+	punctuation?: Record<string, unknown>;
 	"page-range-format"?: string;
 }
 
@@ -169,9 +170,14 @@ export interface PresetInfo {
 }
 
 export interface TemplateComponent {
-	variable?: string;
+	contributor?: string;
+	date?: string;
+	title?: string;
 	number?: string;
-	component?: string;
+	variable?: string;
+	term?: string;
+	items?: TemplateComponent[];
+	delimiter?: string;
 	prefix?: string;
 	suffix?: string;
 	emph?: boolean;
@@ -186,6 +192,7 @@ export type BibliographyTemplate = TemplateComponent[];
 export interface ComponentSelection {
 	componentType: string;
 	cssClass: string;
-	element: HTMLElement;
-	index: number | null;
+	astIndex: number | null;
+	templatePath: string;
+	scope: "all" | "local";
 }

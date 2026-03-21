@@ -10,7 +10,7 @@ import {
 	render_citation,
 	render_intent_citation,
 	decide as wasm_decide,
-} from "../../../server/crates/wasm-bridge/pkg/wasm_bridge.js";
+} from "./wasm-bridge/wasm_bridge.js";
 
 const app = new Hono().basePath("/api");
 
