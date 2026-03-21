@@ -91,9 +91,28 @@
 		class="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none font-headline"
 	>
 		<div class="flex items-center gap-8">
-			<span class="text-xl font-bold tracking-tighter text-primary dark:text-blue-500"
-				>Citum Style Wizard</span
-			>
+			<div class="flex items-center gap-6">
+				<a
+					href="/"
+					class="text-xl font-bold tracking-tighter text-primary dark:text-blue-500 hover:opacity-80 transition-opacity"
+				>
+					Citum Style Wizard
+				</a>
+				<nav class="hidden lg:flex items-center gap-4">
+					<a
+						href="/"
+						class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors duration-200"
+					>
+						Home
+					</a>
+					<a
+						href="/library/browse"
+						class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors duration-200"
+					>
+						Browse
+					</a>
+				</nav>
+			</div>
 			<nav class="hidden md:flex items-center gap-6">
 				<button
 					onclick={goBack}

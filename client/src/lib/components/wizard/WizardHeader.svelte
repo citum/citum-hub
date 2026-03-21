@@ -43,8 +43,24 @@
 					></path>
 				</svg>
 			</div>
-			<h1 class="text-lg font-bold tracking-tight">Citum Style Wizard</h1>
+			<a href="/" class="text-lg font-bold tracking-tight hover:opacity-80 transition-opacity">
+				Citum Style Wizard
+			</a>
 		</div>
+		<nav class="hidden md:flex items-center gap-4 ml-4">
+			<a
+				href="/"
+				class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+			>
+				Home
+			</a>
+			<a
+				href="/library/browse"
+				class="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+			>
+				Browse
+			</a>
+		</nav>
 	</div>
 
 	<div class="flex items-center gap-4">

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import fs from "node:fs";
 import path from "node:path";
 // @ts-expect-error - Bun is the runtime
 import { file, sql } from "bun";
@@ -12,6 +13,7 @@ import {
 	decide as wasm_decide,
 } from "../../../server/crates/wasm-bridge/pkg/wasm_bridge.js";
 import {
+	bootstrapHubApiData,
 	exportRegistryDocument,
 	getHubAliases,
 	getHubStyleDetail,
@@ -24,16 +26,28 @@ import { normalizeStyleYamlForPreview } from "../lib/utils/preview-style";
 
 const app = new Hono().basePath("/api");
 
-// Dynamically determine the core path if not set
 const PROJECT_ROOT = path.resolve(process.cwd(), "..");
-const CITUM_CORE_PATH =
-	process.env.CITUM_CORE_PATH || path.resolve(PROJECT_ROOT, "..", "citum-core");
+const configuredResourceRoot = process.env.CITUM_CORE_PATH;
+const RESOURCE_ROOT =
+	configuredResourceRoot && fs.existsSync(path.join(configuredResourceRoot, "fixtures"))
+		? configuredResourceRoot
+		: configuredResourceRoot && fs.existsSync(path.join(configuredResourceRoot, "resources", "fixtures"))
+			? path.join(configuredResourceRoot, "resources")
+			: path.join(PROJECT_ROOT, "resources");
 
-console.log("[Setup] CITUM_CORE_PATH:", CITUM_CORE_PATH);
+console.log("[Setup] RESOURCE_ROOT:", RESOURCE_ROOT);
 
 const JWT_SECRET = new TextEncoder().encode(
 	process.env.JWT_SECRET || "default_secret_for_development"
 );
+
+void bootstrapHubApiData()
+	.then((summary) => {
+		console.log("[Setup] Hub API bootstrap complete:", summary);
+	})
+	.catch((error) => {
+		console.error("[Setup] Hub API bootstrap failed:", error);
+	});
 
 /**
  * --- Fixture Loading Logic ---
@@ -50,7 +64,7 @@ async function getFixtureData(type: string = "expanded") {
 	};
 
 	const fileName = fixtureMap[type] || fixtureMap["expanded"];
-	const filePath = path.join(CITUM_CORE_PATH, "tests/fixtures", fileName);
+	const filePath = path.join(RESOURCE_ROOT, "fixtures", fileName);
 
 	try {
 		const raw = await file(filePath).json();
@@ -157,7 +171,7 @@ app.get("/hub", async (c) => {
 	try {
 		const page = Number.parseInt(c.req.query("page") || "1", 10) || 1;
 		const pageSize = Number.parseInt(c.req.query("page_size") || "24", 10) || 24;
-		const fields = c.req.queries("field").filter(Boolean);
+		const fields = new URL(c.req.url).searchParams.getAll("field").filter(Boolean);
 		const styles = await queryHubStyles({
 			q: c.req.query("q") || c.req.query("search") || undefined,
 			fields: fields.length > 0 ? fields : undefined,
@@ -687,6 +701,7 @@ app.get("/auth/github/callback", async (c) => {
 
 // --- Websocket Integration ---
 const server = {
+	hostname: "0.0.0.0",
 	port: 3002,
 	fetch(req: Request, server: any) {
 		const url = new URL(req.url);
