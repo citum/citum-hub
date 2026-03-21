@@ -1,6 +1,6 @@
 import { writable } from "svelte/store";
 import { browser } from "$app/environment";
-import { PUBLIC_DEMO_MODE } from "$env/static/public";
+import { env } from "$env/dynamic/public";
 
 export interface User {
 	id: string;
@@ -15,7 +15,7 @@ function createAuthStore() {
 		user: null as User | null,
 	};
 
-	if (PUBLIC_DEMO_MODE === "true") {
+	if (env.PUBLIC_DEMO_MODE === "true") {
 		initialState = {
 			token: "demo-token",
 			user: {

@@ -3,7 +3,7 @@
 	import { auth } from "$lib/stores/auth";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import PreviewPane from "./PreviewPane.svelte";
-	import { PUBLIC_DEMO_MODE } from "$env/static/public";
+	import { env } from "$env/dynamic/public";
 
 	let styleName = $state(wizardStore.styleName || suggestStyleName());
 	let isSaving = $state(false);
@@ -64,7 +64,7 @@
 		}
 
 		// In demo mode, show the sign-in modal
-		if (PUBLIC_DEMO_MODE === "true") {
+		if (env.PUBLIC_DEMO_MODE === "true") {
 			showDemoSignInModal = true;
 			return;
 		}
