@@ -17,13 +17,15 @@
 		};
 	};
 
+	type TabId = "overview" | "style" | "aliases" | "history" | "permissions";
+
 	let detail: HubStyleDetail | null = $state(null);
 	let legacyStyle: LegacyStyle | null = $state(null);
 	let loading = $state(true);
 	let previewLoading = $state(false);
 	let error = $state<string | null>(null);
 	let showSource = $state(false);
-	let activeTab = $state<"overview" | "parent" | "aliases" | "history" | "permissions">("overview");
+	let activeTab = $state<TabId>("overview");
 
 	let previewSet = $state({
 		in_text_parenthetical: null,
@@ -34,7 +36,7 @@
 
 	const tabs = [
 		{ id: "overview", label: "Overview", icon: "info" },
-		{ id: "parent", label: "Parent Style", icon: "account_tree" },
+		{ id: "style", label: "Style", icon: "account_tree" },
 		{ id: "aliases", label: "Aliases", icon: "list_alt" },
 		{ id: "history", label: "History", icon: "history" },
 		{ id: "permissions", label: "Permissions", icon: "shield" },
@@ -56,7 +58,21 @@
 		detail?.style.original_authors || legacyStyle?.source?.original_authors || []
 	);
 
-	onMount(async () => {
+	const HASH_TO_TAB: Record<string, TabId> = {
+		"#overview": "overview",
+		"#style": "style",
+		"#definition": "style",
+		"#aliases": "aliases",
+		"#history": "history",
+		"#permissions": "permissions",
+	};
+
+	function syncTabFromHash() {
+		if (typeof window === "undefined") return;
+		activeTab = HASH_TO_TAB[window.location.hash] || "overview";
+	}
+
+	async function loadStyle() {
 		try {
 			const hubRes = await fetch(`/api/hub/${page.params.id}`, {
 				headers: $auth.token ? { Authorization: `Bearer ${$auth.token}` } : {},
@@ -82,6 +98,18 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	onMount(() => {
+		syncTabFromHash();
+		void loadStyle();
+
+		const handleHashChange = () => syncTabFromHash();
+		window.addEventListener("hashchange", handleHashChange);
+
+		return () => {
+			window.removeEventListener("hashchange", handleHashChange);
+		};
 	});
 
 	async function generatePreviews(citum: string | null) {
@@ -135,8 +163,11 @@
 		goto("/library");
 	}
 
-	function openTab(tabId: typeof activeTab) {
+	function openTab(tabId: TabId) {
 		activeTab = tabId;
+		if (typeof window !== "undefined") {
+			window.history.pushState({}, "", `${window.location.pathname}#${tabId}`);
+		}
 	}
 
 	function aliasIdentifier(alias: HubAliasRecord) {
@@ -285,7 +316,7 @@
 							<ComprehensivePreview
 								{previewSet}
 								title="Reference Preview"
-								subtitle="See how the parent style renders before you inspect its alias mappings."
+								subtitle="See how this style renders before you inspect the aliases people use to find it."
 							/>
 						</section>
 
@@ -300,10 +331,9 @@
 										</p>
 										<h2 class="mt-3 text-2xl font-black text-slate-950">Style Registry</h2>
 										<p class="mt-4 text-sm leading-7 text-slate-600">
-											This parent style anchors a family of dependent journal aliases. Child aliases
-											inherit the parent formatting target, while locale-specific variants are
-											intentionally excluded from the registry because Citum now models those
-											through presets and locale overrides instead.
+											This style is the canonical formatting entry. Aliases are alternate names and
+											search handles that point back to the same behavior, while locale variants are
+											excluded because Citum handles locale separately.
 										</p>
 									</div>
 
@@ -329,15 +359,13 @@
 								</div>
 							{/if}
 
-							{#if activeTab === "parent"}
+							{#if activeTab === "style"}
 								<div class="space-y-6">
 									<div>
 										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
-											Parent Style
+											Style
 										</p>
-										<h2 class="mt-3 text-2xl font-black text-slate-950">
-											Canonical metadata and inheritance model
-										</h2>
+										<h2 class="mt-3 text-2xl font-black text-slate-950">Canonical style details</h2>
 									</div>
 									<div class="grid gap-4 md:grid-cols-2">
 										<div class="rounded-[1.6rem] border border-slate-200 bg-slate-50 p-5">
@@ -359,12 +387,11 @@
 									</div>
 									<div class="rounded-[1.6rem] border border-slate-200 bg-white p-5">
 										<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
-											Style Mapping Rules
+											Alias Discovery
 										</p>
 										<p class="mt-3 text-sm leading-7 text-slate-600">
-											Aliases map back to this parent through explicit registry targets.
-											Journal-specific names stay in the registry layer, while true behavior changes
-											belong in standalone styles or future preset-backed variants.
+											Use aliases to find this style by journal names, short titles, and related
+											publication labels without changing the underlying formatting behavior.
 										</p>
 									</div>
 								</div>
@@ -378,13 +405,13 @@
 												Aliases
 											</p>
 											<h2 class="mt-3 text-2xl font-black text-slate-950">
-												Journals and publications using this parent style
+												Journals and publications mapped to this style
 											</h2>
 										</div>
 										<span
 											class="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold text-slate-500"
 										>
-											{aliasRows.length} shown
+											{aliasRows.length} of {detail?.aliases.total || aliasRows.length} shown
 										</span>
 									</div>
 
@@ -554,17 +581,17 @@
 						</section>
 
 						<section
-							class="overflow-hidden rounded-[2.4rem] border border-slate-200 bg-slate-950 p-6 text-white shadow-[0_20px_60px_rgba(15,23,42,0.12)]"
+							class="rounded-[2.4rem] border border-slate-200 bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.06)]"
 						>
 							<div class="flex items-center justify-between gap-4">
 								<div>
-									<p class="text-xs font-black uppercase tracking-[0.18em] text-blue-200">
-										Citum Source
+									<p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+										Advanced
 									</p>
-									<h2 class="mt-2 text-xl font-black">Registry-backed YAML</h2>
+									<h2 class="mt-2 text-xl font-black text-slate-950">Style source</h2>
 								</div>
 								<button
-									class="rounded-[1rem] bg-white/10 px-4 py-2 text-sm font-bold transition hover:bg-white/15"
+									class="rounded-[1rem] border border-slate-200 bg-slate-50 px-4 py-2 text-sm font-bold text-slate-700 transition hover:border-slate-300 hover:bg-white"
 									onclick={() => (showSource = !showSource)}
 								>
 									{showSource ? "Hide YAML" : "View YAML"}
@@ -573,11 +600,11 @@
 
 							{#if showSource}
 								<pre
-									class="mt-5 max-h-[600px] overflow-auto rounded-[1.4rem] bg-black/30 p-5 text-xs leading-6 text-slate-300">{styleYaml ||
+									class="mt-5 max-h-[600px] overflow-auto rounded-[1.4rem] bg-slate-950 p-5 text-xs leading-6 text-slate-200">{styleYaml ||
 										"No YAML available."}</pre>
 							{:else}
-								<p class="mt-5 text-sm leading-7 text-slate-300">
-									Inspect the full style definition that powers previews and registry exports.
+								<p class="mt-5 text-sm leading-7 text-slate-600">
+									View the raw style definition used for preview and export.
 								</p>
 							{/if}
 						</section>

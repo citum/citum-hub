@@ -41,7 +41,7 @@
 						The definitive source for citation integrity.
 					</h1>
 					<p class="max-w-2xl text-lg leading-8 text-slate-600 lg:text-xl">
-						Search a community-scale registry of parent styles, journal aliases, and discipline
+						Search a community-scale registry of citation styles, journal aliases, and discipline
 						patterns. Find the closest match fast, tweak it when you need to, and export Citum YAML
 						for the tools you already use.
 					</p>
@@ -92,8 +92,8 @@
 						</div>
 						<h2 class="text-lg font-bold text-slate-900">Find</h2>
 						<p class="mt-2 text-sm leading-6 text-slate-600">
-							Search parent styles, journal aliases, and disciplines with fast matching across
-							names, short titles, and registry metadata.
+							Search styles, journal aliases, and disciplines with fast matching across names, short
+							titles, and registry metadata.
 						</p>
 					</div>
 					<div class="rounded-[1.8rem] border border-white/70 bg-white/70 p-5 shadow-sm">
@@ -102,8 +102,8 @@
 						</div>
 						<h2 class="text-lg font-bold text-slate-900">Customize</h2>
 						<p class="mt-2 text-sm leading-6 text-slate-600">
-							Open a canonical style, inspect its alias family, then jump into the builder when you
-							need a project-specific variant.
+							Open a canonical style, inspect its aliases, then jump into the builder when you need
+							a project-specific variant.
 						</p>
 					</div>
 					<div class="rounded-[1.8rem] border border-white/70 bg-white/70 p-5 shadow-sm">
@@ -184,9 +184,9 @@
 					Start from the field your work already lives in.
 				</h2>
 				<p class="mt-4 max-w-xl text-sm leading-7 text-slate-600">
-					The registry keeps parent styles and journal aliases connected, so you can move from a
-					broad discipline search into a concrete publication format without guessing which family
-					to trust.
+					The registry keeps styles and journal aliases connected, so you can move from a broad
+					discipline search into a concrete publication format without guessing which result to
+					trust.
 				</p>
 			</div>
 
@@ -231,8 +231,8 @@
 					Create a custom style from scratch with the wizard.
 				</h2>
 				<p class="mt-4 text-sm leading-7 text-slate-300">
-					Use the visual builder when the registry gets you close but not all the way. Start from a
-					parent family, adjust the behavior, and export only the changes you need.
+					Use the visual builder when the registry gets you close but not all the way. Start from an
+					existing style, adjust the behavior, and export only the changes you need.
 				</p>
 			</div>
 			<div class="flex flex-col gap-3 sm:flex-row">
