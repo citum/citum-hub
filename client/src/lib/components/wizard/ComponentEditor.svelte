@@ -13,75 +13,6 @@
 		getValueAtPath,
 	} from "$lib/utils/wizard-template";
 
-	const FIELD_OPTIONS = [
-		{ value: "doi", label: "DOI" },
-		{ value: "isbn", label: "ISBN" },
-		{ value: "issn", label: "ISSN" },
-		{ value: "url", label: "URL" },
-		{ value: "pmid", label: "PMID" },
-		{ value: "pmcid", label: "PMCID" },
-		{ value: "abstract", label: "Abstract" },
-		{ value: "note", label: "Note" },
-		{ value: "annote", label: "Annote" },
-		{ value: "keyword", label: "Keyword" },
-		{ value: "genre", label: "Genre" },
-		{ value: "medium", label: "Medium" },
-		{ value: "source", label: "Source" },
-		{ value: "status", label: "Status" },
-		{ value: "archive", label: "Archive" },
-		{ value: "archive-location", label: "Archive Location" },
-		{ value: "publisher", label: "Publisher" },
-		{ value: "publisher-place", label: "Publisher Place" },
-		{ value: "event-place", label: "Event Place" },
-		{ value: "dimensions", label: "Dimensions" },
-		{ value: "scale", label: "Scale" },
-		{ value: "version", label: "Version" },
-		{ value: "locator", label: "Locator" },
-		{ value: "container-title-short", label: "Container Title Short" },
-		{ value: "authority", label: "Authority" },
-		{ value: "reporter", label: "Reporter" },
-		{ value: "page", label: "Page" },
-		{ value: "volume", label: "Volume" },
-		{ value: "number", label: "Number" },
-		{ value: "docket-number", label: "Docket Number" },
-		{ value: "patent-number", label: "Patent Number" },
-		{ value: "standard-number", label: "Standard Number" },
-		{ value: "report-number", label: "Report Number" },
-		{ value: "ads-bibcode", label: "ADS Bibcode" },
-	] as const;
-
-	const TERM_OPTIONS = [
-		{ value: "in", label: "In" },
-		{ value: "accessed", label: "Accessed" },
-		{ value: "retrieved", label: "Retrieved" },
-		{ value: "at", label: "At" },
-		{ value: "from", label: "From" },
-		{ value: "of", label: "Of" },
-		{ value: "to", label: "To" },
-		{ value: "by", label: "By" },
-		{ value: "no-date", label: "No Date" },
-		{ value: "anonymous", label: "Anonymous" },
-		{ value: "circa", label: "Circa" },
-		{ value: "available-at", label: "Available At" },
-		{ value: "ibid", label: "Ibid" },
-		{ value: "and", label: "And" },
-		{ value: "et-al", label: "Et Al" },
-		{ value: "and-others", label: "And Others" },
-		{ value: "forthcoming", label: "Forthcoming" },
-		{ value: "online", label: "Online" },
-		{ value: "here", label: "Here" },
-		{ value: "deposited", label: "Deposited" },
-		{ value: "review-of", label: "Review Of" },
-		{ value: "original-work-published", label: "Original Work Published" },
-		{ value: "patent", label: "Patent" },
-		{ value: "volume", label: "Volume" },
-		{ value: "issue", label: "Issue" },
-		{ value: "page", label: "Page" },
-		{ value: "chapter", label: "Chapter" },
-		{ value: "edition", label: "Edition" },
-		{ value: "section", label: "Section" },
-	] as const;
-
 	const contributorTypes = ["author", "editor", "translator"];
 	const titleTypes = ["title", "container-title"];
 	const dateTypes = ["issued", "accessed"];
@@ -95,12 +26,6 @@
 	let groupDelimiter = $state("comma");
 	let lastSelectionPath: string | null = null;
 	let structureRootRef: HTMLDivElement | undefined = $state();
-
-	$effect(() => {
-		if (insertKind === "field") insertValue = "doi";
-		else if (insertKind === "term") insertValue = "retrieved";
-		else insertValue = "";
-	});
 
 	$effect(() => {
 		const selectionPath = wizardStore.selectedComponent?.templatePath ?? null;
@@ -551,18 +476,13 @@
 						<option value="term">Localized term</option>
 						<option value="group">Group</option>
 					</select>
-					{#if insertKind === "group"}
-						<div class="min-w-[120px] flex-1"></div>
-					{:else}
-						<select
-							bind:value={insertValue}
-							class="min-w-[120px] flex-1 rounded border border-border-light bg-surface-light px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
-						>
-							{#each insertKind === "term" ? TERM_OPTIONS : FIELD_OPTIONS as opt}
-								<option value={opt.value}>{opt.label}</option>
-							{/each}
-						</select>
-					{/if}
+					<input
+						type="text"
+						bind:value={insertValue}
+						disabled={insertKind === "group"}
+						placeholder={insertKind === "term" ? "retrieved" : "doi"}
+						class="min-w-[120px] flex-1 rounded border border-border-light bg-surface-light px-3 py-2 text-sm text-text-main focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+					/>
 					<button
 						type="button"
 						onclick={insertComponent}
@@ -571,6 +491,10 @@
 						Append
 					</button>
 				</div>
+				<p class="mt-2 text-[10px] text-text-secondary">
+					Select a type and enter a variable name (like 'doi', 'url', or 'publisher') then click
+					Append.
+				</p>
 			</div>
 		</div>
 	{:else}
