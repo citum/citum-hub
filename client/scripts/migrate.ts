@@ -4,10 +4,16 @@ import { file, sql } from "bun";
 
 const MIGRATIONS_DIR = path.join(process.cwd(), "migrations");
 
+// Arbitrary stable lock ID — prevents concurrent migration runs across replicas.
+const MIGRATION_LOCK_ID = 987654321;
+
 async function migrate() {
 	console.log("🚀 Starting database migrations with Bun.sql...");
 
 	try {
+		// Acquire session-level advisory lock so only one replica runs migrations at a time.
+		await sql`SELECT pg_advisory_lock(${MIGRATION_LOCK_ID})`;
+
 		// 1. Ensure migrations tracking table exists
 		await sql`
             CREATE TABLE IF NOT EXISTS _migrations (
@@ -64,6 +70,8 @@ async function migrate() {
 	} catch (error) {
 		console.error("❌ Migration failed:", error);
 		process.exit(1);
+	} finally {
+		await sql`SELECT pg_advisory_unlock(${MIGRATION_LOCK_ID})`;
 	}
 }
 
