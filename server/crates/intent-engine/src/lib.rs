@@ -3,6 +3,15 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
+#![warn(missing_docs)]
+
+//! The `intent-engine` crate is responsible for capturing the user's intent when 
+//! creating a new citation style and converting that intent into a full `Style` definition.
+//!
+//! It provides types to represent different dimensions of citation styles, such as 
+//! formatting classes (author-date, numeric, note), contributor name formatting, 
+//! date formats, and bibliography layouts.
+
 use citum_schema::{
     Style, StyleInfo, TemplatePreset,
     options::{Config, Processing},
@@ -13,26 +22,39 @@ use serde::{Deserialize, Serialize};
 #[cfg(not(target_arch = "wasm32"))]
 use specta::Type;
 
+/// Defines the fundamental mechanism by which a citation is referenced in text.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 #[serde(rename_all = "snake_case")]
 pub enum CitationClass {
+    /// In-text references formatted with the author's name and publication date (e.g., "(Smith, 2024)").
     AuthorDate,
+    /// Citations placed in page footnotes.
     Footnote,
+    /// Citations placed at the end of the document.
     Endnote,
+    /// In-text references using numbers enclosed in brackets (e.g., "`[1]`").
     Numeric,
+    /// In-text references using a shorthand label.
     Label,
 }
 
+/// Represents the specific dimension of a style the user wishes to refine.
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 #[serde(rename_all = "snake_case")]
 pub enum CustomizeTarget {
+    /// Return to the main customization menu.
     Menu,
+    /// Customize how contributor names are formatted.
     Contributors,
+    /// Customize date formatting.
     Dates,
+    /// Customize title capitalization and styling.
     Titles,
+    /// Customize the layout and ordering of the bibliography.
     Bibliography,
+    /// Customize whether a bibliography is included at all (mostly relevant for note styles).
     BibliographyUsage,
 }
 
@@ -653,31 +675,48 @@ impl StyleIntent {
     }
 }
 
+/// A complete package returned by the intent engine representing the next decision 
+/// the user needs to make, along with the current state of previews.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 pub struct DecisionPackage {
+    /// List of fields that are still missing from the intent to form a complete style.
     pub missing_fields: Vec<String>,
+    /// The next question to ask the user. Will be `None` if the intent is complete.
     pub question: Option<Question>,
+    /// The available choices for the current question, typically rendered as interactive previews.
     pub previews: Vec<Preview>,
+    /// Rendered preview of a parenthetical in-text citation (if applicable).
     pub in_text_parenthetical: Option<String>,
+    /// Rendered preview of a narrative in-text citation (if applicable).
     pub in_text_narrative: Option<String>,
+    /// Rendered preview of a note citation (if applicable).
     pub note: Option<String>,
+    /// Rendered preview of the bibliography.
     pub bibliography: Option<String>,
 }
 
+/// Represents a question asked to the user during the style building process.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 pub struct Question {
+    /// A unique identifier for the question (e.g., "class", "field").
     pub id: String,
+    /// The main text of the question (e.g., "What is your academic field?").
     pub text: String,
+    /// Optional supplementary text providing more context or guidance.
     pub description: Option<String>,
 }
 
+/// Represents an available choice for a `Question`.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[cfg_attr(not(target_arch = "wasm32"), derive(Type))]
 pub struct Preview {
+    /// The human-readable label for this choice.
     pub label: String,
+    /// Rendered HTML demonstrating the effect of this choice.
     pub html: String,
+    /// The JSON value to patch into the `StyleIntent` if this choice is selected.
     pub choice_value: serde_json::Value,
 }
 

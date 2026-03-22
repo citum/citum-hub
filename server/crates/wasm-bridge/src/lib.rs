@@ -1,3 +1,9 @@
+#![warn(missing_docs)]
+
+//! The `wasm-bridge` crate exposes core `citum_engine` and `intent-engine` functionality
+//! to WebAssembly, allowing the frontend to render citations and bibliographies, 
+//! and process style intents entirely client-side.
+
 use citum_engine::{processor::Processor, render::html::Html as HtmlRenderer, Citation, Reference};
 use citum_schema::{CitationSpec, Style, TemplatePreset};
 use indexmap::IndexMap;
@@ -82,6 +88,7 @@ fn parse_references(refs_json: &str) -> Result<IndexMap<String, Reference>, Stri
     Ok(mapped_refs)
 }
 
+/// Extracts the `info` block from a YAML style string and returns it as a JSON string.
 #[wasm_bindgen]
 pub fn get_style_metadata(style_yaml: &str) -> Result<String, JsValue> {
     let style: Style = serde_yaml_ng::from_str(style_yaml)
@@ -91,6 +98,12 @@ pub fn get_style_metadata(style_yaml: &str) -> Result<String, JsValue> {
         .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
 }
 
+/// Renders a single citation to HTML.
+/// 
+/// * `style_yaml` - The citation style definition in YAML format.
+/// * `refs_json` - A JSON map of reference data.
+/// * `citation_json` - A JSON string representing the `Citation` object to render.
+/// * `mode` - Optional mode override (e.g. "Integral").
 #[wasm_bindgen]
 pub fn render_citation(
     style_yaml: &str,
@@ -124,6 +137,7 @@ pub fn render_citation(
         .map_err(|e| JsValue::from_str(&format!("Rendering error: {}", e)))
 }
 
+/// Renders a full bibliography to HTML based on the provided style and references.
 #[wasm_bindgen]
 pub fn render_bibliography(style_yaml: &str, refs_json: &str) -> Result<String, JsValue> {
     let mut style: Style = serde_yaml_ng::from_str(style_yaml)
@@ -139,6 +153,8 @@ pub fn render_bibliography(style_yaml: &str, refs_json: &str) -> Result<String, 
     Ok(processor.render_bibliography_with_format::<HtmlRenderer>())
 }
 
+/// Processes a user's style intent JSON and returns a JSON string representing 
+/// the next required decision or the completed style state.
 #[wasm_bindgen]
 pub fn decide(intent_json: &str) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
@@ -150,6 +166,7 @@ pub fn decide(intent_json: &str) -> Result<String, JsValue> {
         .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
 }
 
+/// Converts a style intent JSON into a complete YAML style definition string.
 #[wasm_bindgen]
 pub fn generate_style(intent_json: &str) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
@@ -162,6 +179,8 @@ pub fn generate_style(intent_json: &str) -> Result<String, JsValue> {
         .map_err(|e| JsValue::from_str(&format!("YAML Serialization error: {}", e)))
 }
 
+/// Ensures a given YAML style definition has all required templates materialized 
+/// (expanding presets if needed) and returns the updated YAML string.
 #[wasm_bindgen]
 pub fn materialize_style(style_yaml: &str) -> Result<String, JsValue> {
     let mut style: Style = serde_yaml_ng::from_str(style_yaml)
@@ -173,6 +192,8 @@ pub fn materialize_style(style_yaml: &str) -> Result<String, JsValue> {
         .map_err(|e| JsValue::from_str(&format!("YAML Serialization error: {}", e)))
 }
 
+/// Renders a single citation to HTML directly from a style intent, bypassing 
+/// the intermediate step of generating a YAML style.
 #[wasm_bindgen]
 pub fn render_intent_citation(
     intent_json: &str,

@@ -3,6 +3,13 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
+#![warn(missing_docs)]
+
+//! Citum Hub API standalone server.
+//!
+//! Provides API endpoints for rendering citations and bibliographies, 
+//! exposing the functionality of `citum_engine` over HTTP.
+
 use axum::{
     extract::State,
     routing::{get, post},
@@ -20,124 +27,38 @@ use citum_engine::render::html::Html;
 use serde::{Deserialize, Serialize};
 use intent_engine::{StyleIntent, DecisionPackage};
 
+/// Shared application state for the standalone API server.
 struct AppState {
+    /// In-memory cache of default references for preview generation.
     references: HashMap<String, Reference>,
 }
 
-
-
-#[tokio::main]
-async fn main() {
-    tracing_subscriber::fmt::init();
-
-    // Use internal macros to build robust preview data instead of dealing with YAML parsing.
-    let references: HashMap<String, Reference> = vec![
-        // Standard Monograph
-        citum_schema::ref_book!("kuhn1962", "Kuhn", "Thomas S.", 1962, "The Structure of Scientific Revolutions"),
-        // Standard Article
-        citum_schema::ref_article_authors!("watson1953", [("Watson", "J. D."), ("Crick", "F. H. C.")], 1953, "Molecular Structure of Nucleic Acids"),
-        // Collection component (approximated as book for preview here, or just book)
-        citum_schema::ref_book!("smith2010", "Smith", "Alice", 2010, "The Future of CSLN"),
-        // Disambiguation
-        citum_schema::ref_article!("doe2020a", "Doe", "John", 2020, "First Paper by Doe"),
-        citum_schema::ref_article!("doe2020b", "Doe", "John", 2020, "Second Paper by Doe"),
-        // Et al
-        citum_schema::ref_article_authors!("genetics1999", [("Adams", "A."), ("Baker", "B."), ("Clark", "C."), ("Davis", "D."), ("Evans", "E."), ("Foster", "F."), ("Green", "G.")], 1999, "A Very Long List of Authors in Genetics"),
-        // Missing fields (no author)
-        citum_schema::ref_book!("manuscript1800", "Archive", "Unknown", 1800, "Historical Document (Missing Author)"),
-    ].into_iter().map(|r| (r.id().unwrap().to_string(), citum_engine::Reference::try_from(r).unwrap())).collect();
-
-    let state = Arc::new(AppState {
-        references: references.clone()
-    });
-    
-    println!("Loaded {} references.", references.len());
-
-    let app = Router::new()
-        .route("/", get(health_check))
-        .route("/version", get(version))
-        .route("/api/references", get(get_references))
-        .route("/preview/citation", post(preview_citation))
-        .route("/preview/bibliography", post(preview_bibliography))
-        .route("/api/v1/decide", post(decide_handler))
-        .route("/api/v1/preview", post(preview_set_handler))
-        .route("/api/v1/generate", post(generate_handler))
-        .with_state(state)
-        .layer(tower_http::cors::CorsLayer::permissive());
-
-    let addr = SocketAddr::from(([0, 0, 0, 0], 3000));
-    println!("Citum Hub API listening on {}", addr);
-    
-    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
-}
-
-async fn health_check() -> &'static str {
-    "OK"
-}
-
-async fn version() -> Json<Value> {
-    Json(json!({
-        "service": "citum-hub-api",
-        "citum_schema_version": "0.6.0"
-    }))
-}
-
-async fn get_references(State(state): State<Arc<AppState>>) -> Json<HashMap<String, Reference>> {
-    Json(state.references.clone())
-}
-
+/// Request payload for generating a citation or bibliography preview.
 #[derive(Deserialize)]
 struct PreviewRequest {
+    /// The style definition to render with.
     style: Style,
+    /// The references to cite.
     references: Vec<Reference>,
 }
 
+/// The response payload containing the rendered preview.
 #[derive(Serialize)]
 struct PreviewResponse {
+    /// The rendered HTML string.
     result: String,
 }
 
-async fn preview_citation(Json(payload): Json<PreviewRequest>) -> Json<PreviewResponse> {
-    let bib: Bibliography = payload.references
-        .into_iter()
-        .map(|r| (r.id().clone().unwrap_or_default(), r))
-        .collect();
-
-    let cite_ids: Vec<String> = bib.keys().cloned().collect();
-    let processor = Processor::new(payload.style, bib);
-
-    let citation = Citation {
-        id: Some("preview-1".to_string()),
-        items: cite_ids.into_iter().map(|id| CitationItem { id, ..Default::default() }).collect(),
-        ..Default::default()
-    };
-
-    let result = match processor.process_citation_with_format::<Html>(&citation) {
-        Ok(res) => res,
-        Err(e) => format!("Error: {}", e),
-    };
-
-    Json(PreviewResponse { result })
-}
-
-async fn preview_bibliography(Json(payload): Json<PreviewRequest>) -> Json<PreviewResponse> {
-    let bib: Bibliography = payload.references
-        .into_iter()
-        .map(|r| (r.id().clone().unwrap_or_default(), r))
-        .collect();
-
-    let processor = Processor::new(payload.style, bib);
-    let result = processor.render_bibliography_with_format::<Html>();
-
-    Json(PreviewResponse { result })
-}
-
+/// A comprehensive set of previews for different citation modes.
 #[derive(Default, Serialize, Deserialize)]
 struct PreviewSet {
+    /// Rendered parenthetical in-text citation preview.
     in_text_parenthetical: Option<String>,
+    /// Rendered narrative in-text citation preview.
     in_text_narrative: Option<String>,
+    /// Rendered footnote or endnote citation preview.
     note: Option<String>,
+    /// Rendered bibliography preview.
     bibliography: Option<String>,
 }
 
