@@ -78,25 +78,61 @@ async function getFixtureData(type: string = "expanded") {
 					.map(([, val]) => val);
 
 		let multiAuthorItem = null;
+		let editorItem = null;
+		let translatorItem = null;
 		const otherItems: unknown[] = [];
 
 		entries.forEach((ref: any) => {
 			if (ref && typeof ref === "object" && "id" in ref) {
 				refs[String(ref.id)] = ref;
 
+				// Priority 1: 4+ authors (to test et al.)
 				if (!multiAuthorItem && ref.author && Array.isArray(ref.author) && ref.author.length >= 4) {
 					multiAuthorItem = ref;
-				} else if (otherItems.length < 5) {
+				}
+				// Priority 2: Editor roles (prefer monographs without authors to ensure role is in primary position)
+				else if (
+					!editorItem &&
+					ref.editor &&
+					Array.isArray(ref.editor) &&
+					ref.editor.length > 0 &&
+					(!ref.author || ref.author.length === 0)
+				) {
+					editorItem = ref;
+				}
+				// Priority 3: Translator roles (prefer works without authors)
+				else if (
+					!translatorItem &&
+					ref.translator &&
+					Array.isArray(ref.translator) &&
+					ref.translator.length > 0 &&
+					(!ref.author || ref.author.length === 0)
+				) {
+					translatorItem = ref;
+				}
+				// Standard items
+				else if (otherItems.length < 10) {
 					otherItems.push(ref);
 				}
 			}
 		});
 
+		// Fallback for editorItem if no edited monograph found
+		if (!editorItem) {
+			editorItem = entries.find(
+				(r: any) => r.editor && Array.isArray(r.editor) && r.editor.length > 0
+			);
+		}
+
 		if (!multiAuthorItem && otherItems.length > 0) {
 			multiAuthorItem = otherItems.pop();
 		}
 
-		const selectedItems = [multiAuthorItem, ...otherItems].filter(Boolean).slice(0, 4);
+		// Ensure we always have 4 items if possible
+		const selectedItems = [multiAuthorItem, editorItem, translatorItem, ...otherItems]
+			.filter(Boolean)
+			.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index) // Unique
+			.slice(0, 4);
 
 		const cite1Items = [];
 		const cite2Items = [];
@@ -112,7 +148,7 @@ async function getFixtureData(type: string = "expanded") {
 		const integralCitation = { items: cite2Items, mode: "integral" };
 
 		return {
-			references: refs,
+			references: refs, // Full bibliography restored
 			citation: nonIntegralCitation, // fallback for decide route
 			citations: {
 				nonIntegral: nonIntegralCitation,
@@ -582,6 +618,7 @@ app.post("/v1/preview", async (c) => {
 				typeof previewStyleYaml === "string" &&
 				previewStyleYaml.trim().length > 0
 			) {
+				console.log("[Preview] Rendering with explicit style YAML");
 				const renderedNonIntegral = render_citation(
 					previewStyleYaml,
 					refsStr,
@@ -600,7 +637,9 @@ app.post("/v1/preview", async (c) => {
 
 				bib = render_bibliography(previewStyleYaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
-				const intentStr = JSON.stringify(body.intent || body);
+				const intent = body.intent || body;
+				console.log("[Preview] Rendering with intent:", JSON.stringify(intent));
+				const intentStr = JSON.stringify(intent);
 				const renderedNonIntegral = render_intent_citation(
 					intentStr,
 					refsStr,
@@ -621,10 +660,8 @@ app.post("/v1/preview", async (c) => {
 				bib = render_bibliography(generated_style, refsStr);
 			}
 		} catch (renderError) {
-			console.error("[Preview] WASM render error:", renderError);
-			const errHtml = `<span style="color:red">Preview rendering error: ${renderError}</span>`;
-			htmlParenthetical = errHtml;
-			htmlNarrative = errHtml;
+			console.error("[Preview] WASM render error details:", renderError);
+			return c.json({ error: "Rendering failed", details: String(renderError) }, 500);
 		}
 
 		return c.json({

@@ -204,5 +204,25 @@
     "issued": { "date-parts": [[2023]] },
     "publisher": "Intergovernmental Panel on Climate Change",
     "publisher-place": "Geneva"
+  },
+  {
+    "id": "kafka1915",
+    "class": "monograph",
+    "type": "book",
+    "title": "Metamorphosis",
+    "issued": { "date-parts": [[1915]] },
+    "publisher": "Kurt Wolff Verlag",
+    "publisher-place": "Leipzig",
+    "translator": [{ "family": "Wyllie", "given": "David" }],
+    "language": "en"
+  },
+  {
+    "id": "ancient-tale",
+    "class": "monograph",
+    "type": "book",
+    "title": "The Ancient Tale",
+    "editor": [{ "family": "Grimm", "given": "Jacob" }],
+    "issued": { "date-parts": [[1850]] },
+    "translator": [{ "family": "Wyllie", "given": "David" }]
   }
 ]

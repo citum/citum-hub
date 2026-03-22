@@ -327,6 +327,7 @@ async function generateFromIntent(intentFields: Record<string, string | boolean 
 			from_preset: intentFields["from_preset"] ?? null,
 			customize_target: null,
 			contributor_preset: intentFields["contributor_preset"] ?? null,
+			role_preset: intentFields["role_preset"] ?? null,
 			date_preset: intentFields["date_preset"] ?? null,
 			title_preset: intentFields["title_preset"] ?? null,
 			sort_preset: null,

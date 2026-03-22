@@ -159,12 +159,14 @@ export interface AxisChoices {
 	hasBibliography?: boolean;
 }
 
+import type { StyleIntent } from "./bindings";
+
 export interface PresetInfo {
 	id: string;
 	name: string;
 	family: StyleFamily;
 	/** Intent fields to set when this preset is selected. */
-	intentFields: Record<string, string | boolean | null>;
+	intentFields: Partial<StyleIntent>;
 	/** Short description of visual traits. */
 	traits: string;
 }

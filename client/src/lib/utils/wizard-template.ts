@@ -24,7 +24,21 @@ export function getLocalTemplatePath(refType: string): string {
 }
 
 export const APA_BASELINE = [
-	{ contributor: "author", form: "long", suffix: ".", "name-order": "family-first" },
+	{
+		contributor: "author",
+		form: "long",
+		suffix: ".",
+		"name-order": "family-first",
+		substitute: {
+			template: ["editor", "title", "translator"],
+		},
+	},
+	{
+		contributor: "translator",
+		form: "long",
+		prefix: " (",
+		suffix: ")",
+	},
 	{ date: "issued", form: "year", wrap: "parentheses", prefix: " " },
 	{ title: "primary", emph: true, prefix: " " },
 	{

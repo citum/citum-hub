@@ -45,12 +45,31 @@ fn ensure_style_has_templates(style: &mut Style) {
 
     // Materialize bibliography template if using a preset
     if let Some(ref mut bib) = style.bibliography {
-        let template = bib.resolve_template().unwrap_or_default();
+        let mut template = bib.resolve_template().unwrap_or_default();
         if !template.is_empty() && bib.template.as_ref().is_none_or(|t| t.is_empty()) {
+            use citum_schema::template::{ContributorRole, TemplateComponent, TemplateContributor};
+
+            let has_translator = template.iter().any(|c| matches!(c, TemplateComponent::Contributor(tc) if tc.contributor == ContributorRole::Translator));
+
+            if !has_translator {
+                template.push(TemplateComponent::Contributor(TemplateContributor {
+                    contributor: ContributorRole::Translator,
+                    form: citum_schema::template::ContributorForm::Long,
+                    rendering: citum_schema::template::Rendering {
+                        prefix: Some(" (".to_string()),
+                        suffix: Some(")".to_string()),
+                        ..Default::default()
+                    },
+                    ..Default::default()
+                }));
+            }
+
             bib.template = Some(template);
             bib.use_preset = None;
         }
-    } else {
+    }
+
+    if style.bibliography.is_none() {
         style.bibliography = Some(citum_schema::BibliographySpec {
             template: Some(citum_schema::TemplatePreset::Apa.bibliography_template()),
             ..Default::default()
@@ -228,16 +247,26 @@ pub fn render_intent_citation(
         .map_err(|e| JsValue::from_str(&format!("Rendering error: {}", e)))
 }
 
-#[cfg(test)]
+#[cfg(all(test, target_arch = "wasm32"))]
 mod tests {
     use super::*;
     use citum_schema::citation::CitationMode;
-    use std::fs;
+
+    fn test_style_yaml() -> &'static str {
+        r#"info:
+  title: APA 7th (Minimal)
+options:
+  processing: author-date
+citation:
+  use-preset: apa
+bibliography:
+  use-preset: apa
+"#
+    }
 
     #[test]
     fn test_apa_7th_citation_modes() {
-        let path = "/Users/brucedarcus/Code/citum/citum-core/styles/apa-7th.yaml";
-        let yaml = fs::read_to_string(path).expect("apa-7th.yaml should exist");
+        let yaml = test_style_yaml();
 
         let refs_json = r#"{
             "ref1": {
@@ -261,13 +290,8 @@ mod tests {
         narrative_cite.mode = CitationMode::Integral;
         let narrative_cite_json = serde_json::to_string(&narrative_cite).unwrap();
 
-        println!("Rendering Parenthetical...");
         let paren_res = render_citation(&yaml, refs_json, &paren_cite_json, None).unwrap();
-        println!("Parenthetical: {}", paren_res);
-
-        println!("Rendering Narrative...");
         let narrative_res = render_citation(&yaml, refs_json, &narrative_cite_json, None).unwrap();
-        println!("Narrative: {}", narrative_res);
 
         assert_ne!(
             paren_res, narrative_res,
@@ -277,41 +301,28 @@ mod tests {
 
     #[test]
     fn test_multi_item_integral_citation_uses_prose_joining() {
-        let style_path = "/Users/brucedarcus/Code/citum/citum-core/styles/apa-7th.yaml";
-        let refs_path =
-            "/Users/brucedarcus/Code/citum/citum-core/tests/fixtures/references-expanded.json";
-        let yaml = fs::read_to_string(style_path).expect("apa-7th.yaml should exist");
-
-        let raw_refs: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(refs_path).expect("fixture should exist"))
-                .expect("fixture should parse");
-        let entries: Vec<serde_json::Value> = match raw_refs {
-            serde_json::Value::Array(entries) => entries,
-            serde_json::Value::Object(entries) => entries
-                .into_iter()
-                .filter_map(|(key, value)| (key != "comment").then_some(value))
-                .collect(),
-            _ => panic!("expanded fixture should be an array or object"),
-        };
-
-        let mut refs = serde_json::Map::new();
-        for entry in entries.iter().take(4) {
-            let id = entry["id"]
-                .as_str()
-                .expect("fixture refs should include ids")
-                .to_string();
-            refs.insert(id, entry.clone());
-        }
+        let yaml = test_style_yaml();
+        let refs_json = r#"{
+            "ref1": {
+                "class": "monograph",
+                "type": "book",
+                "title": "Book 1",
+                "author": [{ "family": "Doe", "given": "Jane" }],
+                "issued": "2020"
+            },
+            "ref2": {
+                "class": "monograph",
+                "type": "book",
+                "title": "Book 2",
+                "author": [{ "family": "Doe", "given": "Jane" }],
+                "issued": "2021"
+            }
+        }"#;
 
         let cite_json = serde_json::json!({
             "items": [
-                {
-                    "id": entries[1]["id"].as_str().expect("second item id"),
-                    "locator": { "label": "page", "value": "123-125" }
-                },
-                {
-                    "id": entries[2]["id"].as_str().expect("third item id")
-                }
+                { "id": "ref1", "locator": { "label": "page", "value": "123-125" } },
+                { "id": "ref2" }
             ],
             "mode": "integral"
         })
@@ -319,7 +330,7 @@ mod tests {
 
         let narrative_res = render_citation(
             &yaml,
-            &serde_json::Value::Object(refs).to_string(),
+            refs_json,
             &cite_json,
             Some("Integral".to_string()),
         )

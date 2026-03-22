@@ -12,15 +12,13 @@ SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 
 use axum::{
     extract::State,
-    routing::{get, post},
+    routing::post,
     Router,
     Json,
 };
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::collections::HashMap;
-use serde_json::{Value, json};
-use citum_schema::Style;
 use citum_schema::citation::{CitationLocator, LocatorSegment, LocatorType, LocatorValue};
 use citum_engine::{Processor, Reference, Bibliography, Citation, CitationItem};
 use citum_engine::render::html::Html;
@@ -33,20 +31,24 @@ struct AppState {
     references: HashMap<String, Reference>,
 }
 
-/// Request payload for generating a citation or bibliography preview.
-#[derive(Deserialize)]
-struct PreviewRequest {
-    /// The style definition to render with.
-    style: Style,
-    /// The references to cite.
-    references: Vec<Reference>,
-}
+#[tokio::main]
+async fn main() {
+    tracing_subscriber::fmt::init();
 
-/// The response payload containing the rendered preview.
-#[derive(Serialize)]
-struct PreviewResponse {
-    /// The rendered HTML string.
-    result: String,
+    let state = Arc::new(AppState {
+        references: HashMap::new(), // In a real app, populate this from a file or DB
+    });
+
+    let app = Router::new()
+        .route("/api/v1/preview", post(preview_set_handler))
+        .route("/api/v1/decide", post(decide_handler))
+        .route("/api/v1/generate", post(generate_handler))
+        .with_state(state);
+
+    let addr = SocketAddr::from(([0, 0, 0, 0], 3001));
+    println!("Citum Hub Standalone API listening on {}", addr);
+    let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
+    axum::serve(listener, app).await.unwrap();
 }
 
 /// A comprehensive set of previews for different citation modes.
