@@ -3,6 +3,13 @@ SPDX-License-Identifier: AGPL-3.0-or-later
 SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 */
 
+#![warn(missing_docs)]
+
+//! The `citum-hub` server provides the backend API for the Citum Hub application.
+//!
+//! It handles user authentication via GitHub OAuth, style database operations, 
+//! and real-time citation rendering via the `citum_engine` and `intent_engine`.
+
 use auth::User;
 use axum::{
     extract::{Path, Query, State},
@@ -34,24 +41,37 @@ use uuid::Uuid;
 mod auth;
 mod preview_data;
 
+/// Shared application state for the Axum server.
 struct AppState {
     db: Pool<Postgres>,
     oauth_client: oauth2::basic::BasicClient,
 }
 
+/// Represents a row from the `styles` database table, joined with metadata.
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct StyleRow {
+    /// The unique UUID of the style.
     pub id: Uuid,
+    /// The UUID of the user who owns this style.
     pub user_id: Uuid,
+    /// The title of the style.
     pub title: String,
+    /// The filename if it syncs to a local public style, else None.
     pub filename: Option<String>,
+    /// The JSON representation of the style intent.
     pub intent: Value,
+    /// The raw YAML definition of the style.
     pub citum: String,
+    /// Whether this style is public and visible to everyone.
     pub is_public: bool,
+    /// The timestamp when this style was created.
     pub created_at: DateTime<Utc>,
+    /// The timestamp when this style was last updated.
     pub updated_at: DateTime<Utc>,
+    /// The description parsed from the style's info block (not stored in DB).
     #[sqlx(skip)]
     pub description: Option<String>,
+    /// The required fields parsed from the style's info block (not stored in DB).
     #[sqlx(skip)]
     pub fields: Vec<CitationField>,
 }
@@ -250,18 +270,26 @@ async fn sync_local_public_style_rows(db: &Pool<Postgres>) -> Option<Vec<StyleRo
     Some(rows)
 }
 
+/// A collection of rendered previews for different citation modes.
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct PreviewSet {
+    /// Rendered parenthetical in-text citation preview.
     pub in_text_parenthetical: Option<String>,
+    /// Rendered narrative in-text citation preview.
     pub in_text_narrative: Option<String>,
+    /// Rendered footnote or endnote citation preview.
     pub note: Option<String>,
+    /// Rendered bibliography preview.
     pub bibliography: Option<String>,
 }
 
+/// Request payload for generating a set of previews.
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum PreviewRequestPayload {
+    /// A raw style definition object.
     Style(Box<Style>),
+    /// A raw Citum YAML string and associated override parameters.
     Citum {
         citum: String,
         mode: Option<String>,
@@ -269,6 +297,7 @@ enum PreviewRequestPayload {
         inject_ast_indices: Option<bool>,
         reference_type: Option<String>,
     },
+    /// A `StyleIntent` object to preview.
     Intent(StyleIntent),
 }
 
