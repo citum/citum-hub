@@ -1,0 +1,38 @@
+{
+	"mcpServers": {
+		"sequential-thinking": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-sequential-thinking"]
+		},
+		"context7": {
+			"command": "npx",
+			"args": ["-y", "@upstash/context7-mcp"]
+		},
+		"perplexity": {
+			"command": "/Users/brucedarcus/.local/bin/pp",
+			"args": [
+				"--env-file",
+				"/Users/brucedarcus/.proton-env",
+				"--",
+				"npx",
+				"-y",
+				"@perplexity-ai/mcp-server"
+			]
+		},
+		"jcodemunch": {
+			"command": "/Users/brucedarcus/.local/bin/pp",
+			"args": ["--env-file", "/Users/brucedarcus/.proton-env", "--", "uvx", "jcodemunch-mcp"]
+		},
+		"citum_brain": {
+			"url": "https://dzxretkswlfyuqwpjggt.supabase.co/functions/v1/citum-brain-mcp",
+			"type": "http",
+			"headers": {
+				"x-brain-key": "58ab8bb78a1cae1f9f504cb45a7b36980035817540ca5328977c7156edf8d7d5"
+			}
+		},
+		"StitchMCP": {
+			"command": "npx",
+			"args": ["-y", "mcp-remote", "https://stitch.googleapis.com/mcp"]
+		}
+	}
+}

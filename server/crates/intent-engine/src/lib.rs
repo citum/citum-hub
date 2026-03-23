@@ -48,6 +48,8 @@ pub enum CustomizeTarget {
     Menu,
     /// Customize how contributor names are formatted.
     Contributors,
+    /// Customize how contributor roles (like editor) are formatted.
+    Roles,
     /// Customize date formatting.
     Dates,
     /// Customize title capitalization and styling.
@@ -74,6 +76,8 @@ pub struct StyleIntent {
     pub customize_target: Option<CustomizeTarget>,
     /// Contributor formatting preset (e.g. "apa", "vancouver").
     pub contributor_preset: Option<String>,
+    /// Role formatting preset (e.g. "short-suffix", "verb-prefix").
+    pub role_preset: Option<String>,
     /// Date formatting preset (e.g. "long", "numeric").
     pub date_preset: Option<String>,
     /// Title formatting preset (e.g. "apa", "chicago", "scientific").
@@ -118,6 +122,7 @@ impl StyleIntent {
         if self.field.is_none() { missing_fields.push("field".to_string()); }
         if effective_class.is_none() { missing_fields.push("class".to_string()); }
         if self.contributor_preset.is_none() { missing_fields.push("contributor_preset".to_string()); }
+        if self.role_preset.is_none() { missing_fields.push("role_preset".to_string()); }
         if self.date_preset.is_none() { missing_fields.push("date_preset".to_string()); }
         if self.title_preset.is_none() { missing_fields.push("title_preset".to_string()); }
 
@@ -237,6 +242,50 @@ impl StyleIntent {
                         choice_value: self.with_optional_customize_return(
                             serde_json::json!({ "bib_template": "harvard" }),
                             self.in_customize_flow(CustomizeTarget::Bibliography),
+                        ),
+                    },
+                ]
+            )
+        } else if (self.role_preset.is_none() && self.from_preset.is_none())
+            || self.in_customize_flow(CustomizeTarget::Roles)
+        {
+            (
+                Some(Question {
+                    id: "role_preset".to_string(),
+                    text: "How should contributor roles (like editor or translator) be formatted?".to_string(),
+                    description: Some("Different styles format roles differently, such as 'ed.', 'editor', or 'edited by'.".to_string()),
+                }),
+                vec![
+                    Preview {
+                        label: "Short Suffix — Smith, J. (ed.)".to_string(),
+                        html: String::new(),
+                        choice_value: self.with_optional_customize_return(
+                            serde_json::json!({ "role_preset": "short-suffix" }),
+                            self.in_customize_flow(CustomizeTarget::Roles),
+                        ),
+                    },
+                    Preview {
+                        label: "Long Suffix — Smith, J. (editor)".to_string(),
+                        html: String::new(),
+                        choice_value: self.with_optional_customize_return(
+                            serde_json::json!({ "role_preset": "long-suffix" }),
+                            self.in_customize_flow(CustomizeTarget::Roles),
+                        ),
+                    },
+                    Preview {
+                        label: "Verb Prefix — edited by J. Smith".to_string(),
+                        html: String::new(),
+                        choice_value: self.with_optional_customize_return(
+                            serde_json::json!({ "role_preset": "verb-prefix" }),
+                            self.in_customize_flow(CustomizeTarget::Roles),
+                        ),
+                    },
+                    Preview {
+                        label: "None — Smith, J.".to_string(),
+                        html: String::new(),
+                        choice_value: self.with_optional_customize_return(
+                            serde_json::json!({ "role_preset": "none" }),
+                            self.in_customize_flow(CustomizeTarget::Roles),
                         ),
                     },
                 ]
@@ -388,11 +437,18 @@ impl StyleIntent {
         include_bib: bool,
         is_note_style: bool,
     ) -> (Option<Question>, Vec<Preview>) {
-        let mut previews = vec![Preview {
-            label: "Contributor Names".to_string(),
-            html: String::new(),
-            choice_value: serde_json::json!({ "customize_target": "contributors" }),
-        }];
+        let mut previews = vec![
+            Preview {
+                label: "Contributor Names".to_string(),
+                html: String::new(),
+                choice_value: serde_json::json!({ "customize_target": "contributors" }),
+            },
+            Preview {
+                label: "Contributor Roles".to_string(),
+                html: String::new(),
+                choice_value: serde_json::json!({ "customize_target": "roles" }),
+            },
+        ];
 
         if is_note_style {
             previews.push(Preview {
@@ -498,6 +554,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "apa",
                             "contributor_preset": "apa",
+                            "role_preset": "short-suffix",
                             "date_preset": "year",
                             "title_preset": "apa",
                             "bib_template": "apa",
@@ -509,6 +566,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "chicago_ad",
                             "contributor_preset": "chicago",
+                            "role_preset": "verb-prefix",
                             "date_preset": "year",
                             "title_preset": "chicago",
                             "bib_template": "chicago",
@@ -520,6 +578,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "harvard",
                             "contributor_preset": "harvard",
+                            "role_preset": "short-suffix",
                             "date_preset": "year",
                             "title_preset": "scientific",
                             "bib_template": "harvard",
@@ -540,6 +599,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "vancouver",
                             "contributor_preset": "vancouver",
+                            "role_preset": "short-suffix",
                             "date_preset": "year",
                             "title_preset": "scientific",
                             "bib_template": "vancouver",
@@ -551,6 +611,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "ieee",
                             "contributor_preset": "ieee",
+                            "role_preset": "short-suffix",
                             "date_preset": "year",
                             "title_preset": "scientific",
                             "bib_template": "vancouver",
@@ -571,6 +632,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "chicago_notes",
                             "contributor_preset": "chicago",
+                            "role_preset": "verb-prefix",
                             "date_preset": "year",
                             "title_preset": "chicago",
                             "bib_template": "chicago",
@@ -582,6 +644,7 @@ impl StyleIntent {
                         choice_value: serde_json::json!({
                             "from_preset": "turabian",
                             "contributor_preset": "chicago",
+                            "role_preset": "verb-prefix",
                             "date_preset": "year",
                             "title_preset": "chicago",
                             "bib_template": "chicago",
@@ -605,7 +668,32 @@ impl StyleIntent {
         };
 
         let mut config = Config::default();
-        config.contributors = self.contributor_preset.as_ref().and_then(|p| serde_yaml::from_str::<ContributorPreset>(p).ok()).map(|p| p.config());
+        let mut contributors = self.contributor_preset.as_ref().and_then(|p| serde_yaml::from_str::<ContributorPreset>(p).ok()).map(|p| p.config());
+
+        if let Some(role_str) = &self.role_preset {
+            let mut cont = contributors.unwrap_or_default();
+            
+            use citum_schema::options::contributors::RoleLabelPreset;
+            let role_preset = match role_str.as_str() {
+                "short-suffix" => Some(RoleLabelPreset::ShortSuffix),
+                "long-suffix" => Some(RoleLabelPreset::LongSuffix),
+                "verb-prefix" => Some(RoleLabelPreset::VerbPrefix),
+                "none" | "" => None,
+                _ => {
+                    eprintln!("Unknown role_preset value: {}", role_str);
+                    None
+                }
+            };
+
+            cont.role = Some(citum_schema::options::contributors::RoleOptions {
+                preset: role_preset,
+                ..Default::default()
+            });
+            contributors = Some(cont);
+        }
+
+        config.contributors = contributors;
+        config.substitute = Some(citum_schema::options::SubstituteConfig::Preset(citum_schema::presets::SubstitutePreset::Standard));
         config.dates = self.date_preset.as_ref().and_then(|p| serde_yaml::from_str::<DatePreset>(p).ok()).map(|p| p.config());
         config.titles = self.title_preset.as_ref().and_then(|p| serde_yaml::from_str::<TitlePreset>(p).ok()).map(|p| p.config());
         
@@ -751,6 +839,24 @@ mod tests {
         let labels: Vec<&str> = decision.previews.iter().map(|preview| preview.label.as_str()).collect();
         assert_eq!(decision.question.as_ref().map(|q| q.id.as_str()), Some("class"));
         assert_eq!(labels, vec!["Footnote — 1", "Author-Date — (Smith, 2024)"]);
+    }
+
+    #[test]
+    fn test_role_preset_to_style() {
+        let intent = StyleIntent {
+            role_preset: Some("verb-prefix".to_string()),
+            ..Default::default()
+        };
+        let style = intent.to_style();
+        let config = style.options.unwrap();
+        let contributors = config.contributors.unwrap();
+        let role = contributors.role.unwrap();
+        
+        // verb-prefix should map to RoleLabelPreset::VerbPrefix
+        assert_eq!(
+            role.preset,
+            Some(citum_schema::options::contributors::RoleLabelPreset::VerbPrefix)
+        );
     }
 
     #[test]

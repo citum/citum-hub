@@ -8,6 +8,7 @@ export function createInitialIntent(): StyleIntent {
 		from_preset: null,
 		customize_target: null,
 		contributor_preset: null,
+		role_preset: null,
 		date_preset: null,
 		title_preset: null,
 		sort_preset: null,

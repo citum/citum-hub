@@ -61,6 +61,10 @@
 		}
 	}
 
+	function updateRolePreset(preset: string) {
+		onUpdateContributors("role.preset", preset);
+	}
+
 	const getNameOrderValue = () => {
 		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
 			const config = currentOptions.contributors as ContributorConfig;
@@ -118,6 +122,17 @@
 			return config["default-label-form"] || "short";
 		}
 		return "short";
+	};
+
+	const getRolePresetValue = () => {
+		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
+			const config = currentOptions.contributors as ContributorConfig;
+			if (typeof config.role === "string") return config.role;
+			if (config.role && typeof config.role === "object" && config.role.preset) {
+				return config.role.preset;
+			}
+		}
+		return "short-suffix";
 	};
 </script>
 
@@ -242,6 +257,23 @@
 							<option value="abbreviated">Abbreviated (J. A.)</option>
 							<option value="compact">Compact (JA)</option>
 							<option value="full">Full names</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="rc-role-preset" class="block text-sm font-medium text-text-main mb-2"
+							>Role Label Format</label
+						>
+						<select
+							id="rc-role-preset"
+							onchange={(e) => updateRolePreset(e.currentTarget.value)}
+							value={getRolePresetValue()}
+							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+						>
+							<option value="short-suffix">Short Suffix (ed. / trans.)</option>
+							<option value="long-suffix">Long Suffix (editor / translator)</option>
+							<option value="verb-prefix">Verb Prefix (edited by / translated by)</option>
+							<option value="none">None (suppress role)</option>
 						</select>
 					</div>
 				</div>

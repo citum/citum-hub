@@ -62,6 +62,16 @@
 				{ value: "none", label: "123 (no label)" },
 			],
 		},
+		{
+			id: "rolePreset",
+			question: "How should contributor roles be formatted?",
+			options: [
+				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
+				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
+				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
+				{ value: "none", label: "None (suppress role)" },
+			],
+		},
 	];
 
 	const numericAxes = [
@@ -84,6 +94,16 @@
 				{ value: "given-first-initials", label: "J. A. Smith" },
 			],
 		},
+		{
+			id: "rolePreset",
+			question: "How should contributor roles be formatted?",
+			options: [
+				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
+				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
+				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
+				{ value: "none", label: "None (suppress role)" },
+			],
+		},
 	];
 
 	const noteAxes = [
@@ -101,6 +121,16 @@
 			options: [
 				{ value: "italic", label: "Italic" },
 				{ value: "plain", label: "plain" },
+			],
+		},
+		{
+			id: "rolePreset",
+			question: "How should contributor roles be formatted?",
+			options: [
+				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
+				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
+				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
+				{ value: "none", label: "None (suppress role)" },
 			],
 		},
 	];
@@ -166,6 +196,9 @@
 				} else {
 					wizardStore.updateStyleField("citation.wrap", "none");
 				}
+				break;
+			case "rolePreset":
+				wizardStore.updateStyleField("options.contributors.role.preset", value);
 				break;
 		}
 	};

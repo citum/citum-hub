@@ -11,6 +11,7 @@ export type StyleIntent = {
 	from_preset: string | null;
 	customize_target: CustomizeTarget | null;
 	contributor_preset: string | null;
+	role_preset: string | null;
 	date_preset: string | null;
 	title_preset: string | null;
 	sort_preset: string | null;
@@ -18,16 +19,27 @@ export type StyleIntent = {
 	has_bibliography: boolean | null;
 };
 
+/**
+ * Defines the fundamental mechanism by which a citation is referenced in text.
+ */
 export type CitationClass = "author_date" | "footnote" | "endnote" | "numeric" | "label";
 
+/**
+ * Represents the specific dimension of a style the user wishes to refine.
+ */
 export type CustomizeTarget =
 	| "menu"
 	| "contributors"
+	| "roles"
 	| "dates"
 	| "titles"
 	| "bibliography"
 	| "bibliography_usage";
 
+/**
+ * A complete package returned by the intent engine representing the next decision
+ * the user needs to make, along with the current state of previews.
+ */
 export type DecisionPackage = {
 	missing_fields: string[];
 	question: Question | null;
@@ -38,6 +50,12 @@ export type DecisionPackage = {
 	bibliography: string | null;
 };
 
+/**
+ * Represents a question asked to the user during the style building process.
+ */
 export type Question = { id: string; text: string; description: string | null };
 
+/**
+ * Represents an available choice for a `Question`.
+ */
 export type Preview = { label: string; html: string; choice_value: any };

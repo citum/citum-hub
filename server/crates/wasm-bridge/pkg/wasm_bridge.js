@@ -1,6 +1,8 @@
 /* @ts-self-types="./wasm_bridge.d.ts" */
 
 /**
+ * Processes a user's style intent JSON and returns a JSON string representing
+ * the next required decision or the completed style state.
  * @param {string} intent_json
  * @returns {string}
  */
@@ -33,6 +35,7 @@ function decide(intent_json) {
 exports.decide = decide;
 
 /**
+ * Converts a style intent JSON into a complete YAML style definition string.
  * @param {string} intent_json
  * @returns {string}
  */
@@ -65,6 +68,7 @@ function generate_style(intent_json) {
 exports.generate_style = generate_style;
 
 /**
+ * Extracts the `info` block from a YAML style string and returns it as a JSON string.
  * @param {string} style_yaml
  * @returns {string}
  */
@@ -97,6 +101,41 @@ function get_style_metadata(style_yaml) {
 exports.get_style_metadata = get_style_metadata;
 
 /**
+ * Ensures a given YAML style definition has all required templates materialized
+ * (expanding presets if needed) and returns the updated YAML string.
+ * @param {string} style_yaml
+ * @returns {string}
+ */
+function materialize_style(style_yaml) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passStringToWasm0(style_yaml, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.materialize_style(retptr, ptr0, len0);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
+        var r3 = getDataViewMemory0().getInt32(retptr + 4 * 3, true);
+        var ptr2 = r0;
+        var len2 = r1;
+        if (r3) {
+            ptr2 = 0; len2 = 0;
+            throw takeObject(r2);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+        wasm.__wbindgen_export3(deferred3_0, deferred3_1, 1);
+    }
+}
+exports.materialize_style = materialize_style;
+
+/**
+ * Renders a full bibliography to HTML based on the provided style and references.
  * @param {string} style_yaml
  * @param {string} refs_json
  * @returns {string}
@@ -132,6 +171,12 @@ function render_bibliography(style_yaml, refs_json) {
 exports.render_bibliography = render_bibliography;
 
 /**
+ * Renders a single citation to HTML.
+ *
+ * * `style_yaml` - The citation style definition in YAML format.
+ * * `refs_json` - A JSON map of reference data.
+ * * `citation_json` - A JSON string representing the `Citation` object to render.
+ * * `mode` - Optional mode override (e.g. "Integral").
  * @param {string} style_yaml
  * @param {string} refs_json
  * @param {string} citation_json
@@ -173,6 +218,8 @@ function render_citation(style_yaml, refs_json, citation_json, mode) {
 exports.render_citation = render_citation;
 
 /**
+ * Renders a single citation to HTML directly from a style intent, bypassing
+ * the intermediate step of generating a YAML style.
  * @param {string} intent_json
  * @param {string} refs_json
  * @param {string} citation_json

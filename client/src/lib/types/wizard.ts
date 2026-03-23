@@ -121,6 +121,7 @@ export interface ContributorConfig {
 	and?: string;
 	"initialize-with"?: string;
 	shorten?: { min?: number; "use-first"?: number };
+	role?: string | { preset?: string };
 }
 
 export interface DateConfig {
