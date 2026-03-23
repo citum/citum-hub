@@ -1,9 +1,10 @@
+import type { RequestEvent } from "@sveltejs/kit";
 import { error, redirect } from "@sveltejs/kit";
 import { env } from "$env/dynamic/private";
 
 const BACKEND_URL = env.BACKEND_URL || "http://localhost:3002";
 
-export async function GET({ url }) {
+export async function GET({ url }: RequestEvent) {
 	const code = url.searchParams.get("code");
 
 	if (!code) throw error(400, "Missing code");
