@@ -111,7 +111,7 @@ fn load_local_style_yaml(filename: &str) -> Option<String> {
 }
 
 fn local_styles_dir() -> PathBuf {
-    FsPath::new(env!("CARGO_MANIFEST_DIR")).join("../../citum-core/styles")
+    FsPath::new(env!("CARGO_MANIFEST_DIR")).join("../resources/styles")
 }
 
 fn is_supported_style_file(path: &FsPath) -> bool {

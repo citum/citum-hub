@@ -1,0 +1,54 @@
+import { P as store_get, Q as head, R as unsubscribe_stores, S as attr } from './exports-Cx_VB--H.js';
+import './client-B7Dtr-YV.js';
+import { p as page } from './stores-DCwJ4FIX.js';
+import { a as auth } from './auth-Dhpl1IIb.js';
+import './index-DyD4Z1FP.js';
+
+//#region src/lib/assets/favicon.svg
+var favicon_default = "data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20width='107'%20height='128'%20viewBox='0%200%20107%20128'%3e%3ctitle%3esvelte-logo%3c/title%3e%3cpath%20d='M94.157%2022.819c-10.4-14.885-30.94-19.297-45.792-9.835L22.282%2029.608A29.92%2029.92%200%200%200%208.764%2049.65a31.5%2031.5%200%200%200%203.108%2020.231%2030%2030%200%200%200-4.477%2011.183%2031.9%2031.9%200%200%200%205.448%2024.116c10.402%2014.887%2030.942%2019.297%2045.791%209.835l26.083-16.624A29.92%2029.92%200%200%200%2098.235%2078.35a31.53%2031.53%200%200%200-3.105-20.232%2030%2030%200%200%200%204.474-11.182%2031.88%2031.88%200%200%200-5.447-24.116'%20style='fill:%23ff3e00'/%3e%3cpath%20d='M45.817%20106.582a20.72%2020.72%200%200%201-22.237-8.243%2019.17%2019.17%200%200%201-3.277-14.503%2018%2018%200%200%201%20.624-2.435l.49-1.498%201.337.981a33.6%2033.6%200%200%200%2010.203%205.098l.97.294-.09.968a5.85%205.85%200%200%200%201.052%203.878%206.24%206.24%200%200%200%206.695%202.485%205.8%205.8%200%200%200%201.603-.704L69.27%2076.28a5.43%205.43%200%200%200%202.45-3.631%205.8%205.8%200%200%200-.987-4.371%206.24%206.24%200%200%200-6.698-2.487%205.7%205.7%200%200%200-1.6.704l-9.953%206.345a19%2019%200%200%201-5.296%202.326%2020.72%2020.72%200%200%201-22.237-8.243%2019.17%2019.17%200%200%201-3.277-14.502%2017.99%2017.99%200%200%201%208.13-12.052l26.081-16.623a19%2019%200%200%201%205.3-2.329%2020.72%2020.72%200%200%201%2022.237%208.243%2019.17%2019.17%200%200%201%203.277%2014.503%2018%2018%200%200%201-.624%202.435l-.49%201.498-1.337-.98a33.6%2033.6%200%200%200-10.203-5.1l-.97-.294.09-.968a5.86%205.86%200%200%200-1.052-3.878%206.24%206.24%200%200%200-6.696-2.485%205.8%205.8%200%200%200-1.602.704L37.73%2051.72a5.42%205.42%200%200%200-2.449%203.63%205.79%205.79%200%200%200%20.986%204.372%206.24%206.24%200%200%200%206.698%202.486%205.8%205.8%200%200%200%201.602-.704l9.952-6.342a19%2019%200%200%201%205.295-2.328%2020.72%2020.72%200%200%201%2022.237%208.242%2019.17%2019.17%200%200%201%203.277%2014.503%2018%2018%200%200%201-8.13%2012.053l-26.081%2016.622a19%2019%200%200%201-5.3%202.328'%20style='fill:%23fff'/%3e%3c/svg%3e";
+//#endregion
+//#region src/routes/+layout.svelte
+function _layout($$renderer, $$props) {
+	$$renderer.component(($$renderer) => {
+		var $$store_subs;
+		let { children } = $$props;
+		const isCustomizerRoute = store_get($$store_subs ??= {}, "$page", page).url.pathname.startsWith("/create/customize") || store_get($$store_subs ??= {}, "$page", page).url.pathname.startsWith("/create/refine");
+		head("12qhfyh", $$renderer, ($$renderer) => {
+			$$renderer.title(($$renderer) => {
+				$$renderer.push(`<title>Citum Hub</title>`);
+			});
+			$$renderer.push(`<link rel="icon"${attr("href", favicon_default)}/> <link rel="preconnect" href="https://fonts.googleapis.com"/> <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/> <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400&amp;display=swap" rel="stylesheet"/> <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>`);
+		});
+		$$renderer.push(`<div class="min-h-screen flex flex-col bg-background-light">`);
+		if (!isCustomizerRoute) {
+			$$renderer.push("<!--[-->");
+			$$renderer.push(`<header class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-10"><a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity"><div class="size-8 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-3xl">school</span></div> <h2 class="text-lg font-bold leading-tight tracking-[-0.015em] text-slate-900">Citum Hub</h2></a> <div class="hidden md:flex flex-1 justify-end gap-8"><nav class="flex items-center gap-9"><a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/library/browse">Browse</a> <a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/create">Style Builder</a> `);
+			if (store_get($$store_subs ??= {}, "$auth", auth).user) {
+				$$renderer.push("<!--[-->");
+				$$renderer.push(`<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/library">My Library</a>`);
+			} else $$renderer.push("<!--[!-->");
+			$$renderer.push(`<!--]--> <a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/">Docs</a></nav> <div class="flex gap-2">`);
+			if (store_get($$store_subs ??= {}, "$auth", auth).user) {
+				$$renderer.push("<!--[-->");
+				$$renderer.push(`<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-slate-200 hover:bg-slate-300 text-slate-900 text-sm font-bold transition-colors">Sign Out</button>`);
+			} else {
+				$$renderer.push("<!--[!-->");
+				$$renderer.push(`<button class="flex min-w-[84px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-primary text-white hover:bg-primary-dark text-sm font-bold transition-colors">Sign In</button>`);
+			}
+			$$renderer.push(`<!--]--></div></div></header>`);
+		} else $$renderer.push("<!--[!-->");
+		$$renderer.push(`<!--]--> <div class="flex-grow">`);
+		children($$renderer);
+		$$renderer.push(`<!----></div> `);
+		if (!isCustomizerRoute) {
+			$$renderer.push("<!--[-->");
+			$$renderer.push(`<footer class="border-t border-slate-100 bg-white px-10 py-16"><div class="max-w-[1200px] mx-auto flex flex-col md:flex-row justify-between gap-12"><div class="flex flex-col gap-4 max-w-sm"><div class="flex items-center gap-3"><div class="size-6 text-primary flex items-center justify-center"><span class="material-symbols-outlined text-2xl">school</span></div> <span class="text-lg font-bold text-slate-900">Citum Hub</span></div> <p class="text-sm text-slate-500 leading-relaxed">An open-source initiative to modernize academic referencing. Maintained by the Citation
+						Style Language community.</p></div> <div class="grid grid-cols-2 sm:grid-cols-3 gap-12"><div class="flex flex-col gap-4"><h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4> <a class="text-sm text-slate-500 hover:text-primary" href="/library/browse">Browse</a> <a class="text-sm text-slate-500 hover:text-primary" href="/create">Style Builder</a> <a class="text-sm text-slate-500 hover:text-primary" href="/">API</a></div> <div class="flex flex-col gap-4"><h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Help</h4> <a class="text-sm text-slate-500 hover:text-primary" href="/">Docs</a> <a class="text-sm text-slate-500 hover:text-primary" href="/">Forum</a></div></div></div> <div class="mt-16 pt-8 border-t border-slate-100 text-center"><p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 Citum Hub. All rights reserved.</p></div></footer>`);
+		} else $$renderer.push("<!--[!-->");
+		$$renderer.push(`<!--]--></div>`);
+		if ($$store_subs) unsubscribe_stores($$store_subs);
+	});
+}
+
+export { _layout as default };
+//# sourceMappingURL=_layout.svelte-kMWtR-qU.js.map

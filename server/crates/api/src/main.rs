@@ -90,7 +90,7 @@ fn generate_preview_set(intent: &StyleIntent, references: &HashMap<String, Refer
         cite_ids_1.push("kuhn1962".to_string());
     }
 
-    let cite_ids_2 = vec!["genetics1999".to_string()];
+    let cite_ids_2 = ["genetics1999".to_string()];
 
     // Make sure we have these references
     let mut bib_refs = Vec::new();

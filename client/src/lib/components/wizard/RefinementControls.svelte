@@ -126,9 +126,11 @@
 
 	const getRolePresetValue = () => {
 		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
-			const config = currentOptions.contributors as any;
+			const config = currentOptions.contributors as ContributorConfig;
 			if (typeof config.role === "string") return config.role;
-			if (config.role?.preset) return config.role.preset;
+			if (config.role && typeof config.role === "object" && config.role.preset) {
+				return config.role.preset;
+			}
 		}
 		return "short-suffix";
 	};
