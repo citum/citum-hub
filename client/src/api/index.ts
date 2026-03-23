@@ -120,9 +120,9 @@ async function getFixtureData(
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		let multiAuthorItem = null;
-		let editorItem = null;
-		let translatorItem = null;
+		let multiAuthorItem: any = null;
+		let editorItem: any = null;
+		let translatorItem: any = null;
 		const otherItems: unknown[] = [];
 
 		entries.forEach((ref: any) => {
