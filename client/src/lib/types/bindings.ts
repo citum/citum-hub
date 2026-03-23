@@ -5,7 +5,19 @@
  * Represents the user's intent for the citation style they are building.
  * Redesigned to center around pervasive presets.
  */
-export type StyleIntent = { field: string | null; class: CitationClass | null; from_preset: string | null; customize_target: CustomizeTarget | null; contributor_preset: string | null; role_preset: string | null; date_preset: string | null; title_preset: string | null; sort_preset: string | null; bib_template: string | null; has_bibliography: boolean | null };
+export type StyleIntent = {
+	field: string | null;
+	class: CitationClass | null;
+	from_preset: string | null;
+	customize_target: CustomizeTarget | null;
+	contributor_preset: string | null;
+	role_preset: string | null;
+	date_preset: string | null;
+	title_preset: string | null;
+	sort_preset: string | null;
+	bib_template: string | null;
+	has_bibliography: boolean | null;
+};
 
 /**
  * Defines the fundamental mechanism by which a citation is referenced in text.
@@ -15,13 +27,28 @@ export type CitationClass = "author_date" | "footnote" | "endnote" | "numeric" |
 /**
  * Represents the specific dimension of a style the user wishes to refine.
  */
-export type CustomizeTarget = "menu" | "contributors" | "roles" | "dates" | "titles" | "bibliography" | "bibliography_usage";
+export type CustomizeTarget =
+	| "menu"
+	| "contributors"
+	| "roles"
+	| "dates"
+	| "titles"
+	| "bibliography"
+	| "bibliography_usage";
 
 /**
- * A complete package returned by the intent engine representing the next decision 
+ * A complete package returned by the intent engine representing the next decision
  * the user needs to make, along with the current state of previews.
  */
-export type DecisionPackage = { missing_fields: string[]; question: Question | null; previews: Preview[]; in_text_parenthetical: string | null; in_text_narrative: string | null; note: string | null; bibliography: string | null };
+export type DecisionPackage = {
+	missing_fields: string[];
+	question: Question | null;
+	previews: Preview[];
+	in_text_parenthetical: string | null;
+	in_text_narrative: string | null;
+	note: string | null;
+	bibliography: string | null;
+};
 
 /**
  * Represents a question asked to the user during the style building process.
