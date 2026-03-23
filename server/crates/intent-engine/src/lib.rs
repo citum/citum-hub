@@ -672,14 +672,23 @@ impl StyleIntent {
 
         if let Some(role_str) = &self.role_preset {
             let mut cont = contributors.unwrap_or_default();
-            // Use shorthand string support: ContributorConfig.role is Option<RoleOptions>, 
-            // but we can parse the preset string into RoleLabelPreset via serde_yaml
-            if let Ok(role_preset) = serde_yaml::from_str::<citum_schema::options::contributors::RoleLabelPreset>(&format!("\"{}\"", role_str)) {
-                cont.role = Some(citum_schema::options::contributors::RoleOptions {
-                    preset: Some(role_preset),
-                    ..Default::default()
-                });
-            }
+            
+            use citum_schema::options::contributors::RoleLabelPreset;
+            let role_preset = match role_str.as_str() {
+                "short-suffix" => Some(RoleLabelPreset::ShortSuffix),
+                "long-suffix" => Some(RoleLabelPreset::LongSuffix),
+                "verb-prefix" => Some(RoleLabelPreset::VerbPrefix),
+                "none" | "" => None,
+                _ => {
+                    eprintln!("Unknown role_preset value: {}", role_str);
+                    None
+                }
+            };
+
+            cont.role = Some(citum_schema::options::contributors::RoleOptions {
+                preset: role_preset,
+                ..Default::default()
+            });
             contributors = Some(cont);
         }
 

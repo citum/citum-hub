@@ -638,7 +638,11 @@ app.post("/v1/preview", async (c) => {
 				bib = render_bibliography(previewStyleYaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
 				const intent = body.intent || body;
-				console.log("[Preview] Rendering with intent:", JSON.stringify(intent));
+				console.log(
+					"[Preview] Rendering with intent (field=%s, class=%s)",
+					(intent as any).field ?? "unknown",
+					(intent as any).class ?? "unknown"
+				);
 				const intentStr = JSON.stringify(intent);
 				const renderedNonIntegral = render_intent_citation(
 					intentStr,

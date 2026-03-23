@@ -62,7 +62,7 @@
 	}
 
 	function updateRolePreset(preset: string) {
-		onUpdateContributors("role", preset);
+		onUpdateContributors("role.preset", preset);
 	}
 
 	const getNameOrderValue = () => {

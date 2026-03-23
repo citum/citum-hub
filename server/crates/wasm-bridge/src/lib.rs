@@ -45,13 +45,15 @@ fn ensure_style_has_templates(style: &mut Style) {
 
     // Materialize bibliography template if using a preset
     if let Some(ref mut bib) = style.bibliography {
+        let is_apa_preset = bib.use_preset == Some(TemplatePreset::Apa);
         let mut template = bib.resolve_template().unwrap_or_default();
         if !template.is_empty() && bib.template.as_ref().is_none_or(|t| t.is_empty()) {
             use citum_schema::template::{ContributorRole, TemplateComponent, TemplateContributor};
 
             let has_translator = template.iter().any(|c| matches!(c, TemplateComponent::Contributor(tc) if tc.contributor == ContributorRole::Translator));
 
-            if !has_translator {
+            // Only force translator for APA-derived wizard styles to ensure role preview coverage
+            if !has_translator && is_apa_preset {
                 template.push(TemplateComponent::Contributor(TemplateContributor {
                     contributor: ContributorRole::Translator,
                     form: citum_schema::template::ContributorForm::Long,
@@ -247,7 +249,7 @@ pub fn render_intent_citation(
         .map_err(|e| JsValue::from_str(&format!("Rendering error: {}", e)))
 }
 
-#[cfg(all(test, target_arch = "wasm32"))]
+#[cfg(test)]
 mod tests {
     use super::*;
     use citum_schema::citation::CitationMode;
@@ -257,6 +259,8 @@ mod tests {
   title: APA 7th (Minimal)
 options:
   processing: author-date
+  contributors:
+    and: text
 citation:
   use-preset: apa
 bibliography:
@@ -314,7 +318,7 @@ bibliography:
                 "class": "monograph",
                 "type": "book",
                 "title": "Book 2",
-                "author": [{ "family": "Doe", "given": "Jane" }],
+                "author": [{ "family": "Smith", "given": "John" }],
                 "issued": "2021"
             }
         }"#;

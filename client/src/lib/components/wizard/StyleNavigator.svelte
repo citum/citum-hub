@@ -198,7 +198,7 @@
 				}
 				break;
 			case "rolePreset":
-				wizardStore.updateStyleField("options.contributors.role", value);
+				wizardStore.updateStyleField("options.contributors.role.preset", value);
 				break;
 		}
 	};
