@@ -7,8 +7,8 @@ import { Hono, type Context } from "hono";
 import { jwtVerify, SignJWT } from "jose";
 import {
 	generate_style,
-	render_bibliography,
-	render_citation,
+	renderBibliography as render_bibliography,
+	renderCitation as render_citation,
 	render_intent_citation,
 	decide as wasm_decide,
 } from "../../../server/crates/wasm-bridge/pkg/wasm_bridge.js";
