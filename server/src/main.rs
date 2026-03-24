@@ -7,7 +7,7 @@ SPDX-FileCopyrightText: © 2023-2026 Bruce D'Arcus
 
 //! The `citum-hub` server provides the backend API for the Citum Hub application.
 //!
-//! It handles user authentication via GitHub OAuth, style database operations, 
+//! It handles user authentication via GitHub OAuth, style database operations,
 //! and real-time citation rendering via the `citum_engine` and `intent_engine`.
 
 use auth::User;
@@ -106,12 +106,24 @@ fn resolve_synced_public_style_yaml(row: &StyleRow) -> String {
         .unwrap_or_else(|| row.citum.clone())
 }
 
-fn load_local_style_yaml(filename: &str) -> Option<String> {
-    load_style_yaml_from_root(&local_styles_dir(), filename)
+fn core_styles_dir() -> Option<PathBuf> {
+    std::env::var("CITUM_CORE_PATH")
+        .ok()
+        .map(|p| PathBuf::from(p).join("styles"))
+        .filter(|p| p.is_dir())
 }
 
 fn local_styles_dir() -> PathBuf {
     FsPath::new(env!("CARGO_MANIFEST_DIR")).join("../resources/styles")
+}
+
+fn load_local_style_yaml(filename: &str) -> Option<String> {
+    if let Some(core) = core_styles_dir() {
+        if let Some(yaml) = load_style_yaml_from_root(&core, filename) {
+            return Some(yaml);
+        }
+    }
+    load_style_yaml_from_root(&local_styles_dir(), filename)
 }
 
 fn is_supported_style_file(path: &FsPath) -> bool {
@@ -145,7 +157,18 @@ struct LocalStyleDefinition {
 }
 
 fn discover_local_public_styles() -> Vec<LocalStyleDefinition> {
-    discover_local_public_styles_from_root(&local_styles_dir())
+    if let Some(core) = core_styles_dir() {
+        let mut styles = discover_local_public_styles_from_root(&core);
+        // Also include hub-local experimental styles (hub-specific only)
+        let local_experimental = local_styles_dir().join("experimental");
+        if local_experimental.is_dir() {
+            collect_local_public_styles(&local_styles_dir(), &local_experimental, &mut styles);
+        }
+        styles.sort_by(|a, b| a.filename.cmp(&b.filename));
+        styles
+    } else {
+        discover_local_public_styles_from_root(&local_styles_dir())
+    }
 }
 
 fn discover_local_public_styles_from_root(root: &FsPath) -> Vec<LocalStyleDefinition> {
@@ -1153,14 +1176,11 @@ mod tests {
 
     #[test]
     fn local_chicago_author_date_preview_does_not_repeat_period_separators() {
-        let path = local_styles_dir().join("chicago-author-date.yaml");
-        if !path.exists() {
-            println!("Skipping test: {} not found", path.display());
-            return;
-        }
-        let raw = fs::read_to_string(path).expect("local chicago style should be readable");
-        let style =
-            serde_yaml_ng::from_str::<Style>(&raw).expect("local chicago style should parse");
+        use citum_schema::embedded::get_embedded_style;
+
+        let style = get_embedded_style("chicago-author-date")
+            .expect("chicago-author-date should be an embedded style")
+            .expect("chicago-author-date should parse");
 
         let preview = generate_preview_set_internal(&style, "in_text", None, None, false, None);
         let bibliography = preview

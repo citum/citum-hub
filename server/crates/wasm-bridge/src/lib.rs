@@ -1,220 +1,67 @@
 #![warn(missing_docs)]
 
-//! The `wasm-bridge` crate exposes core `citum_engine` and `intent-engine` functionality
-//! to WebAssembly, allowing the frontend to render citations and bibliographies, 
-//! and process style intents entirely client-side.
+//! WASM bridge: thin layer over `citum-bindings` plus intent-engine functions.
+//!
+//! Intent-agnostic functions (`render_citation`, `render_bibliography`,
+//! `get_style_metadata`, `materialize_style`, `validate_style`) are provided
+//! by `citum-bindings`. Only the three functions that depend on `intent-engine`
+//! are implemented here.
 
+use citum_bindings::ensure_style_has_templates;
 use citum_engine::{processor::Processor, render::html::Html as HtmlRenderer, Citation, Reference};
-use citum_schema::{CitationSpec, Style, TemplatePreset};
+use citum_schema::citation::CitationMode;
 use indexmap::IndexMap;
 use intent_engine::StyleIntent;
 use serde_json::Value;
 use wasm_bindgen::prelude::*;
 
-fn ensure_style_has_templates(style: &mut Style) {
-    if style.citation.is_none() {
-        style.citation = Some(CitationSpec {
-            use_preset: Some(TemplatePreset::Apa),
-            ..Default::default()
-        });
-    }
-
-    // Force locator into the citation template if missing, to ensure it renders in preview
-    if let Some(ref mut citation) = style.citation {
-        use citum_schema::template::{
-            Rendering, SimpleVariable, TemplateComponent, TemplateVariable,
-        };
-
-        let mut template = citation.resolve_template().unwrap_or_default();
-        let has_locator = template.iter().any(|c| matches!(c, TemplateComponent::Variable(v) if v.variable == SimpleVariable::Locator));
-
-        if !has_locator {
-            template.push(TemplateComponent::Variable(TemplateVariable {
-                variable: SimpleVariable::Locator,
-                rendering: Rendering {
-                    prefix: Some(", ".to_string()),
-                    ..Default::default()
-                },
-                ..Default::default()
-            }));
-
-            citation.template = Some(template);
-            citation.use_preset = None; // Explicit template overrides preset
-        }
-    }
-
-    // Materialize bibliography template if using a preset
-    if let Some(ref mut bib) = style.bibliography {
-        let is_apa_preset = bib.use_preset == Some(TemplatePreset::Apa);
-        let mut template = bib.resolve_template().unwrap_or_default();
-        if !template.is_empty() && bib.template.as_ref().is_none_or(|t| t.is_empty()) {
-            use citum_schema::template::{ContributorRole, TemplateComponent, TemplateContributor};
-
-            let has_translator = template.iter().any(|c| matches!(c, TemplateComponent::Contributor(tc) if tc.contributor == ContributorRole::Translator));
-
-            // Only force translator for APA-derived wizard styles to ensure role preview coverage
-            if !has_translator && is_apa_preset {
-                template.push(TemplateComponent::Contributor(TemplateContributor {
-                    contributor: ContributorRole::Translator,
-                    form: citum_schema::template::ContributorForm::Long,
-                    rendering: citum_schema::template::Rendering {
-                        prefix: Some(" (".to_string()),
-                        suffix: Some(")".to_string()),
-                        ..Default::default()
-                    },
-                    ..Default::default()
-                }));
-            }
-
-            bib.template = Some(template);
-            bib.use_preset = None;
-        }
-    }
-
-    if style.bibliography.is_none() {
-        style.bibliography = Some(citum_schema::BibliographySpec {
-            template: Some(citum_schema::TemplatePreset::Apa.bibliography_template()),
-            ..Default::default()
-        });
-    }
-}
-
-/// Parses a map of references, automatically upgrading legacy CSL-JSON to the new schema.
+/// Parse a map of references, automatically upgrading legacy CSL-JSON.
 fn parse_references(refs_json: &str) -> Result<IndexMap<String, Reference>, String> {
-    let raw_refs: IndexMap<String, Value> = serde_json::from_str(refs_json)
-        .map_err(|e| format!("Invalid JSON for references: {}", e))?;
+    let raw: IndexMap<String, Value> =
+        serde_json::from_str(refs_json).map_err(|e| format!("Invalid JSON for references: {e}"))?;
 
-    let mut mapped_refs = IndexMap::new();
-    for (key, val) in raw_refs {
-        // Try parsing as the new InputReference first
-        if let Ok(new_ref) =
+    let mut mapped = IndexMap::new();
+    for (key, val) in raw {
+        if let Ok(r) =
             serde_json::from_value::<citum_schema::reference::InputReference>(val.clone())
         {
-            mapped_refs.insert(key, new_ref);
+            mapped.insert(key, r);
             continue;
         }
-
-        // Fallback: try parsing as legacy CSL-JSON
-        if let Ok(legacy_ref) = serde_json::from_value::<csl_legacy::csl_json::Reference>(val) {
-            let new_ref: citum_schema::reference::InputReference = legacy_ref.into();
-            mapped_refs.insert(key, new_ref);
+        if let Ok(legacy) = serde_json::from_value::<csl_legacy::csl_json::Reference>(val) {
+            let r: citum_schema::reference::InputReference = legacy.into();
+            mapped.insert(key, r);
             continue;
         }
-
         return Err(format!(
-            "Failed to parse reference '{}' as either InputReference or legacy CSL-JSON",
-            key
+            "Failed to parse reference '{key}' as InputReference or CSL-JSON"
         ));
     }
-    Ok(mapped_refs)
+    Ok(mapped)
 }
 
-/// Extracts the `info` block from a YAML style string and returns it as a JSON string.
-#[wasm_bindgen]
-pub fn get_style_metadata(style_yaml: &str) -> Result<String, JsValue> {
-    let style: Style = serde_yaml_ng::from_str(style_yaml)
-        .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
-
-    serde_json::to_string(&style.info)
-        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
-}
-
-/// Renders a single citation to HTML.
-/// 
-/// * `style_yaml` - The citation style definition in YAML format.
-/// * `refs_json` - A JSON map of reference data.
-/// * `citation_json` - A JSON string representing the `Citation` object to render.
-/// * `mode` - Optional mode override (e.g. "Integral").
-#[wasm_bindgen]
-pub fn render_citation(
-    style_yaml: &str,
-    refs_json: &str,
-    citation_json: &str,
-    mode: Option<String>,
-) -> Result<String, JsValue> {
-    let mut style: Style = serde_yaml_ng::from_str(style_yaml)
-        .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
-
-    ensure_style_has_templates(&mut style);
-
-    let references = parse_references(refs_json)
-        .map_err(|e| JsValue::from_str(&format!("References parse error: {}", e)))?;
-
-    let mut citation: Citation = serde_json::from_str(citation_json)
-        .map_err(|e| JsValue::from_str(&format!("Citation parse error: {}", e)))?;
-
-    if let Some(m) = mode {
-        if let Ok(m_enum) =
-            serde_json::from_str::<citum_schema::citation::CitationMode>(&format!("\"{}\"", m))
-        {
-            citation.mode = m_enum;
-        }
-    }
-
-    let processor = Processor::new(style, references);
-
-    processor
-        .process_citation_with_format::<HtmlRenderer>(&citation)
-        .map_err(|e| JsValue::from_str(&format!("Rendering error: {}", e)))
-}
-
-/// Renders a full bibliography to HTML based on the provided style and references.
-#[wasm_bindgen]
-pub fn render_bibliography(style_yaml: &str, refs_json: &str) -> Result<String, JsValue> {
-    let mut style: Style = serde_yaml_ng::from_str(style_yaml)
-        .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
-
-    ensure_style_has_templates(&mut style);
-
-    let references = parse_references(refs_json)
-        .map_err(|e| JsValue::from_str(&format!("References parse error: {}", e)))?;
-
-    let processor = Processor::new(style, references);
-
-    Ok(processor.render_bibliography_with_format::<HtmlRenderer>())
-}
-
-/// Processes a user's style intent JSON and returns a JSON string representing 
-/// the next required decision or the completed style state.
+/// Process a style intent and return the next decision or completed state.
 #[wasm_bindgen]
 pub fn decide(intent_json: &str) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
-        .map_err(|e| JsValue::from_str(&format!("Intent parse error: {}", e)))?;
-
+        .map_err(|e| JsValue::from_str(&format!("Intent parse error: {e}")))?;
     let decision = intent.decide();
-
     serde_json::to_string(&decision)
-        .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+        .map_err(|e| JsValue::from_str(&format!("Serialization error: {e}")))
 }
 
-/// Converts a style intent JSON into a complete YAML style definition string.
+/// Convert a style intent into a complete YAML style string.
 #[wasm_bindgen]
 pub fn generate_style(intent_json: &str) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
-        .map_err(|e| JsValue::from_str(&format!("Intent parse error: {}", e)))?;
-
+        .map_err(|e| JsValue::from_str(&format!("Intent parse error: {e}")))?;
     let mut style = intent.to_style();
     ensure_style_has_templates(&mut style);
-
     serde_yaml_ng::to_string(&style)
-        .map_err(|e| JsValue::from_str(&format!("YAML Serialization error: {}", e)))
+        .map_err(|e| JsValue::from_str(&format!("YAML serialization error: {e}")))
 }
 
-/// Ensures a given YAML style definition has all required templates materialized 
-/// (expanding presets if needed) and returns the updated YAML string.
-#[wasm_bindgen]
-pub fn materialize_style(style_yaml: &str) -> Result<String, JsValue> {
-    let mut style: Style = serde_yaml_ng::from_str(style_yaml)
-        .map_err(|e| JsValue::from_str(&format!("Style parse error: {}", e)))?;
-
-    ensure_style_has_templates(&mut style);
-
-    serde_yaml_ng::to_string(&style)
-        .map_err(|e| JsValue::from_str(&format!("YAML Serialization error: {}", e)))
-}
-
-/// Renders a single citation to HTML directly from a style intent, bypassing 
-/// the intermediate step of generating a YAML style.
+/// Render a citation to HTML directly from a style intent.
 #[wasm_bindgen]
 pub fn render_intent_citation(
     intent_json: &str,
@@ -223,130 +70,30 @@ pub fn render_intent_citation(
     mode: Option<String>,
 ) -> Result<String, JsValue> {
     let intent: StyleIntent = serde_json::from_str(intent_json)
-        .map_err(|e| JsValue::from_str(&format!("Intent parse error: {}", e)))?;
-
+        .map_err(|e| JsValue::from_str(&format!("Intent parse error: {e}")))?;
     let mut style = intent.to_style();
     ensure_style_has_templates(&mut style);
 
-    let references = parse_references(refs_json)
-        .map_err(|e| JsValue::from_str(&format!("References parse error: {}", e)))?;
+    let refs = parse_references(refs_json)
+        .map_err(|e| JsValue::from_str(&format!("References parse error: {e}")))?;
 
     let mut citation: Citation = serde_json::from_str(citation_json)
-        .map_err(|e| JsValue::from_str(&format!("Citation parse error: {}", e)))?;
+        .map_err(|e| JsValue::from_str(&format!("Citation parse error: {e}")))?;
 
     if let Some(m) = mode {
-        if let Ok(m_enum) =
-            serde_json::from_str::<citum_schema::citation::CitationMode>(&format!("\"{}\"", m))
-        {
+        if let Ok(m_enum) = serde_json::from_str::<CitationMode>(&format!("\"{m}\"")) {
             citation.mode = m_enum;
         }
     }
 
-    let processor = Processor::new(style, references);
-
+    let processor = Processor::new(style, refs);
     processor
         .process_citation_with_format::<HtmlRenderer>(&citation)
-        .map_err(|e| JsValue::from_str(&format!("Rendering error: {}", e)))
+        .map_err(|e| JsValue::from_str(&format!("Rendering error: {e}")))
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use citum_schema::citation::CitationMode;
-
-    fn test_style_yaml() -> &'static str {
-        r#"info:
-  title: APA 7th (Minimal)
-options:
-  processing: author-date
-  contributors:
-    and: text
-citation:
-  use-preset: apa
-bibliography:
-  use-preset: apa
-"#
-    }
-
-    #[test]
-    fn test_apa_7th_citation_modes() {
-        let yaml = test_style_yaml();
-
-        let refs_json = r#"{
-            "ref1": {
-                "class": "monograph",
-                "type": "book",
-                "title": "Test Book",
-                "author": { "family": "Smith", "given": "John" },
-                "issued": "2020"
-            }
-        }"#;
-
-        let cite_json = r#"{
-            "items": [{ "id": "ref1" }]
-        }"#;
-
-        let mut paren_cite: Citation = serde_json::from_str(cite_json).unwrap();
-        paren_cite.mode = CitationMode::NonIntegral;
-        let paren_cite_json = serde_json::to_string(&paren_cite).unwrap();
-
-        let mut narrative_cite: Citation = serde_json::from_str(cite_json).unwrap();
-        narrative_cite.mode = CitationMode::Integral;
-        let narrative_cite_json = serde_json::to_string(&narrative_cite).unwrap();
-
-        let paren_res = render_citation(&yaml, refs_json, &paren_cite_json, None).unwrap();
-        let narrative_res = render_citation(&yaml, refs_json, &narrative_cite_json, None).unwrap();
-
-        assert_ne!(
-            paren_res, narrative_res,
-            "Parenthetical and Narrative renderings should be different!"
-        );
-    }
-
-    #[test]
-    fn test_multi_item_integral_citation_uses_prose_joining() {
-        let yaml = test_style_yaml();
-        let refs_json = r#"{
-            "ref1": {
-                "class": "monograph",
-                "type": "book",
-                "title": "Book 1",
-                "author": [{ "family": "Doe", "given": "Jane" }],
-                "issued": "2020"
-            },
-            "ref2": {
-                "class": "monograph",
-                "type": "book",
-                "title": "Book 2",
-                "author": [{ "family": "Smith", "given": "John" }],
-                "issued": "2021"
-            }
-        }"#;
-
-        let cite_json = serde_json::json!({
-            "items": [
-                { "id": "ref1", "locator": { "label": "page", "value": "123-125" } },
-                { "id": "ref2" }
-            ],
-            "mode": "integral"
-        })
-        .to_string();
-
-        let narrative_res = render_citation(
-            &yaml,
-            refs_json,
-            &cite_json,
-            Some("Integral".to_string()),
-        )
-        .unwrap();
-
-        assert!(
-            narrative_res.contains(" and "),
-            "multi-item integral preview should use prose joining: {narrative_res}"
-        );
-        assert!(
-            !narrative_res.contains(";"),
-            "multi-item integral preview should not use semicolon clustering: {narrative_res}"
-        );
-    }
+    // Intent-engine tests only.
+    // render_citation/render_bibliography tests live in citum-bindings.
 }
