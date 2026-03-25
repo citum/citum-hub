@@ -1,8 +1,7 @@
 /* @ts-self-types="./wasm_bridge.d.ts" */
 
 /**
- * Processes a user's style intent JSON and returns a JSON string representing
- * the next required decision or the completed style state.
+ * Process a style intent and return the next decision or completed state.
  * @param {string} intent_json
  * @returns {string}
  */
@@ -35,7 +34,7 @@ function decide(intent_json) {
 exports.decide = decide;
 
 /**
- * Converts a style intent JSON into a complete YAML style definition string.
+ * Convert a style intent into a complete YAML style string.
  * @param {string} intent_json
  * @returns {string}
  */
@@ -68,18 +67,23 @@ function generate_style(intent_json) {
 exports.generate_style = generate_style;
 
 /**
- * Extracts the `info` block from a YAML style string and returns it as a JSON string.
+ * Extract the `info` block from a YAML style string as JSON.
+ *
+ * # Errors
+ *
+ * Returns a string error if the YAML fails to parse or the info block cannot
+ * be serialized to JSON.
  * @param {string} style_yaml
  * @returns {string}
  */
-function get_style_metadata(style_yaml) {
+function getStyleMetadata(style_yaml) {
     let deferred3_0;
     let deferred3_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passStringToWasm0(style_yaml, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len0 = WASM_VECTOR_LEN;
-        wasm.get_style_metadata(retptr, ptr0, len0);
+        wasm.getStyleMetadata(retptr, ptr0, len0);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
@@ -98,22 +102,26 @@ function get_style_metadata(style_yaml) {
         wasm.__wbindgen_export3(deferred3_0, deferred3_1, 1);
     }
 }
-exports.get_style_metadata = get_style_metadata;
+exports.getStyleMetadata = getStyleMetadata;
 
 /**
- * Ensures a given YAML style definition has all required templates materialized
- * (expanding presets if needed) and returns the updated YAML string.
+ * Materialize all template presets in a style and return the updated YAML.
+ *
+ * # Errors
+ *
+ * Returns a string error if the input YAML fails to parse or the materialized
+ * style cannot be serialized back to YAML.
  * @param {string} style_yaml
  * @returns {string}
  */
-function materialize_style(style_yaml) {
+function materializeStyle(style_yaml) {
     let deferred3_0;
     let deferred3_1;
     try {
         const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
         const ptr0 = passStringToWasm0(style_yaml, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len0 = WASM_VECTOR_LEN;
-        wasm.materialize_style(retptr, ptr0, len0);
+        wasm.materializeStyle(retptr, ptr0, len0);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
@@ -132,15 +140,22 @@ function materialize_style(style_yaml) {
         wasm.__wbindgen_export3(deferred3_0, deferred3_1, 1);
     }
 }
-exports.materialize_style = materialize_style;
+exports.materializeStyle = materializeStyle;
 
 /**
- * Renders a full bibliography to HTML based on the provided style and references.
+ * Render a full bibliography to HTML.
+ *
+ * - `style_yaml` — Citum style as YAML
+ * - `refs_json` — bibliography as JSON object or CSL-JSON array
+ *
+ * # Errors
+ *
+ * Returns a string error on style or reference parse failure.
  * @param {string} style_yaml
  * @param {string} refs_json
  * @returns {string}
  */
-function render_bibliography(style_yaml, refs_json) {
+function renderBibliography(style_yaml, refs_json) {
     let deferred4_0;
     let deferred4_1;
     try {
@@ -149,7 +164,7 @@ function render_bibliography(style_yaml, refs_json) {
         const len0 = WASM_VECTOR_LEN;
         const ptr1 = passStringToWasm0(refs_json, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         const len1 = WASM_VECTOR_LEN;
-        wasm.render_bibliography(retptr, ptr0, len0, ptr1, len1);
+        wasm.renderBibliography(retptr, ptr0, len0, ptr1, len1);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
@@ -168,22 +183,27 @@ function render_bibliography(style_yaml, refs_json) {
         wasm.__wbindgen_export3(deferred4_0, deferred4_1, 1);
     }
 }
-exports.render_bibliography = render_bibliography;
+exports.renderBibliography = renderBibliography;
 
 /**
- * Renders a single citation to HTML.
+ * Render a single citation to HTML.
  *
- * * `style_yaml` - The citation style definition in YAML format.
- * * `refs_json` - A JSON map of reference data.
- * * `citation_json` - A JSON string representing the `Citation` object to render.
- * * `mode` - Optional mode override (e.g. "Integral").
+ * - `style_yaml` — Citum style as YAML
+ * - `refs_json` — bibliography as JSON object (`{id: Reference}`) or CSL-JSON array
+ * - `citation_json` — a single [`Citation`] as JSON
+ * - `mode` — optional mode override (e.g. `"Integral"`)
+ *
+ * # Errors
+ *
+ * Returns a string error on style/reference/citation parse failure, invalid
+ * mode string, or engine rendering error.
  * @param {string} style_yaml
  * @param {string} refs_json
  * @param {string} citation_json
  * @param {string | null} [mode]
  * @returns {string}
  */
-function render_citation(style_yaml, refs_json, citation_json, mode) {
+function renderCitation(style_yaml, refs_json, citation_json, mode) {
     let deferred6_0;
     let deferred6_1;
     try {
@@ -196,7 +216,7 @@ function render_citation(style_yaml, refs_json, citation_json, mode) {
         const len2 = WASM_VECTOR_LEN;
         var ptr3 = isLikeNone(mode) ? 0 : passStringToWasm0(mode, wasm.__wbindgen_export, wasm.__wbindgen_export2);
         var len3 = WASM_VECTOR_LEN;
-        wasm.render_citation(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
+        wasm.renderCitation(retptr, ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3);
         var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
         var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
         var r2 = getDataViewMemory0().getInt32(retptr + 4 * 2, true);
@@ -215,11 +235,10 @@ function render_citation(style_yaml, refs_json, citation_json, mode) {
         wasm.__wbindgen_export3(deferred6_0, deferred6_1, 1);
     }
 }
-exports.render_citation = render_citation;
+exports.renderCitation = renderCitation;
 
 /**
- * Renders a single citation to HTML directly from a style intent, bypassing
- * the intermediate step of generating a YAML style.
+ * Render a citation to HTML directly from a style intent.
  * @param {string} intent_json
  * @param {string} refs_json
  * @param {string} citation_json
@@ -259,6 +278,31 @@ function render_intent_citation(intent_json, refs_json, citation_json, mode) {
     }
 }
 exports.render_intent_citation = render_intent_citation;
+
+/**
+ * Validate a Citum style string.
+ *
+ * # Errors
+ *
+ * Returns a string error describing the parse or schema validation failure.
+ * @param {string} style_yaml
+ */
+function validateStyle(style_yaml) {
+    try {
+        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
+        const ptr0 = passStringToWasm0(style_yaml, wasm.__wbindgen_export, wasm.__wbindgen_export2);
+        const len0 = WASM_VECTOR_LEN;
+        wasm.validateStyle(retptr, ptr0, len0);
+        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
+        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
+        if (r1) {
+            throw takeObject(r0);
+        }
+    } finally {
+        wasm.__wbindgen_add_to_stack_pointer(16);
+    }
+}
+exports.validateStyle = validateStyle;
 
 function __wbg_get_imports() {
     const import0 = {
