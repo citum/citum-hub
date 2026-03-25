@@ -57,6 +57,13 @@ Product vision and user stories live in `specs/`. Start there for feature contex
 - `specs/STYLE_EDITOR_VISION.md` — Style editor and wizard vision
 - `specs/BUN_ADOPTION_PLAN.md` — Roadmap for Bun-native migration
 
+## Commit Conventions
+
+- Format: `<type>(<scope>): <description>`
+- Subject line: max 50 characters
+- Body lines: max 72 characters
+- No `Co-Authored-By` footer
+
 ## Verification
 
 ```bash
