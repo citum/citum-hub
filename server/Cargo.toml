@@ -1,8 +1,10 @@
 [package]
 name = "style-editor-server"
-version = "0.1.0"
-edition = "2021"
-license = "AGPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+description = "Backend server for Citum Hub."
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 axum = "0.7"
@@ -22,7 +24,7 @@ jsonwebtoken = "9"
 reqwest = { version = "0.12", features = ["json"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 
-# Core CSL logic
+# Core Citum logic
 citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", branch = "main" }
 citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", branch = "main" }
 intent_engine = { package = "intent-engine", path = "crates/intent-engine" }

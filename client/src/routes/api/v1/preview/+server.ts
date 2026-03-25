@@ -7,6 +7,13 @@ const BACKEND_URL =
 export const POST: RequestHandler = async ({ request, fetch, url }) => {
 	try {
 		const body = await request.json();
+
+		// Environment Check & Fix: Normalize mode to kebab-case for the backend engine
+		if (body.mode) {
+			if (body.mode === "NonIntegral") body.mode = "non-integral";
+			if (body.mode === "Integral") body.mode = "integral";
+		}
+
 		const headers: Record<string, string> = {
 			"Content-Type": "application/json",
 		};

@@ -7,13 +7,19 @@ import { file, sql } from "bun";
 
 const PROJECT_ROOT = path.resolve(process.cwd(), "..");
 const configuredResourceRoot = process.env.CITUM_CORE_PATH;
+
+// Look for citum-core in sibling directory if not explicitly configured
+const siblingCorePath = path.resolve(PROJECT_ROOT, "..", "citum-core");
+const actualCorePath =
+	configuredResourceRoot || (syncFs.existsSync(siblingCorePath) ? siblingCorePath : null);
+
 const RESOURCE_ROOT =
-	configuredResourceRoot && syncFs.existsSync(path.join(configuredResourceRoot, "styles"))
-		? configuredResourceRoot
-		: configuredResourceRoot &&
-			  syncFs.existsSync(path.join(configuredResourceRoot, "resources", "styles"))
-			? path.join(configuredResourceRoot, "resources")
+	actualCorePath && syncFs.existsSync(path.join(actualCorePath, "styles"))
+		? actualCorePath
+		: actualCorePath && syncFs.existsSync(path.join(actualCorePath, "resources", "styles"))
+			? path.join(actualCorePath, "resources")
 			: path.join(PROJECT_ROOT, "resources");
+
 const CORE_STYLES_DIR = path.join(RESOURCE_ROOT, "styles");
 const CORE_DEFAULT_REGISTRY_PATH = path.join(RESOURCE_ROOT, "registry", "default.yaml");
 const HUB_PRIMARY_REGISTRY_PATH = path.join(
@@ -23,6 +29,13 @@ const HUB_PRIMARY_REGISTRY_PATH = path.join(
 	"hub-primary.yaml"
 );
 const SYSTEM_USER_EMAIL = "system@citum.org";
+
+// Define a custom schema to handle !custom tags in Citum YAML
+const CUSTOM_TAG = new yaml.Type("!custom", {
+	kind: "mapping",
+	construct: (data) => data,
+});
+const CITUM_SCHEMA = yaml.DEFAULT_SCHEMA.extend([CUSTOM_TAG]);
 
 type RegistrySlug = "core-default" | "hub-primary" | "hub-candidates";
 type TargetKind = "builtin" | "path";
@@ -307,7 +320,7 @@ async function ensureSystemUser() {
 }
 
 function shouldSyncStyle(filename: string) {
-	return !filename.startsWith("experimental/") && !filename.startsWith("preset-bases/");
+	return !filename.startsWith("experimental/");
 }
 
 function parseStyleYamlMetadata(
@@ -333,7 +346,7 @@ function parseStyleYamlMetadata(
 	}
 
 	try {
-		const parsed = (yaml.load(citum) || {}) as Record<string, unknown>;
+		const parsed = (yaml.load(citum, { schema: CITUM_SCHEMA }) || {}) as Record<string, unknown>;
 		const info = ((parsed.info as Record<string, unknown> | undefined) || {}) as Record<
 			string,
 			unknown
@@ -457,10 +470,17 @@ async function ensureRegistrySeeded() {
 async function buildResolutionContext(): Promise<ResolutionContext> {
 	const styles = (await syncCoreStyles()) as StyleRow[];
 	const stylesByKey = new Map<string, StyleRow>();
-	const defaultRegistry = (yaml.load(await file(CORE_DEFAULT_REGISTRY_PATH).text()) || {
-		version: "1",
-		styles: [],
-	}) as CoreRegistryDocument;
+
+	let defaultRegistry: CoreRegistryDocument = { version: "1", styles: [] };
+	if (syncFs.existsSync(CORE_DEFAULT_REGISTRY_PATH)) {
+		defaultRegistry = (yaml.load(await file(CORE_DEFAULT_REGISTRY_PATH).text(), {
+			schema: CITUM_SCHEMA,
+		}) || defaultRegistry) as CoreRegistryDocument;
+	} else {
+		console.warn(
+			`[Registry] WARNING: Core default registry not found at ${CORE_DEFAULT_REGISTRY_PATH}`
+		);
+	}
 
 	for (const style of styles) {
 		const metadata = parseStyleYamlMetadata(style.citum, style.title, style.filename);
@@ -641,7 +661,17 @@ async function replaceEntryNames(
 }
 
 async function syncCoreDefaultRegistry(coreRegistryId: string, context: ResolutionContext) {
-	const doc = (yaml.load(await file(CORE_DEFAULT_REGISTRY_PATH).text()) || {
+	if (!syncFs.existsSync(CORE_DEFAULT_REGISTRY_PATH)) {
+		console.warn(
+			`[Registry] WARNING: Core default registry not found at ${CORE_DEFAULT_REGISTRY_PATH}`
+		);
+		console.warn("[Registry] Ensure CITUM_CORE_PATH is set correctly.");
+		return 0;
+	}
+
+	const doc = (yaml.load(await file(CORE_DEFAULT_REGISTRY_PATH).text(), {
+		schema: CITUM_SCHEMA,
+	}) || {
 		version: "1",
 		styles: [],
 	}) as CoreRegistryDocument;
@@ -692,7 +722,10 @@ async function seedHubPrimaryRegistryFromBundle(
 	context: ResolutionContext
 ) {
 	const raw = await file(HUB_PRIMARY_REGISTRY_PATH).text();
-	const doc = (yaml.load(raw) || { version: "1", styles: [] }) as CoreRegistryDocument;
+	const doc = (yaml.load(raw, { schema: CITUM_SCHEMA }) || {
+		version: "1",
+		styles: [],
+	}) as CoreRegistryDocument;
 	if (!Array.isArray(doc.styles) || doc.styles.length === 0) {
 		throw new Error(`Static hub registry is empty: ${HUB_PRIMARY_REGISTRY_PATH}`);
 	}
@@ -1159,7 +1192,9 @@ export async function importRegistryDocument({
 		throw new Error(`Unknown registry: ${registrySlug}`);
 	}
 
-	const parsed = (format === "json" ? JSON.parse(body) : yaml.load(body)) as CoreRegistryDocument;
+	const parsed = (
+		format === "json" ? JSON.parse(body) : yaml.load(body, { schema: CITUM_SCHEMA })
+	) as CoreRegistryDocument;
 	if (!parsed || !Array.isArray(parsed.styles)) {
 		throw new Error("Invalid registry document.");
 	}

@@ -118,10 +118,10 @@ fn local_styles_dir() -> PathBuf {
 }
 
 fn load_local_style_yaml(filename: &str) -> Option<String> {
-    if let Some(core) = core_styles_dir() {
-        if let Some(yaml) = load_style_yaml_from_root(&core, filename) {
-            return Some(yaml);
-        }
+    if let Some(core) = core_styles_dir()
+        && let Some(yaml) = load_style_yaml_from_root(&core, filename)
+    {
+        return Some(yaml);
     }
     load_style_yaml_from_root(&local_styles_dir(), filename)
 }
@@ -585,20 +585,20 @@ fn generate_preview_set_internal(
             },
             ..Default::default()
         });
-    } else if class != "note" && is_author_date_like {
-        if let Some(ref mut citation) = effective_style.citation {
-            if citation.wrap.is_none() {
-                // Saved author-date styles may omit parenthetical wrapping.
-                citation.wrap = Some(citum_schema::template::WrapPunctuation::Parentheses);
-            }
+    } else if class != "note" && is_author_date_like
+        && let Some(ref mut citation) = effective_style.citation
+    {
+        if citation.wrap.is_none() {
+            // Saved author-date styles may omit parenthetical wrapping.
+            citation.wrap = Some(citum_schema::template::WrapPunctuation::Parentheses);
+        }
 
-            if citation.integral.is_none() {
-                // Narrative previews should avoid inheriting parenthetical wrapping.
-                citation.integral = Some(Box::new(citum_schema::CitationSpec {
-                    wrap: Some(citum_schema::template::WrapPunctuation::None),
-                    ..Default::default()
-                }));
-            }
+        if citation.integral.is_none() {
+            // Narrative previews should avoid inheriting parenthetical wrapping.
+            citation.integral = Some(Box::new(citum_schema::CitationSpec {
+                wrap: Some(citum_schema::template::WrapPunctuation::None),
+                ..Default::default()
+            }));
         }
     }
 
@@ -760,11 +760,11 @@ async fn decide_handler(Json(intent): Json<StyleIntent>) -> Json<DecisionPackage
     // Also generate per-choice previews
     for choice_preview in &mut package.previews {
         if let Ok(mut intent_val) = serde_json::to_value(&intent) {
-            if let Some(obj) = intent_val.as_object_mut() {
-                if let Some(choice_obj) = choice_preview.choice_value.as_object() {
-                    for (k, v) in choice_obj {
-                        obj.insert(k.clone(), v.clone());
-                    }
+            if let Some(obj) = intent_val.as_object_mut()
+                && let Some(choice_obj) = choice_preview.choice_value.as_object()
+            {
+                for (k, v) in choice_obj {
+                    obj.insert(k.clone(), v.clone());
                 }
             }
             if let Ok(temp_intent) = serde_json::from_value::<StyleIntent>(intent_val) {

@@ -24,6 +24,9 @@ COPY server/ ./server/
 # Compile WASM bridge (nodejs target)
 RUN cd server/crates/wasm-bridge && wasm-pack build --target nodejs --release
 
+# Clone citum-core for styles and registry
+RUN git clone https://github.com/citum/citum-core.git /app/citum-core
+
 # Copy client source and install deps
 COPY client/ ./client/
 WORKDIR /app/client
@@ -37,8 +40,12 @@ WORKDIR /app
 # WASM bridge pkg
 COPY --from=builder /app/server/crates/wasm-bridge/pkg ./server/crates/wasm-bridge/pkg
 
-# Bundled runtime assets (fixtures, styles, registries)
+# Bundled runtime assets (fixtures, styles, registries) from hub
 COPY resources/ ./resources/
+
+# Core assets from citum-core
+COPY --from=builder /app/citum-core/styles ./citum-core/styles
+COPY --from=builder /app/citum-core/registry ./citum-core/registry
 
 # API source and deps
 COPY --from=builder /app/client/src ./client/src
@@ -50,8 +57,9 @@ COPY --from=builder /app/client/migrations ./client/migrations
 WORKDIR /app/client
 
 ENV PORT=3002
-ENV CITUM_CORE_PATH=/app/resources
+ENV CITUM_CORE_PATH=/app/citum-core
 EXPOSE 3002
+
 
 # Run migrations, then start the API. Registry warmup happens in-process after bind.
 CMD ["sh", "-c", "bun run scripts/migrate.ts && bun src/api/index.ts"]

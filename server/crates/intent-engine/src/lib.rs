@@ -107,10 +107,8 @@ impl StyleIntent {
         mut updates: serde_json::Value,
         return_to_menu: bool,
     ) -> serde_json::Value {
-        if return_to_menu {
-            if let Some(obj) = updates.as_object_mut() {
-                obj.insert("customize_target".to_string(), serde_json::json!("menu"));
-            }
+        if return_to_menu && let Some(obj) = updates.as_object_mut() {
+            obj.insert("customize_target".to_string(), serde_json::json!("menu"));
         }
         updates
     }
