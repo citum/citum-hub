@@ -1,8 +1,10 @@
 [package]
 name = "intent-engine"
-version = "0.1.0"
-edition = "2021"
-license = "AGPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+description = "Core logic for Citum Hub's style creation wizard and intent resolution."
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }

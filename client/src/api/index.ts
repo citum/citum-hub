@@ -28,15 +28,33 @@ const app = new Hono().basePath("/api");
 
 const PROJECT_ROOT = path.resolve(process.cwd(), "..");
 const configuredResourceRoot = process.env.CITUM_CORE_PATH;
+
+// Look for citum-core in sibling directory if not explicitly configured
+const siblingCorePath = path.resolve(PROJECT_ROOT, "..", "citum-core");
+const actualCorePath =
+	configuredResourceRoot || (fs.existsSync(siblingCorePath) ? siblingCorePath : null);
+
 const RESOURCE_ROOT =
-	configuredResourceRoot && fs.existsSync(path.join(configuredResourceRoot, "fixtures"))
-		? configuredResourceRoot
-		: configuredResourceRoot &&
-			  fs.existsSync(path.join(configuredResourceRoot, "resources", "fixtures"))
-			? path.join(configuredResourceRoot, "resources")
+	actualCorePath && fs.existsSync(path.join(actualCorePath, "fixtures"))
+		? actualCorePath
+		: actualCorePath && fs.existsSync(path.join(actualCorePath, "resources", "fixtures"))
+			? path.join(actualCorePath, "resources")
 			: path.join(PROJECT_ROOT, "resources");
 
 console.log("[Setup] RESOURCE_ROOT:", RESOURCE_ROOT);
+
+// Startup Validation: ensure we actually have styles to work with
+const stylesDir = path.join(RESOURCE_ROOT, "styles");
+if (!fs.existsSync(stylesDir) || fs.readdirSync(stylesDir).length === 0) {
+	console.error("\n" + "!".repeat(80));
+	console.error("FATAL ERROR: Styles directory is missing or empty!");
+	console.error(`Path: ${stylesDir}`);
+	console.error("The Hub cannot link aliases or generate previews without the citum-core styles.");
+	console.error("Please ensure one of the following:");
+	console.error("1. CITUM_CORE_PATH is set to your local citum-core repository.");
+	console.error("2. A 'citum-core' directory exists as a sibling to 'citum-hub'.");
+	console.error("!".repeat(80) + "\n");
+}
 
 const JWT_SECRET = new TextEncoder().encode(
 	process.env.JWT_SECRET || "default_secret_for_development"
@@ -565,7 +583,7 @@ app.post("/v1/decide", async (c) => {
 						JSON.stringify(previewIntent),
 						refsStr,
 						citeStr,
-						"NonIntegral"
+						"non-integral"
 					);
 				} catch {
 					preview.html = "";
@@ -623,13 +641,13 @@ app.post("/v1/preview", async (c) => {
 					previewStyleYaml,
 					refsStr,
 					citeNonIntegralStr,
-					"NonIntegral"
+					"non-integral"
 				);
 				const renderedIntegral = render_citation(
 					previewStyleYaml,
 					refsStr,
 					citeIntegralStr,
-					"Integral"
+					"integral"
 				);
 
 				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;
@@ -648,13 +666,13 @@ app.post("/v1/preview", async (c) => {
 					intentStr,
 					refsStr,
 					citeNonIntegralStr,
-					"NonIntegral"
+					"non-integral"
 				);
 				const renderedIntegral = render_intent_citation(
 					intentStr,
 					refsStr,
 					citeIntegralStr,
-					"Integral"
+					"integral"
 				);
 
 				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;

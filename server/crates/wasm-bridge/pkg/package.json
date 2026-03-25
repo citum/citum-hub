@@ -1,6 +1,12 @@
 {
   "name": "wasm-bridge",
-  "version": "0.1.0",
+  "description": "WASM bridge for Citum Hub, providing citation rendering and intent-engine integration.",
+  "version": "0.6.0",
+  "license": "AGPL-3.0-or-later",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/citum/citum-hub"
+  },
   "files": [
     "wasm_bridge_bg.wasm",
     "wasm_bridge.js",

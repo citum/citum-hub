@@ -121,12 +121,12 @@
 				fetch("/api/v1/preview", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ style_yaml: citum, mode: "NonIntegral" }),
+					body: JSON.stringify({ style_yaml: citum, mode: "non-integral" }),
 				}),
 				fetch("/api/v1/preview", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ style_yaml: citum, mode: "Integral" }),
+					body: JSON.stringify({ style_yaml: citum, mode: "integral" }),
 				}),
 			]);
 

@@ -45,18 +45,13 @@
 		}, 300);
 	}
 
-	function updateContributorsField(path: string, value: unknown) {
-		wizardStore.updateStyleField(`options.contributors.${path}`, value);
+	function updateOptionField(path: string, value: unknown) {
+		wizardStore.updateStyleField(`options.${path}`, value);
 		debouncedFetchPreview();
 	}
 
 	function updateMonthFormat(month: string) {
-		wizardStore.updateStyleField("options.dates.month", month);
-		debouncedFetchPreview();
-	}
-
-	function updateTitleCase(caseStyle: string) {
-		wizardStore.updateStyleField("options.titles.default.text-case", caseStyle);
+		wizardStore.updateStyleField("options.dates", month);
 		debouncedFetchPreview();
 	}
 
@@ -264,9 +259,8 @@
 								<RefinementControls
 									{activeTab}
 									{currentOptions}
-									onUpdateContributors={updateContributorsField}
+									onUpdateOption={updateOptionField}
 									onUpdateDates={updateMonthFormat}
-									onUpdateTitles={updateTitleCase}
 									onUpdatePageRange={updatePageRangeFormat}
 									onUpdateLocatorLabel={updateLocatorLabel}
 								/>

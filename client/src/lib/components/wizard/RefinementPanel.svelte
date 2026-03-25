@@ -14,18 +14,13 @@
 		}, 300);
 	}
 
-	function updateContributorsField(path: string, value: unknown) {
-		wizardStore.updateStyleField(`options.contributors.${path}`, value);
+	function updateOptionField(path: string, value: unknown) {
+		wizardStore.updateStyleField(`options.${path}`, value);
 		debouncedFetchPreview();
 	}
 
 	function updateMonthFormat(month: string) {
-		wizardStore.updateStyleField("options.dates.month", month);
-		debouncedFetchPreview();
-	}
-
-	function updateTitleCase(caseStyle: string) {
-		wizardStore.updateStyleField("options.titles.default.text-case", caseStyle);
+		wizardStore.updateStyleField("options.dates", month);
 		debouncedFetchPreview();
 	}
 
@@ -44,7 +39,7 @@
 	}
 
 	function skipToReview() {
-		wizardStore.setStep(7);
+		wizardStore.setStep(5);
 		goto("/create/review");
 	}
 
@@ -53,16 +48,41 @@
 
 <div class="min-h-screen bg-background-light p-4 sm:p-6 lg:p-8">
 	<div class="mx-auto max-w-7xl">
-		<div class="mb-6 space-y-2">
-			<h1 class="font-display text-3xl font-semibold text-text-main">Refine your style</h1>
-			<p class="text-text-secondary">Customize naming, dates, and title formatting</p>
+		<!-- Progress Indicator -->
+		<div class="mb-8 max-w-2xl mx-auto w-full text-center shrink-0 relative">
+			<button
+				onclick={() => history.back()}
+				class="absolute top-0 sm:top-2 left-0 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+			>
+				<span class="material-symbols-outlined">arrow_back</span>
+			</button>
+			<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 4 of 5</p>
+			<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+				<div
+					class="h-full bg-primary rounded-full transition-all duration-500"
+					style="width: 80%"
+				></div>
+			</div>
+			<h1 class="text-2xl font-bold mt-4 text-slate-900 dark:text-white">Refine your style</h1>
+			<p class="text-text-secondary mt-1">Fine-tune the details (or skip to finish)</p>
 		</div>
 
-		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_1.5fr]">
+		<div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
 			<!-- Left: Preview (on mobile: bottom) -->
 			<div class="order-2 lg:order-1">
 				<div class="sticky top-6">
-					<PreviewPane {activeHighlight} />
+					<div
+						class="flex flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden"
+					>
+						<div
+							class="flex items-center justify-between border-b border-border-light bg-surface-light px-4 py-3"
+						>
+							<h3 class="font-semibold text-text-main">Live Preview</h3>
+						</div>
+						<div class="bg-surface-main p-6 overflow-auto max-h-[calc(100vh-16rem)]">
+							<PreviewPane {activeHighlight} />
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -70,9 +90,8 @@
 			<div class="order-1 space-y-4 lg:order-2">
 				<RefinementControls
 					{currentOptions}
-					onUpdateContributors={updateContributorsField}
+					onUpdateOption={updateOptionField}
 					onUpdateDates={updateMonthFormat}
-					onUpdateTitles={updateTitleCase}
 					onUpdatePageRange={updatePageRangeFormat}
 					onUpdateLocatorLabel={updateLocatorLabel}
 					onHighlightChange={(field) => {

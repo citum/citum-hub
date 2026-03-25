@@ -122,7 +122,7 @@
 		>
 			<span class="material-symbols-outlined">arrow_back</span>
 		</button>
-		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 4 of 4</p>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 5 of 5</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
 			<div
 				class="h-full bg-primary rounded-full transition-all duration-500"
@@ -368,7 +368,7 @@
 		<!-- Back to Wizard -->
 		<button
 			onclick={() => {
-				wizardStore.setStep(3);
+				wizardStore.setStep(4);
 				goto("/create/refine");
 			}}
 			class="flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-8 py-3 font-bold text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 transition-all focus:ring-4 focus:ring-slate-100"

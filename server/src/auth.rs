@@ -135,12 +135,11 @@ where
             .get(axum::http::header::AUTHORIZATION)
             .and_then(|h| h.to_str().ok());
 
-        if let Some(header) = auth_header {
-            if let Some(token) = header.strip_prefix("Bearer ") {
-                if let Ok(claims) = decode_jwt(token) {
-                    return Ok(OptionalUser(Some(claims.sub)));
-                }
-            }
+        if let Some(header) = auth_header
+            && let Some(token) = header.strip_prefix("Bearer ")
+            && let Ok(claims) = decode_jwt(token)
+        {
+            return Ok(OptionalUser(Some(claims.sub)));
         }
 
         Ok(OptionalUser(None))

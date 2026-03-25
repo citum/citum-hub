@@ -1,18 +1,16 @@
 <script lang="ts">
-	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import RefinementPanel from "$lib/components/wizard/RefinementPanel.svelte";
+	import { goto } from "$app/navigation";
 
 	onMount(() => {
 		if (!wizardStore.styleYaml) {
 			goto("/create/field", { replaceState: true });
 			return;
 		}
-		wizardStore.setPhase("visual-customizer");
-		goto("/create/customize", { replaceState: true });
+		wizardStore.setStep(4);
 	});
 </script>
 
-<div class="flex items-center justify-center py-20">
-	<div class="animate-pulse text-sm text-text-secondary">Redirecting to the visual customizer…</div>
-</div>
+<RefinementPanel />

@@ -1,8 +1,10 @@
 [package]
 name = "style-editor-api"
-version = "0.1.0"
-edition = "2021"
-license = "AGPL-3.0-or-later"
+version.workspace = true
+edition.workspace = true
+description = "Internal API for Citum Hub's style editor."
+repository.workspace = true
+license.workspace = true
 
 [dependencies]
 axum = "0.7"
@@ -14,7 +16,7 @@ tracing = "0.1"
 tracing-subscriber = "0.3"
 indexmap = "2"
 
-# Core CSL logic
+# Core Citum logic
 citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", branch = "main" }
 citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", branch = "main" }
 intent-engine = { path = "../intent-engine" }

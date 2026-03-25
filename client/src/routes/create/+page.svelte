@@ -5,11 +5,13 @@
 
 	onMount(() => {
 		// Resume where the user left off, or start fresh
-		if (wizardStore.field && wizardStore.family && wizardStore.styleYaml) {
+		if (wizardStore.step === 5) {
 			goto("/create/review", { replaceState: true });
-		} else if (wizardStore.field && wizardStore.family) {
+		} else if (wizardStore.step === 4) {
+			goto("/create/refine", { replaceState: true });
+		} else if (wizardStore.step === 3) {
 			goto("/create/style", { replaceState: true });
-		} else if (wizardStore.field) {
+		} else if (wizardStore.step === 2) {
 			goto("/create/family", { replaceState: true });
 		} else {
 			goto("/create/field", { replaceState: true });

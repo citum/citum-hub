@@ -92,29 +92,29 @@ looks right, not what sounds right.
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│                    SvelteKit App                     │
-│                                                      │
+│                    SvelteKit App                    │
+│                                                     │
 │  ┌──────────┐   ┌──────────────┐   ┌──────────────┐ │
-│  │  Quick    │──▶│   Visual     │──▶│  Advanced    │ │
-│  │  Start    │   │  Customizer  │   │  Editor      │ │
-│  │  (Guide)  │◀──│  (Direct)    │◀──│  (YAML)      │ │
+│  │  Quick   │──▶│   Visual     │──▶│  Advanced    │ │
+│  │  Start   │   │  Customizer  │   │  Editor      │ │
+│  │  (Guide) │◀──│  (Direct)    │◀──│  (YAML)      │ │
 │  └──────────┘   └──────────────┘   └──────────────┘ │
-│       │                │                    │         │
-│       ▼                ▼                    ▼         │
-│  ┌──────────────────────────────────────────────┐    │
-│  │           WizardStore (Svelte 5 runes)        │    │
-│  │                                                │    │
-│  │  styleYaml ←→ parsedStyle ←→ wizardState      │    │
-│  └──────────────────────────────────────────────┘    │
-│                        │                              │
-│                        ▼                              │
-│  ┌──────────────────────────────────────────────┐    │
-│  │          WASM Bridge (citum-engine)            │    │
-│  │                                                │    │
-│  │  renderCitation(yaml, refs) → html             │    │
-│  │  renderBibliography(yaml, refs) → html         │    │
-│  │  validateStyle(yaml) → errors[]                │    │
-│  └──────────────────────────────────────────────┘    │
+│       │                │                    │       │
+│       ▼                ▼                    ▼       │
+│  ┌──────────────────────────────────────────────┐   │
+│  │           WizardStore (Svelte 5 runes)       │   │
+│  │                                              │   │
+│  │  styleYaml ←→ parsedStyle ←→ wizardState     │   │
+│  └──────────────────────────────────────────────┘   │
+│                        │                            │
+│                        ▼                            │
+│  ┌──────────────────────────────────────────────┐   │
+│  │          WASM Bridge (citum-engine)          │   │
+│  │                                              │   │
+│  │  renderCitation(yaml, refs) → html           │   │
+│  │  renderBibliography(yaml, refs) → html       │   │
+│  │  validateStyle(yaml) → errors[]              │   │
+│  └──────────────────────────────────────────────┘   │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -138,7 +138,7 @@ looks right, not what sounds right.
 
 ---
 
-## 4. Phase 1: Quick Start
+## 4. Quick Start (Phase 1)
 
 ### Purpose
 
@@ -301,14 +301,15 @@ choosing a name. When the navigation converges on an exact match the banner read
 | 3 | How are article titles formatted? | plain / "In quotes" |
 | 4 | Where does the year appear? | after volume/issue `2024;12(3)` / end `(2024)` / after title |
 
-**Note** (4 axes):
+**Note** (5 axes):
 
 | # | Question | Rendered choices |
 |---|----------|-----------------|
-| 1 | How are names written in footnotes? | Full name `John A. Smith` / Inverted `Smith, John A.` |
-| 2 | How are book titles shown? | *Italic* / plain |
-| 3 | On second citation, use… | Ibid. / shortened title / full repeat |
-| 4 | Do you also need a bibliography? | Yes / Footnotes only |
+| 1 | Where should citations appear? | Footnotes / Endnotes |
+| 2 | How are names written? | Full name `John A. Smith` / Inverted `Smith, John A.` |
+| 3 | How are book titles shown? | *Italic* / plain |
+| 4 | On second citation, use… | Ibid. / shortened title / full repeat |
+| 5 | Do you also need a bibliography? | Yes / Footnotes only |
 
 Each rendered choice is generated live by WASM using the actual CitumStyle for
 the closest matching converted style — not a static string mock.
@@ -343,48 +344,57 @@ the closest matching converted style — not a static string mock.
 Each section shows the current setting with a rendered example and a dropdown or
 button group to change it. Changing a setting instantly updates the left preview.
 
+**Schema Note:** Citum v2 separates configuration into `citation.options` and
+`bibliography.options`. The Quick Start abstracts this by targeting the global
+`options` block. Changes to settings like `name-form`, `dates`, or `titles` modify
+the global baseline, which then flow to the citation and bibliography components
+through Citum's inheritance model. This maintains concision while allowing
+specialized overrides (like short name forms in text citations) to be preserved
+as defined by the underlying preset. This ensures that a global change to
+"Initials" doesn't accidentally overwrite a style's specific citation rules.
+
 #### Section: Names
 
 Shows current name rendering with options:
 
 ```
 ┌─ Names ──────────────────────────────────────────┐
-│                                                    │
-│  Current: Smith, J. A., & Jones, B. C.             │
-│                                                    │
-│  Name order    [Family-first ▾]                    │
-│                 ├ Family-first    Smith, J. A.      │
-│                 ├ Given-first     J. A. Smith       │
-│                 └ Full names      John A. Smith     │
-│                                                    │
-│  And/ampersand  [Symbol (&) ▾]                     │
-│                  ├ Symbol (&)                       │
-│                  ├ Word (and)                       │
-│                  └ None (comma only)                │
-│                                                    │
-│  Et al. after   [3 authors ▾]                      │
-│                  ├ 1 author                         │
-│                  ├ 2 authors                        │
-│                  ├ 3 authors                        │
-│                  ├ 6 authors                        │
-│                  └ Show all                         │
-│                                                    │
-│  Initials       [Abbreviated (J. A.) ▾]            │
-│                  ├ Abbreviated (J. A.)              │
-│                  ├ Compact (JA)                     │
-│                  └ Full (John Andrew)               │
-│                                                    │
-└────────────────────────────────────────────────────┘
+│                                                  │
+│  Current: Smith, J. A., & Jones, B. C.           │
+│                                                  │
+│  Name order    [Family-first ▾]                  │
+│                 ├ Family-first    Smith, J. A.   │
+│                 ├ Given-first     J. A. Smith    │
+│                 └ Full names      John A. Smith  │
+│                                                  │
+│  And/ampersand  [Symbol (&) ▾]                   │
+│                  ├ Symbol (&)                    │
+│                  ├ Word (and)                    │
+│                  └ None (comma only)             │
+│                                                  │
+│  Et al. after   [3 authors ▾]                    │
+│                  ├ 1 author                      │
+│                  ├ 2 authors                     │
+│                  ├ 3 authors                     │
+│                  ├ 6 authors                     │
+│                  └ Show all                      │
+│                                                  │
+│  Initials       [Abbreviated (J. A.) ▾]          │
+│                  ├ Abbreviated (J. A.)           │
+│                  ├ Compact (JA)                  │
+│                  └ Full (John Andrew)            │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
-Each dropdown selection maps to specific fields in the style's `options.contributors`
-preset or override:
+Each dropdown selection maps to specific fields in the style's global `options.contributors`
+preset or override, but may be overridden in `citation.options` or `bibliography.options`.
 
 | UI Control | Style Path | Values |
 |-----------|-----------|--------|
-| Name order | `options.contributors.form` | `short` (family-first) / `long` (given-first) |
+| Name order | `options.contributors.name-form` | `family-first` / `given-first` / `full` |
 | And/ampersand | `options.contributors.and` | `symbol` / `text` / none |
-| Et al. after | `options.contributors.shorten.min` | 1-20 |
+| Et al. after | `options.contributors.shorten.min` | 1-50 (schema range; presets may use values such as 21) |
 | Initials | `options.contributors.initialize-with` | `". "` / `""` / omit |
 
 **Preset deviation tracking:** When the user changes a value that differs from the
@@ -396,48 +406,66 @@ deviates, the wizard expands to an explicit configuration (lower SQI but accurat
 
 ```
 ┌─ Dates ──────────────────────────────────────────┐
-│                                                    │
-│  Current: (2024)                                   │
-│                                                    │
-│  Format        [Year only ▾]                       │
-│                 ├ Year only         (2024)          │
-│                 ├ Month and year    (January 2024)  │
-│                 ├ Full date         (15 Jan 2024)   │
-│                 └ Numeric           (2024-01-15)    │
-│                                                    │
-│  Position      [After author ▾]                    │
-│                 ├ After author                      │
-│                 └ End of entry                      │
-│                                                    │
-└────────────────────────────────────────────────────┘
+│                                                  │
+│  Current: (2024)                                 │
+│                                                  │
+│  Format        [Year only ▾]                     │
+│                 ├ Year only       (2024)         │
+│                 ├ Month and year  (January 2024) │
+│                 ├ Full date       (15 Jan 2024)  │
+│                 └ Numeric         (2024-01-15)   │
+│                                                  │
+│  Position      [After author ▾]                  │
+│                 ├ After author                   │
+│                 └ End of entry                   │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
 #### Section: Titles
 
 ```
 ┌─ Titles ─────────────────────────────────────────┐
-│                                                    │
-│  Current: The role of memory in learning           │
-│                                                    │
-│  Article titles  [Sentence case ▾]                 │
-│                   ├ Sentence case                   │
-│                   ├ Title Case                      │
-│                   └ As entered                      │
-│                                                    │
-│  Article style   [No decoration ▾]                 │
-│                   ├ No decoration                   │
-│                   ├ "In quotes"                     │
-│                   └ Italic                          │
-│                                                    │
-│  Book titles     [Italic ▾]                        │
-│                   ├ Italic                          │
-│                   └ No decoration                   │
-│                                                    │
-└────────────────────────────────────────────────────┘
+│                                                  │
+│  Current: The role of memory in learning         │
+│                                                  │
+│  Article titles  [Sentence case ▾]               │
+│                   ├ Sentence case                │
+│                   ├ Title Case                   │
+│                   └ As entered                   │
+│                                                  │
+│  Article style   [No decoration ▾]               │
+│                   ├ No decoration                │
+│                   ├ "In quotes"                  │
+│                   └ Italic                       │
+│                                                  │
+│  Book titles     [Italic ▾]                      │
+│                   ├ Italic                       │
+│                   └ No decoration                │
+│                                                  │
+└──────────────────────────────────────────────────┘
+```
+
+#### Section: Labels
+
+```
+┌─ Labels ─────────────────────────────────────────┐
+│                                                  │
+│  Editor label   [Abbreviated (ed.) ▾]            │
+│                  ├ Abbreviated (ed.)             │
+│                  ├ Full (editor)                 │
+│                  └ Verb (edited by)              │
+│                                                  │
+│  Page label     [Abbreviated (p./pp.) ▾]         │
+│                  ├ Abbreviated (p./pp.)          │
+│                  ├ Symbol (§)                    │
+│                  └ None (number only)            │
+│                                                  │
+└──────────────────────────────────────────────────┘
 ```
 
 **Behavior:**
-- All three sections are expanded by default. User can collapse any section.
+- All four sections are expanded by default. User can collapse any section.
 - A "Skip — use defaults" button at the bottom advances directly to Step 7.
 - Changes update the live preview within 50ms (WASM rendering).
 - Back button returns to Step 3 (style navigator).
@@ -450,39 +478,39 @@ deviates, the wizard expands to an explicit configuration (lower SQI but accurat
 
 ```
 ┌────────────────────────────────────────────────────┐
-│  Name your style                                    │
-│  ┌──────────────────────────────────────────────┐   │
-│  │ My Department Style                           │   │
-│  └──────────────────────────────────────────────┘   │
-│  Auto-suggested: "APA Author-Date (Modified)"       │
-│                                                      │
-│  ┌──────────────────────────────────────────────┐   │
-│  │              FINAL PREVIEW                    │   │
-│  │                                                │   │
-│  │  In-text (parenthetical):                     │   │
-│  │  (Smith & Jones, 2024; Chen et al., 2023)     │   │
-│  │                                                │   │
-│  │  In-text (narrative):                         │   │
-│  │  Smith and Jones (2024) argue that...         │   │
-│  │                                                │   │
-│  │  Bibliography:                                │   │
-│  │  Chen, L., Kim, S., & Park, J. (2023).        │   │
-│  │      Title of the article. Journal of          │   │
-│  │      Examples, 15(2), 100–115.                 │   │
-│  │      https://doi.org/10.1234/example           │   │
-│  │  Smith, J. A., & Jones, B. C. (2024). ...     │   │
-│  │                                                │   │
-│  └──────────────────────────────────────────────┘   │
-│                                                      │
+│  Name your style                                   │
+│  ┌──────────────────────────────────────────────┐  │
+│  │ My Department Style                          │  │
+│  └──────────────────────────────────────────────┘  │
+│  Auto-suggested: "APA Author-Date (Modified)"      │
+│                                                    │
+│  ┌──────────────────────────────────────────────┐  │
+│  │              FINAL PREVIEW                   │  │
+│  │                                              │  │
+│  │  In-text (parenthetical):                    │  │
+│  │  (Smith & Jones, 2024; Chen et al., 2023)    │  │
+│  │                                              │  │
+│  │  In-text (narrative):                        │  │
+│  │  Smith and Jones (2024) argue that...        │  │
+│  │                                              │  │
+│  │  Bibliography:                               │  │
+│  │  Chen, L., Kim, S., & Park, J. (2023).       │  │
+│  │      Title of the article. Journal of        │  │
+│  │      Examples, 15(2), 100–115.               │  │
+│  │      https://doi.org/10.1234/example         │  │
+│  │  Smith, J. A., & Jones, B. C. (2024). ...    │  │
+│  │                                              │  │
+│  └──────────────────────────────────────────────┘  │
+│                                                    │
 │  ┌────────────┐  ┌───────────────┐  ┌───────────┐  │
-│  │ ◉ Download  │  │ ✎ Customize   │  │ ↺ Start   │  │
-│  │   YAML      │  │   Further     │  │   Over    │  │
+│  │ ◉ Download │  │ ✎ Customize   │  │ ↺ Start   │  │
+│  │   YAML     │  │   Further     │  │   Over    │  │
 │  └────────────┘  └───────────────┘  └───────────┘  │
-│                                                      │
-│  ┌────────────────────────────────────────────┐      │
-│  │ 💾 Save to Library (sign in with GitHub)    │      │
-│  └────────────────────────────────────────────┘      │
-│                                                      │
+│                                                    │
+│  ┌────────────────────────────────────────────┐    │
+│  │ 💾 Save to Library (sign in with GitHub)   │    │
+│  └────────────────────────────────────────────┘    │
+│                                                    │
 └────────────────────────────────────────────────────┘
 ```
 
@@ -524,38 +552,38 @@ right" becomes "exactly right".
 
 ```
 ┌──────────────────────────────────────────────────────────┐
-│  ◀ Back to Quick Start          Visual Customizer         │
+│  ◀ Back to Quick Start          Visual Customizer        │
 ├──────────────────────────────────────────────────────────┤
-│                                                            │
-│  Reference type: [Article ▾] [Book] [Chapter] [Report]     │
-│                                                            │
-│  ┌─────────────────────────────────────────────┐           │
-│  │               LIVE PREVIEW                   │           │
-│  │                                               │           │
-│  │  ╔═══════════════╗                            │           │
-│  │  ║ Smith, J. A.  ║, & Jones, B. C. (2024).   │           │
-│  │  ╚═══════════════╝                            │           │
-│  │  Title of the article. Journal of Examples,   │           │
-│  │  15(2), 100–115.                              │           │
-│  │  https://doi.org/10.1234/example              │           │
-│  │                                               │           │
-│  └─────────────────────────────────────────────┘           │
-│          ↕ Click any element to edit                        │
-│                                                            │
-│  ┌─────────────────────────────────────────────┐           │
-│  │            COMPONENT EDITOR                  │           │
-│  │                                               │           │
-│  │  Editing: Author (first position)             │           │
-│  │                                               │           │
-│  │  Name order     [Family, Given ▾]             │           │
-│  │  Initials       [J. A. ▾]                     │           │
-│  │  And connector  [& ▾]                         │           │
-│  │  Et al. after   [3 ▾]                         │           │
-│  │                                               │           │
-│  │  [Apply to all types]  [Only for articles]    │           │
-│  │                                               │           │
-│  └─────────────────────────────────────────────┘           │
-│                                                            │
+│                                                          │
+│  Reference type: [Article ▾] [Book] [Chapter] [Report]   │
+│                                                          │
+│  ┌─────────────────────────────────────────────┐         │
+│  │               LIVE PREVIEW                  │         │
+│  │                                             │         │
+│  │  ╔═══════════════╗                          │         │
+│  │  ║ Smith, J. A.  ║, & Jones, B. C. (2024).  │         │
+│  │  ╚═══════════════╝                          │         │
+│  │  Title of the article. Journal of Examples, │         │
+│  │  15(2), 100–115.                            │         │
+│  │  https://doi.org/10.1234/example            │         │
+│  │                                             │         │
+│  └─────────────────────────────────────────────┘         │
+│          ↕ Click any element to edit                     │
+│                                                          │
+│  ┌─────────────────────────────────────────────┐         │
+│  │            COMPONENT EDITOR                 │         │
+│  │                                             │         │
+│  │  Editing: Author (first position)           │         │
+│  │                                             │         │
+│  │  Name order     [Family, Given ▾]           │         │
+│  │  Initials       [J. A. ▾]                   │         │
+│  │  And connector  [& ▾]                       │         │
+│  │  Et al. after   [3 ▾]                       │         │
+│  │                                             │         │
+│  │  [Apply to all types]  [Only for articles]  │         │
+│  │                                             │         │
+│  └─────────────────────────────────────────────┘         │
+│                                                          │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -647,31 +675,48 @@ Each template component type has a dedicated editor panel:
 | Font | `emph`, `strong` | Checkboxes |
 | Link | (DOI/URL only) | Render as hyperlink toggle |
 
-### Type-Specific Overrides
+### Grouped Components (v2 `group`)
+
+V2 templates support `group` containers (formerly `items`), allowing multiple
+components to be grouped with a shared `delimiter`, `wrap`, `prefix`, and `suffix`.
+
+The Visual Customizer represents groups with a dashed outline. Clicking a grouped
+component selects it; double-clicking (or clicking the group outline) opens the
+Group Editor:
+
+| Control | Maps To | Options |
+|---------|---------|---------|
+| Delimiter | `delimiter` | Period, Comma, Semicolon, Space, None |
+| Wrap | `wrap` | Parentheses, Brackets, None |
+| Prefix/Suffix | `prefix`, `suffix` | Text input |
+
+### Type-Specific Variants (v2 `type-variants`)
 
 The reference type selector tabs above the preview let the user switch between
-rendered examples of different reference types (article, book, chapter, report,
-thesis, webpage).
+rendered examples of different reference types.
 
-When the user edits a component while viewing a specific type, the wizard asks:
+In v2, type-specific formatting is handled by defining a full template variant
+for that type. Component-level overrides no longer exist. When the user edits a
+component while viewing a specific type (e.g., Book), the wizard asks:
 
 ```
 ┌────────────────────────────────────────────┐
-│  Apply this change to:                      │
-│                                              │
-│  ◉ All reference types (recommended)        │
-│  ○ Only Article Journal                      │
-│                                              │
-│  [Apply]                                     │
+│  Apply this change to:                     │
+│                                            │
+│  ◉ All reference types (recommended)       │
+│  ○ Only Article Journal                    │
+│                                            │
+│  [Apply]                                   │
 └────────────────────────────────────────────┘
 ```
 
-- **"All types"** modifies the base template component → high concision SQI.
-- **"Only [type]"** creates a type-override entry in `bibliography.type-templates`
-  → lower concision but necessary for type-specific formatting.
+- **"All types"** modifies the base template.
+- **"Only [type]"** clones the entire base template into a `type-variant` for that
+  type and applies the change there. This ensures that the variant remains a
+  complete, independent template for that type.
 
-The default is always "All types" to nudge toward high SQI. Type-specific overrides
-are clearly marked in the preview with a small badge: `[article only]`.
+The default is always "All types". Type-specific variants are marked in the
+preview with a badge: `[article only]`.
 
 ### Adding and Removing Components
 
@@ -685,14 +730,14 @@ faded/strikethrough in the preview and can be re-enabled.
 
 ```
 ┌─ Add Component ──────────────┐
-│                                │
-│  ◉ Field       [DOI ▾]        │
-│  ○ Text        [________]     │
-│  ○ Localized   [retrieved ▾]  │
-│                                │
-│  [Add after: Page numbers ▾]   │
-│  [Insert]                      │
-└────────────────────────────────┘
+│                              │
+│  ◉ Field       [DOI ▾]       │
+│  ○ Text        [________]    │
+│  ○ Localized   [retrieved ▾] │
+│                              │
+│  [Add after: Page numbers ▾] │
+│  [Insert]                    │
+└──────────────────────────────┘
 ```
 
 This adds a new `TemplateVariable`, `TemplateNumber`, or `TemplateTerm` to the
@@ -724,45 +769,52 @@ toggle in the Visual Customizer.
 
 ### Features
 
-#### 6.1 Type-Template Manager
+#### 6.1 Type-Variant Manager
 
 A dedicated view for managing type-specific bibliography templates:
 
 ```
-┌─ Type Templates ─────────────────────────────────────────┐
+┌─ Type Variants ────────────────────────────────────────────┐
 │                                                            │
 │  Base template (all types)           [Edit visually]       │
-│  ├─ article-journal                  [Override] [Remove]   │
-│  ├─ book                             [Override] [Remove]   │
+│  ├─ article-journal                  [Variant] [Remove]    │
+│  ├─ book                             [Variant] [Remove]    │
 │  ├─ chapter                          ← uses base template  │
-│  ├─ report                           [Override] [Remove]   │
+│  ├─ report                           [Variant] [Remove]    │
 │  ├─ thesis                           ← uses base template  │
 │  └─ webpage                          ← uses base template  │
 │                                                            │
 │  Types using the base template are grayed out.             │
-│  "Override" creates a copy of the base template for that   │
+│  "Variant" creates a copy of the base template for that    │
 │  type, which can then be customized independently.         │
 │                                                            │
-└──────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────┘
 ```
 
-This gives experts visibility into the override structure and its SQI implications.
-A sidebar indicator shows: "Concision score: 87 — fewer overrides = higher score."
+This gives experts visibility into the variant structure and its SQI implications.
+A sidebar indicator shows: "Concision score: 87 — fewer variants = higher score."
 
 #### 6.2 Options Panel
 
-Global formatting options not covered by the visual customizer:
+Citum v2 separates configuration into global, citation, and bibliography blocks.
+The Options Panel in the Advanced Editor exposes these explicitly, whereas the Quick Start abstracts
+this hierarchy from the user.
 
-| Option | Control | Maps To |
-|--------|---------|---------|
-| Page range format | Dropdown | `options.page-range-format` |
-| Punctuation in quotes | Toggle | `options.punctuation-in-quote` |
-| Hanging indent | Toggle | `options.bibliography.hanging-indent` |
-| Entry spacing | Number input | `options.bibliography.entry-spacing` |
-| Subsequent citation | Dropdown | `citation.subsequent` template |
-| Ibid handling | Toggle + options | `citation.ibid` |
-| Sort order | Dropdown | `bibliography.sort` |
-| Substitute rules | Multi-select | `options.substitute` |
+| Category | Option | Control | Maps To |
+|----------|--------|---------|---------|
+| **Global** | Processing | Dropdown | `options.processing` |
+| | Substitute | Multi-select | `options.substitute` |
+| | Contributors | Config Editor | `options.contributors` |
+| | Dates | Config Editor | `options.dates` |
+| | Punctuation in quote | Toggle | `options.punctuation-in-quote` |
+| | Page range format | Dropdown | `options.page-range-format` |
+| **Citation** | Ibid handling | Toggle + opts | `citation.ibid` |
+| | Subsequent | Dropdown | `citation.subsequent` |
+| | Contributors | Config Editor | `citation.options.contributors` |
+| **Bibliography** | Hanging indent | Toggle | `bibliography.options.hanging-indent` |
+| | Entry spacing | Number | `bibliography.options.entry-spacing` |
+| | Sort order | Dropdown | `bibliography.sort` |
+| | Contributors | Config Editor | `bibliography.options.contributors` |
 
 #### 6.3 YAML Editor
 
@@ -795,7 +847,18 @@ scenarios. Each set contains 6-8 references covering:
 | `thesis` | University context | Degree type, institution |
 | `webpage` | Digital-only | URL, access date, no volume/pages |
 | `paper-conference` | Event context | Conference name, proceedings |
-| `article-magazine` | (optional) | Popular press, no DOI |
+| `legal-case` | Legal scholarship | Reporter, volume, authority |
+| `patent` | Technical / legal | Patent number, country |
+| `software` | Technical | Version, publisher, URL |
+| `dataset` | Science | Repository, version, DOI |
+| `standard` | Industry | Organization, number |
+| `entry-encyclopedia` | Humanities/Reference | Encyclopedia title, volume, pages |
+
+**Note on Structural Types:** While the Quick Start phase and Phase 2 abstract specific types from the
+user, the Wizard should internally utilize structural types (e.g., `Monograph`,
+`Serial`, `Container`, `Periodical`) to optimize template logic. For instance,
+if a user changes a date format for a `book`, the Wizard should evaluate if this
+should apply to all `Monograph` types to maintain style consistency and high SQI.
 
 References should include edge cases: multi-author (for et al.), institutional
 author (for literal names), translated works (for translator handling), and
@@ -848,33 +911,36 @@ produce maintainable, clean styles.
 ### 8.1 Preset Preservation
 
 When the user's settings match a known preset, the YAML output uses the preset
-name rather than expanding to explicit configuration:
+name rather than expanding to explicit configuration. Global options define the
+baseline; citation/bibliography blocks contain overrides.
 
 ```yaml
-# High SQI (preset match)
+# Global defaults in APA
 options:
-  contributors: apa
-
-# Lower SQI (expanded — same behavior, harder to maintain)
-options:
+  processing: author-date
+  substitute: standard
   contributors:
-    form: short
-    and: symbol
     initialize-with: ". "
-    shorten:
-      min: 3
-      use-first: 1
+    and: symbol
+    shorten: { min: 21, use-first: 19 }
+
+# Citation override for shorter et-al
+citation:
+  options:
+    contributors:
+      shorten: { min: 3, use-first: 1 }
 ```
 
 The wizard tracks preset deviation and only expands when necessary. A subtle
 indicator could show: "Based on APA preset" or "Custom configuration" — this
 helps users understand they're building on a standard.
 
-### 8.2 Type-Override Discipline
+### 8.2 Type-Variant Discipline (v2 `type-variants`)
 
-The "Apply to all types" default in the Component Editor nudges users toward
-fewer type-overrides (higher concision score). Type-overrides are still easy to
-create, but the default is always the base template.
+The wizard nudges users toward maintaining a single base template and only
+creating `type-variants` when a reference type diverges significantly. This
+maintains higher concision scores. Type-variants are full templates for a
+specific type; component-level overrides are no longer supported.
 
 ### 8.3 Template Reuse (use_preset)
 
@@ -888,7 +954,7 @@ In the Advanced Editor, an optional SQI panel shows the four subscores with
 brief explanations:
 
 ```
-┌─ Style Quality ──────────────────────────────────┐
+┌─ Style Quality ────────────────────────────────────┐
 │                                                    │
 │  Overall                          ████████░░  85   │
 │                                                    │
@@ -915,7 +981,7 @@ The central store uses Svelte 5 runes (`$state`, `$derived`):
 
 ```typescript
 interface WizardState {
-  // Phase 1 tracking
+  // Quick Start tracking
   phase: 'quick-start' | 'visual-customizer' | 'advanced';
   quickStartStep: number; // 1-7
   field: CitationField | null;
@@ -1045,12 +1111,12 @@ Each route is a SvelteKit page that reads from and writes to the shared
 │   │   │   └── VariableEditor.svelte
 │   │   ├── TypeSelector.svelte
 │   │   └── ComponentAdder.svelte
-│   └── AdvancedEditor.svelte    # Phase 3
-│       ├── TypeTemplateManager.svelte
-│       ├── OptionsPanel.svelte
-│       ├── YamlEditor.svelte
-│       └── SqiDashboard.svelte
-└── PreviewPane.svelte           # Shared live preview (WASM-rendered)
+│   ├── AdvancedEditor.svelte    # Phase 3
+│   │   ├── TypeVariantManager.svelte
+│   │   ├── OptionsPanel.svelte
+│   │   ├── YamlEditor.svelte
+│   │   └── SqiDashboard.svelte
+│   └── PreviewPane.svelte       # Shared live preview (WASM-rendered)
 ```
 
 ### 10.3 Shared Components
@@ -1134,12 +1200,12 @@ The WizardStore maintains a history stack of `Style` snapshots:
 
 ### 12.3 Progress Indicator
 
-Phase 1 uses a step-based progress bar:
+The Quick Start phase uses a step-based progress bar:
 - Total steps = 7 (fixed, regardless of branch).
 - Current step = the route's step number.
 - Back navigation updates the progress bar accurately (no missing_fields drift).
 
-Phase 2 and 3 do not show a progress bar (there is no linear path to "complete").
+The Visual Customizer and Advanced Editor do not show a progress bar (there is no linear path to "complete").
 Instead, the header shows the current phase name.
 
 ### 12.4 Session Persistence
@@ -1257,7 +1323,7 @@ An implementation is complete when:
 19. Undo/Redo works for all edits (Ctrl+Z / Ctrl+Shift+Z).
 
 ### Phase 3: Advanced Editor
-20. Type-template manager shows override structure clearly.
+20. Type-variant manager shows override structure clearly.
 21. Options panel exposes all `Config` settings not covered by Phase 2.
 22. YAML editor has syntax highlighting, validation, and live preview.
 23. Bidirectional sync between visual and YAML views works without data loss.
@@ -1272,34 +1338,37 @@ An implementation is complete when:
 
 ---
 
-## 18. Implementation Priority
+## 18. Integrated Implementation Plan
 
-### Wave 1: Quick Start MVP
-- Steps 1-2 (field → family) with WASM preview
-- Step 3 (style navigator): axis cards with live WASM preview and "Closest match"
-  banner; all axes for the selected family; "Skip — show me all styles" modal
-- Step 7 (review & download) with name input
-- Skip steps 4-6 (refinement) — go straight from navigator to review
-- WASM bridge: `render_bibliography`, `render_citation`, `validate_style`
-- Axis-to-preset matching: `match_axes_to_preset(family, axisChoices) → PresetMatch`
+The Style Wizard v2 will be implemented as a unified rollout to ensure
+architectural integrity across the three phases.
 
-### Wave 2: Refinement & Visual Basics
-- Steps 4-6 (names, dates, titles refinement controls)
-- Phase 2 basic: annotated rendering, click-to-select (highlight only)
-- Component Editor for contributor, date, title types
+### Phase 1: Quick Start (MVP)
+- **WASM Bridge:** WASM exports `render_bibliography_annotated`,
+  `render_citation_annotated`, and `validate_style`, exposed in the JS API as
+  `renderBibliography`, `renderCitation`, and `validateStyle`, plus preset
+  matching logic.
+- **Routing:** Field selector, Family selector, and Style Navigator (Step 1-3).
+- **Navigation Logic:** Axis-to-preset matching and style convergence logic.
+- **Preview:** Standard citation/bibliography preview powered by WASM.
 
-### Wave 3: Full Visual Customizer
-- Component Editor for all types (number, variable, term)
-- Type-specific override UI with "all types" / "only [type]" prompt
-- Add/remove components
-- Delimiter editing
-- Undo/redo
+### Phase 2: Direct Manipulation & Refinement
+- **Interactive Preview:** Annotated rendering with component-level selection.
+- **Component Editors:** Visual panels for all component types (contributor,
+  date, title, number, variable, term).
+- **Type-Variant Logic:** Auto-cloning of templates for type-specific tweaks.
+- **Refinement Controls:** Synchronized Quick Start refinement (Steps 4-6).
 
-### Wave 4: Advanced Editor
-- Type-template manager
-- Options panel
-- YAML editor with bidirectional sync
-- SQI dashboard
+### Phase 3: Advanced Features & SQI
+- **Type-Variant Manager:** Unified management of template variants.
+- **Options Panel:** Full schema access for global, citation, and bibliography
+  blocks.
+- **YAML Editor:** Bidirectional sync and live validation.
+- **SQI Dashboard:** Quality scoring and optimization tips.
+
+The implementation should be delivered in a single integrated development cycle
+to maintain consistency between the abstracted Quick Start choices and the granular
+Phase 3 schema.
 
 ---
 
