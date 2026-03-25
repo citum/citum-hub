@@ -1,7 +1,10 @@
 [package]
 name = "wasm-bridge"
-version = "0.1.0"
-edition = "2021"
+version.workspace = true
+edition.workspace = true
+description = "WASM bridge for Citum Hub, providing citation rendering and intent-engine integration."
+repository.workspace = true
+license.workspace = true
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -13,17 +16,13 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml_ng = "0.10"
 citum-schema = { git = "https://github.com/citum/citum-core", branch = "main", features = ["legacy-convert"] }
-citum-engine = { git = "https://github.com/citum/citum-core", branch = "main" }
-citum-bindings = { git = "https://github.com/citum/citum-core", branch = "main", features = ["wasm", "legacy-convert"] }
+citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", branch = "main" }
+citum_bindings = { package = "citum-bindings", git = "https://github.com/citum/citum-core", branch = "main", features = ["wasm", "legacy-convert"] }
 csl-legacy = { git = "https://github.com/citum/citum-core", branch = "main" }
 intent-engine = { path = "../intent-engine" }
 indexmap = { version = "2", features = ["serde"] }
 uuid = { version = "1.0", features = ["v4", "serde", "wasm-bindgen"] }
 getrandom = { version = "0.2", features = ["js"] }
-
-[profile.release]
-opt-level = "s"
-lto = true
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = false

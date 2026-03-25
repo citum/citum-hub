@@ -8,6 +8,7 @@
 		"dev": "vite",
 		"dev:api": "bun run --hot src/api/index.ts",
 		"build": "vite build",
+		"build:wasm": "cd ../server/crates/wasm-bridge && wasm-pack build --target nodejs",
 		"preview": "vite preview",
 		"sync-styles": "bun run scripts/sync-local.ts",
 		"migrate": "bun run scripts/migrate.ts",

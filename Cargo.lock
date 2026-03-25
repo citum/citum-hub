@@ -1288,7 +1288,7 @@ checksum = "bfa799dd5ed20a7e349f3b4639aa80d74549c81716d9ec4f994c9b5815598306"
 
 [[package]]
 name = "intent-engine"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "citum-schema",
  "serde",
@@ -2716,7 +2716,7 @@ dependencies = [
 
 [[package]]
 name = "style-editor-api"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "axum",
  "citum-engine",
@@ -2734,7 +2734,7 @@ dependencies = [
 
 [[package]]
 name = "style-editor-server"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "axum",
  "axum-extra",
@@ -3398,7 +3398,7 @@ dependencies = [
 
 [[package]]
 name = "wasm-bridge"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "citum-bindings",
  "citum-engine",
