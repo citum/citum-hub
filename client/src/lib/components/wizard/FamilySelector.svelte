@@ -39,11 +39,11 @@
 		>
 			<span class="material-symbols-outlined">arrow_back</span>
 		</button>
-		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 2 of 4</p>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 2 of 5</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
 			<div
 				class="h-full bg-primary rounded-full transition-all duration-500"
-				style="width: 50%"
+				style="width: 40%"
 			></div>
 		</div>
 		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
@@ -105,15 +105,28 @@
 	<div class="mt-12 text-center">
 		<button
 			onclick={async () => {
+				const defaultFamily =
+					wizardStore.family ??
+					(wizardStore.field ? FIELD_DEFAULTS[wizardStore.field] : "author-date");
+				const presetId =
+					defaultFamily === "author-date"
+						? "apa"
+						: defaultFamily === "numeric"
+							? "vancouver"
+							: "chicago-note";
+
 				wizardStore.setPhase("visual-customizer");
-				// Generate based on current choice or default
+				wizardStore.setFamily(defaultFamily);
+				wizardStore.setPresetId(presetId);
+
 				await wizardStore.generateFromIntent({
-					class: wizardStore.field
-						? FIELD_DEFAULTS[wizardStore.field] === "author-date"
+					class:
+						defaultFamily === "author-date"
 							? "author_date"
-							: "numeric"
-						: "author_date",
-					from_preset: wizardStore.presetId || "apa",
+							: defaultFamily === "numeric"
+								? "numeric"
+								: "footnote",
+					from_preset: presetId,
 				});
 				goto("/create/customize");
 			}}

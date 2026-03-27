@@ -9,6 +9,7 @@
 			goto("/create/family", { replaceState: true });
 			return;
 		}
+		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(3);
 	});
 </script>

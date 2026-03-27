@@ -31,7 +31,8 @@
 	}
 
 	function handleSave() {
-		wizardStore.setStep(7);
+		wizardStore.setPhase("quick-start");
+		wizardStore.setStep(5);
 		goto("/create/review");
 	}
 
@@ -45,18 +46,13 @@
 		}, 300);
 	}
 
-	function updateContributorsField(path: string, value: unknown) {
-		wizardStore.updateStyleField(`options.contributors.${path}`, value);
+	function updateOptionField(path: string, value: unknown) {
+		wizardStore.updateStyleField(`options.${path}`, value);
 		debouncedFetchPreview();
 	}
 
 	function updateMonthFormat(month: string) {
-		wizardStore.updateStyleField("options.dates.month", month);
-		debouncedFetchPreview();
-	}
-
-	function updateTitleCase(caseStyle: string) {
-		wizardStore.updateStyleField("options.titles.default.text-case", caseStyle);
+		wizardStore.updateStyleField("options.dates", month);
 		debouncedFetchPreview();
 	}
 
@@ -66,11 +62,7 @@
 	}
 
 	function updateLocatorLabel(form: string) {
-		if (form === "none") {
-			wizardStore.updateStyleField("options.locators", undefined);
-		} else {
-			wizardStore.updateStyleField("options.locators.default-label-form", form);
-		}
+		wizardStore.updateStyleField("options.locators.default-label-form", form);
 		debouncedFetchPreview();
 	}
 
@@ -264,9 +256,8 @@
 								<RefinementControls
 									{activeTab}
 									{currentOptions}
-									onUpdateContributors={updateContributorsField}
+									onUpdateOption={updateOptionField}
 									onUpdateDates={updateMonthFormat}
-									onUpdateTitles={updateTitleCase}
 									onUpdatePageRange={updatePageRangeFormat}
 									onUpdateLocatorLabel={updateLocatorLabel}
 								/>
@@ -310,7 +301,7 @@
 								<h4
 									class="text-stone-400 text-xs font-bold tracking-widest uppercase mb-2 font-headline"
 								>
-									Bibliography
+									Style Preview
 								</h4>
 								<div class="h-0.5 w-8 bg-primary mx-auto"></div>
 							</div>

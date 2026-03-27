@@ -237,7 +237,7 @@
 			</div>
 			<div class="flex flex-col gap-3 sm:flex-row">
 				<a
-					href="/create-wizard"
+					href="/create"
 					class="inline-flex items-center justify-center gap-2 rounded-[1.4rem] bg-primary px-6 py-4 text-sm font-black uppercase tracking-[0.18em] text-white transition hover:bg-blue-700"
 				>
 					<span class="material-symbols-outlined text-lg">auto_fix_high</span>

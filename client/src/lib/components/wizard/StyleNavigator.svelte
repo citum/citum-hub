@@ -1,9 +1,15 @@
 <script lang="ts">
-	/* eslint-disable @typescript-eslint/no-explicit-any */
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import PreviewPane from "$lib/components/wizard/PreviewPane.svelte";
 	import type { AxisChoices } from "$lib/types/wizard";
 	import { goto } from "$app/navigation";
+	import {
+		getArticleTitleStyleUpdates,
+		getCitationNumberUpdates,
+		getLocatorLabelUpdates,
+		getRolePresetUpdates,
+		type WizardStyleUpdate,
+	} from "$lib/utils/wizard-style-updates";
 
 	// Define the axes based on the selected family
 	const authorDateAxes = [
@@ -95,6 +101,23 @@
 			],
 		},
 		{
+			id: "articleTitleEmphasis",
+			question: "How are article titles formatted?",
+			options: [
+				{ value: "plain", label: "plain" },
+				{ value: "quoted", label: '"In quotes"' },
+			],
+		},
+		{
+			id: "yearPosition",
+			question: "Where does the year appear?",
+			options: [
+				{ value: "volume-issue", label: "after volume/issue (2024;12(3))" },
+				{ value: "end-parens", label: "at the end (2024)" },
+				{ value: "after-title", label: "after title" },
+			],
+		},
+		{
 			id: "rolePreset",
 			question: "How should contributor roles be formatted?",
 			options: [
@@ -107,6 +130,14 @@
 	];
 
 	const noteAxes = [
+		{
+			id: "citationLocation",
+			question: "Where should citations appear?",
+			options: [
+				{ value: "footnote", label: "Footnotes" },
+				{ value: "endnote", label: "Endnotes" },
+			],
+		},
 		{
 			id: "footnoteNameForm",
 			question: "How are names written in footnotes?",
@@ -121,6 +152,23 @@
 			options: [
 				{ value: "italic", label: "Italic" },
 				{ value: "plain", label: "plain" },
+			],
+		},
+		{
+			id: "repeatCitation",
+			question: "On second citation, use...",
+			options: [
+				{ value: "ibid", label: "Ibid." },
+				{ value: "short-title", label: "shortened title" },
+				{ value: "full", label: "full repeat" },
+			],
+		},
+		{
+			id: "hasBibliography",
+			question: "Do you also need a bibliography?",
+			options: [
+				{ value: true, label: "Yes" },
+				{ value: false, label: "Footnotes only" },
 			],
 		},
 		{
@@ -145,8 +193,14 @@
 
 	let currentAxisIndex = $state(0);
 
+	function applyStyleUpdates(updates: WizardStyleUpdate[]) {
+		for (const update of updates) {
+			wizardStore.updateStyleField(update.path, update.value);
+		}
+	}
+
 	// Mapping of axis choice values to style fields
-	const updateStyleForAxis = (axisId: string, value: any) => {
+	const updateStyleForAxis = (axisId: string, value: unknown) => {
 		switch (axisId) {
 			case "nameForm":
 				if (value === "family-first-initials") {
@@ -161,14 +215,21 @@
 					wizardStore.updateStyleField("options.contributors.display-as-sort", "all");
 					wizardStore.updateStyleField("options.contributors.name-form", "full");
 					wizardStore.updateStyleField("options.contributors.initialize-with", undefined);
+				} else if (value === "compact") {
+					wizardStore.updateStyleField("options.contributors.display-as-sort", "all");
+					wizardStore.updateStyleField("options.contributors.name-form", "initials");
+					wizardStore.updateStyleField("options.contributors.initialize-with", "");
 				}
 				break;
 			case "etAlThreshold":
 				if (value === null) {
 					wizardStore.updateStyleField("options.contributors.shorten", undefined);
 				} else {
-					wizardStore.updateStyleField("options.contributors.shorten.min", value);
-					wizardStore.updateStyleField("options.contributors.shorten.use-first", 1);
+					wizardStore.updateStyleField("options.contributors.shorten", {
+						min: value,
+						"use-first": 1,
+						"and-others": "et-al",
+					});
 				}
 				break;
 			case "authorConnector":
@@ -178,33 +239,54 @@
 				);
 				break;
 			case "locatorLabel":
-				if (value === "none") {
-					wizardStore.updateStyleField("options.locators", undefined);
-				} else {
-					wizardStore.updateStyleField("options.locators.default-label-form", value);
-				}
+				applyStyleUpdates(getLocatorLabelUpdates(String(value)));
 				break;
 			case "datePosition":
-				// Note: Date wrap in the current schema is often handled at the template level
-				// or via specific options. For now, we'll just skip this to avoid errors.
+				// Standard Citum doesn't have a top-level position for dates in options.
+				// We'll set a standard form for now to avoid invalid YAML.
+				wizardStore.updateStyleField("options.dates", "long");
+				break;
+			case "articleTitleEmphasis":
+				applyStyleUpdates(getArticleTitleStyleUpdates(value as "plain" | "quoted" | "italic"));
+				break;
+			case "yearPosition":
+				// Skip non-existent field to avoid 500
 				break;
 			case "numberBracket":
-				if (value === "square") {
-					wizardStore.updateStyleField("citation.wrap", "brackets");
-				} else if (value === "paren") {
-					wizardStore.updateStyleField("citation.wrap", "parentheses");
-				} else {
-					wizardStore.updateStyleField("citation.wrap", "none");
-				}
+				applyStyleUpdates(
+					getCitationNumberUpdates(value as "square" | "period" | "paren" | "superscript")
+				);
+				break;
+			case "citationLocation":
+				wizardStore.updateStyleField(
+					"options.processing",
+					value === "footnote" || value === "endnote" ? "note" : "author-date"
+				);
+				break;
+			case "footnoteNameForm":
+				wizardStore.updateStyleField(
+					"options.contributors.display-as-sort",
+					value === "inverted" ? "all" : "none"
+				);
+				break;
+			case "bookEmphasis":
+				wizardStore.updateStyleField("options.titles.monograph.emph", value === "italic");
+				break;
+			case "repeatCitation":
+				// Template-based logic, skip for basic options
+				break;
+			case "hasBibliography":
+				// Intent field, not a direct Style field
 				break;
 			case "rolePreset":
-				wizardStore.updateStyleField("options.contributors.role.preset", value);
+				applyStyleUpdates(getRolePresetUpdates(String(value)));
 				break;
 		}
 	};
 
-	async function selectOption(axisId: string, value: any, index: number) {
-		wizardStore.setAxisChoices({ [axisId]: value });
+	async function selectOption(axisId: string, value: unknown, index: number) {
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		wizardStore.setAxisChoices({ [axisId]: value } as any);
 		updateStyleForAxis(axisId, value);
 
 		// Re-fetch preview to show the change immediately
@@ -260,7 +342,7 @@
 			await wizardStore.fetchPreview();
 		}
 		wizardStore.setStep(4);
-		goto("/create/review");
+		goto("/create/refine");
 	}
 </script>
 
@@ -273,11 +355,11 @@
 		>
 			<span class="material-symbols-outlined">arrow_back</span>
 		</button>
-		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 3 of 4</p>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 3 of 5</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
 			<div
 				class="h-full bg-primary rounded-full transition-all duration-500"
-				style="width: 75%"
+				style="width: 60%"
 			></div>
 		</div>
 		<h2 class="text-2xl font-bold mt-4 text-slate-900 dark:text-white">Style Navigator</h2>
@@ -354,14 +436,14 @@
 						onclick={useThisAnyhow}
 						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
 					>
-						Continue to Final Review
+						Continue to Refinement
 					</button>
 				{:else}
 					<button
 						onclick={useThisAnyhow}
 						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
 					>
-						Use these settings
+						{currentAxisIndex === 0 ? "Skip to Refinement" : "Next: Refine Details"}
 					</button>
 					{#if currentAxisIndex < axes.length - 1}
 						<p class="mt-2 text-xs text-text-secondary italic">
@@ -371,13 +453,25 @@
 					{/if}
 				{/if}
 
-				<button
-					onclick={customizeFurther}
-					class="w-full rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-				>
-					<span class="material-symbols-outlined text-lg">settings_suggest</span>
-					Open Visual Editor
-				</button>
+				<div class="grid grid-cols-2 gap-3">
+					<button
+						onclick={customizeFurther}
+						class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+					>
+						<span class="material-symbols-outlined text-lg">settings_suggest</span>
+						Visual Editor
+					</button>
+					<button
+						onclick={() => {
+							wizardStore.reset();
+							goto("/create/field");
+						}}
+						class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+					>
+						<span class="material-symbols-outlined text-lg">restart_alt</span>
+						Start Over
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>

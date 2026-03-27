@@ -1,10 +1,16 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import ReviewScreen from "$lib/components/wizard/ReviewScreen.svelte";
 
 	onMount(() => {
-		wizardStore.setStep(7); // Review is step 7 in the v2 spec
+		if (!wizardStore.styleYaml) {
+			goto("/create/field", { replaceState: true });
+			return;
+		}
+		wizardStore.setPhase("quick-start");
+		wizardStore.setStep(5);
 	});
 </script>
 

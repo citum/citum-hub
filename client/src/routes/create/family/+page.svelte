@@ -9,6 +9,7 @@
 			goto("/create/field", { replaceState: true });
 			return;
 		}
+		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(2);
 	});
 </script>
