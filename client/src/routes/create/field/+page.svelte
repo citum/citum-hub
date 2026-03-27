@@ -4,6 +4,7 @@
 	import FieldSelector from "$lib/components/wizard/FieldSelector.svelte";
 
 	onMount(() => {
+		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(1);
 	});
 </script>

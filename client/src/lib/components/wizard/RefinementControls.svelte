@@ -1,12 +1,16 @@
 <script lang="ts">
 	import type { WizardStyleOptions, ContributorConfig, LocatorConfig } from "$lib/types/wizard";
+	import {
+		getArticleTitleStyleUpdates,
+		getRolePresetUpdates,
+		type WizardStyleUpdate,
+	} from "$lib/utils/wizard-style-updates";
 
 	interface Props {
 		activeTab?: string;
 		currentOptions: WizardStyleOptions | null;
-		onUpdateContributors: (path: string, value: unknown) => void;
+		onUpdateOption: (path: string, value: unknown) => void;
 		onUpdateDates: (form: string) => void;
-		onUpdateTitles: (textCase: string) => void;
 		onUpdatePageRange: (format: string) => void;
 		onUpdateLocatorLabel: (form: string) => void;
 		onHighlightChange?: (field: string | null) => void;
@@ -15,9 +19,8 @@
 	const {
 		activeTab,
 		currentOptions,
-		onUpdateContributors,
+		onUpdateOption,
 		onUpdateDates,
-		onUpdateTitles,
 		onUpdatePageRange,
 		onUpdateLocatorLabel,
 		onHighlightChange,
@@ -34,36 +37,78 @@
 		expandedSections[section] = !expandedSections[section];
 	}
 
+	function applyOptionUpdates(updates: WizardStyleUpdate[]) {
+		for (const update of updates) {
+			onUpdateOption(update.path.replace(/^options\./, ""), update.value);
+		}
+	}
+
 	function updateNameOrder(order: string) {
 		const displayAsSort = order === "family-first" ? "all" : "none";
-		onUpdateContributors("display-as-sort", displayAsSort);
+		onUpdateOption("contributors.display-as-sort", displayAsSort);
 	}
 
 	function updateAndConnector(connector: string) {
-		onUpdateContributors("and", connector);
+		onUpdateOption("contributors.and", connector);
 	}
 
 	function updateEtAlAfter(minValue: number) {
 		if (minValue < 1 || minValue > 20) return;
-		onUpdateContributors("shorten", { min: minValue, "use-first": 1 });
+		onUpdateOption("contributors.shorten", {
+			min: minValue,
+			"use-first": 1,
+			"and-others": "et-al",
+		});
 	}
 
 	function updateInitials(style: string) {
 		if (style === "abbreviated") {
-			onUpdateContributors("name-form", "initials");
-			onUpdateContributors("initialize-with", ". ");
+			onUpdateOption("contributors.name-form", "initials");
+			onUpdateOption("contributors.initialize-with", ". ");
 		} else if (style === "compact") {
-			onUpdateContributors("name-form", "initials");
-			onUpdateContributors("initialize-with", "");
+			onUpdateOption("contributors.name-form", "initials");
+			onUpdateOption("contributors.initialize-with", "");
 		} else {
-			onUpdateContributors("name-form", "full");
-			onUpdateContributors("initialize-with", undefined);
+			onUpdateOption("contributors.name-form", "full");
+			onUpdateOption("contributors.initialize-with", undefined);
 		}
 	}
 
 	function updateRolePreset(preset: string) {
-		onUpdateContributors("role.preset", preset);
+		applyOptionUpdates(getRolePresetUpdates(preset));
 	}
+
+	function updateArticleStyle(style: "plain" | "quoted" | "italic") {
+		applyOptionUpdates(getArticleTitleStyleUpdates(style));
+	}
+
+	function updateBookEmphasis(italic: boolean) {
+		onUpdateOption("titles.monograph.emph", italic);
+	}
+
+	function updateTitleCase(caseStyle: string) {
+		onUpdateOption("titles.monograph.text-case", caseStyle);
+		onUpdateOption("titles.serial.text-case", caseStyle);
+	}
+
+	const getArticleStyleValue = () => {
+		if (currentOptions?.titles && typeof currentOptions.titles === "object") {
+			const titles = currentOptions.titles as Record<string, Record<string, unknown>>;
+			if (titles.component?.quote) return "quoted";
+			if (titles.component?.emph) return "italic";
+			if (titles.serial?.wrap === "quotes") return "quoted";
+			if (titles.serial?.emph) return "italic";
+		}
+		return "plain";
+	};
+
+	const getBookEmphasisValue = () => {
+		if (currentOptions?.titles && typeof currentOptions.titles === "object") {
+			const titles = currentOptions.titles as Record<string, Record<string, unknown>>;
+			return titles.monograph?.emph !== false;
+		}
+		return true;
+	};
 
 	const getNameOrderValue = () => {
 		if (currentOptions?.contributors && typeof currentOptions.contributors === "object") {
@@ -109,9 +154,8 @@
 
 	const getTitleCaseValue = () => {
 		if (currentOptions?.titles && typeof currentOptions.titles === "object") {
-			const titles = currentOptions.titles as Record<string, unknown>;
-			const defaultRendering = titles.default as Record<string, unknown> | undefined;
-			return (defaultRendering?.["text-case"] as string) || "sentence";
+			const titles = currentOptions.titles as Record<string, Record<string, unknown>>;
+			return (titles.monograph?.["text-case"] as string) || "sentence";
 		}
 		return "sentence";
 	};
@@ -156,11 +200,12 @@
 			{#if expandedSections.citations}
 				<div class="space-y-4 border-t border-border-light px-6 py-4">
 					<p class="text-xs text-text-secondary">
-						Configure how pinpoint locators (page numbers, etc.) appear in citations.
+						Applies across the style. The first preview citation shows a pinpoint example so you can
+						see the label change immediately.
 					</p>
 					<div>
 						<label for="rc-locator-label" class="block text-sm font-medium text-text-main mb-2"
-							>Locator Label Format</label
+							>Locator Labels</label
 						>
 						<select
 							id="rc-locator-label"
@@ -330,6 +375,23 @@
 					</div>
 
 					<div class="pt-2">
+						<label for="rc-date-position" class="block text-sm font-medium text-text-main mb-2"
+							>Position</label
+						>
+						<select
+							id="rc-date-position"
+							disabled
+							value="after-author"
+							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main opacity-50 cursor-not-allowed"
+						>
+							<option value="after-author">After author</option>
+						</select>
+						<p class="mt-1 text-xs text-text-secondary">
+							Structural position is set by style family.
+						</p>
+					</div>
+
+					<div class="pt-2">
 						<label for="rc-page-range" class="block text-sm font-medium text-text-main mb-2"
 							>Page Range Format</label
 						>
@@ -373,13 +435,45 @@
 						>
 						<select
 							id="rc-title-case"
-							onchange={(e) => onUpdateTitles(e.currentTarget.value)}
+							onchange={(e) => updateTitleCase(e.currentTarget.value)}
 							value={getTitleCaseValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
 							<option value="sentence">Sentence case</option>
 							<option value="title">Title Case</option>
 							<option value="as-is">As entered</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="rc-article-style" class="block text-sm font-medium text-text-main mb-2"
+							>Article Style</label
+						>
+						<select
+							id="rc-article-style"
+							onchange={(e) =>
+								updateArticleStyle(e.currentTarget.value as "plain" | "quoted" | "italic")}
+							value={getArticleStyleValue()}
+							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+						>
+							<option value="plain">No decoration</option>
+							<option value="quoted">"In quotes"</option>
+							<option value="italic">Italic</option>
+						</select>
+					</div>
+
+					<div>
+						<label for="rc-book-emphasis" class="block text-sm font-medium text-text-main mb-2"
+							>Book Titles</label
+						>
+						<select
+							id="rc-book-emphasis"
+							onchange={(e) => updateBookEmphasis(e.currentTarget.value === "italic")}
+							value={getBookEmphasisValue() ? "italic" : "plain"}
+							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+						>
+							<option value="italic">Italic</option>
+							<option value="plain">No decoration</option>
 						</select>
 					</div>
 				</div>

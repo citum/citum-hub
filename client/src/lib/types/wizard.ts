@@ -141,19 +141,23 @@ export interface TitleConfig {
 	component?: TitleRendering;
 	monograph?: TitleRendering;
 	periodical?: TitleRendering;
+	serial?: TitleRendering;
 }
 
 export interface AxisChoices {
 	// Author-date
-	nameForm?: "family-first-initials" | "given-first-initials" | "family-first-full";
+	nameForm?: "family-first-initials" | "given-first-initials" | "family-first-full" | "compact";
 	datePosition?: "after-author-parens" | "after-author-bare" | "after-author-comma";
 	articleTitleEmphasis?: "plain" | "quoted" | "italic";
 	etAlThreshold?: 2 | 3 | 6 | null; // null = show all
 	authorConnector?: "symbol" | "text" | "none";
+	locatorLabel?: "short" | "long" | "symbol" | "none";
+	rolePreset?: "short-suffix" | "long-suffix" | "verb-prefix" | "none";
 	// Numeric
 	numberBracket?: "square" | "period" | "paren" | "superscript";
 	yearPosition?: "volume-issue" | "end-parens" | "after-title";
 	// Note
+	citationLocation?: "footnote" | "endnote";
 	footnoteNameForm?: "full" | "inverted";
 	bookEmphasis?: "italic" | "plain";
 	repeatCitation?: "ibid" | "short-title" | "full";

@@ -56,7 +56,7 @@
 			<p class="text-slate-500">Manage your custom styles and references</p>
 		</div>
 		<a
-			href="/create-wizard"
+			href="/create"
 			class="bg-primary text-white px-6 py-2 rounded-lg font-bold hover:bg-primary-dark transition-colors"
 		>
 			Create New Style

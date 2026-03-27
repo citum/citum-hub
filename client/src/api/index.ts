@@ -4,6 +4,7 @@ import path from "node:path";
 // @ts-expect-error - Bun is the runtime
 import { file, sql } from "bun";
 import { Hono, type Context } from "hono";
+import yaml from "js-yaml";
 import { jwtVerify, SignJWT } from "jose";
 import {
 	generate_style,
@@ -22,6 +23,7 @@ import {
 	queryHubStyles,
 	syncRegistryData,
 } from "../lib/server/registry";
+import { normalizeCitationPreviewHtml } from "../lib/utils/preview-output";
 import { normalizeStyleYamlForPreview } from "../lib/utils/preview-style";
 
 const app = new Hono().basePath("/api");
@@ -185,6 +187,41 @@ async function getFixtureData(type: string = "expanded") {
 			citations: { nonIntegral: emptyCite, integral: emptyCite },
 		};
 	}
+}
+
+function resolvePreviewClass(
+	body: Record<string, unknown>,
+	previewStyleYaml: string | undefined
+): "author_date" | "numeric" | "footnote" | "endnote" | "expanded" {
+	const explicitClass =
+		(typeof body.intent === "object" &&
+			body.intent &&
+			typeof (body.intent as Record<string, unknown>).class === "string" &&
+			((body.intent as Record<string, unknown>).class as string)) ||
+		(typeof body.class === "string" ? body.class : null);
+
+	if (explicitClass === "numeric") return "numeric";
+	if (explicitClass === "footnote" || explicitClass === "endnote") return explicitClass;
+	if (explicitClass === "author_date" || explicitClass === "author-date") return "author_date";
+
+	if (!previewStyleYaml) return "expanded";
+
+	try {
+		const parsed = yaml.load(previewStyleYaml);
+		if (!parsed || typeof parsed !== "object") return "expanded";
+
+		const options = (parsed as Record<string, unknown>).options;
+		if (!options || typeof options !== "object") return "expanded";
+
+		const processing = (options as Record<string, unknown>).processing;
+		if (processing === "numeric") return "numeric";
+		if (processing === "note") return "footnote";
+		if (processing === "author-date" || processing === "author_date") return "author_date";
+	} catch {
+		return "expanded";
+	}
+
+	return "expanded";
 }
 
 // --- Middleware: Auth ---
@@ -604,10 +641,11 @@ app.post("/v1/preview", async (c) => {
 		const previewStyleYaml =
 			typeof style_yaml === "string" ? normalizeStyleYamlForPreview(style_yaml) : style_yaml;
 		const test_locator = body.test_locator || "123-125";
-
-		let fixtureType = "expanded";
-		if (body.intent?.class) fixtureType = body.intent.class;
-		else if (body.class) fixtureType = body.class;
+		const fixtureType = resolvePreviewClass(
+			body,
+			typeof previewStyleYaml === "string" ? previewStyleYaml : undefined
+		);
+		const isNotePreview = fixtureType === "footnote" || fixtureType === "endnote";
 
 		const fixture = await getFixtureData(fixtureType);
 		const refsStr = JSON.stringify(fixture.references);
@@ -628,6 +666,7 @@ app.post("/v1/preview", async (c) => {
 
 		let htmlParenthetical = "",
 			htmlNarrative = "",
+			htmlNote = "",
 			bib = "";
 
 		try {
@@ -649,9 +688,15 @@ app.post("/v1/preview", async (c) => {
 					citeIntegralStr,
 					"integral"
 				);
+				const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
+				const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
 
-				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;
-				htmlNarrative = `According to ${renderedIntegral}, the implications are broad and warrant further research in the field.`;
+				if (isNotePreview) {
+					htmlNote = previewNonIntegral;
+				} else {
+					htmlParenthetical = previewNonIntegral;
+					htmlNarrative = previewIntegral;
+				}
 
 				bib = render_bibliography(previewStyleYaml, refsStr);
 			} else if (body.intent || body.field || body.class) {
@@ -674,9 +719,15 @@ app.post("/v1/preview", async (c) => {
 					citeIntegralStr,
 					"integral"
 				);
+				const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
+				const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
 
-				htmlParenthetical = `Recent studies have shown significant results ${renderedNonIntegral}. As we can see, these findings are critical.`;
-				htmlNarrative = `According to ${renderedIntegral}, the implications are broad and warrant further research in the field.`;
+				if (isNotePreview) {
+					htmlNote = previewNonIntegral;
+				} else {
+					htmlParenthetical = previewNonIntegral;
+					htmlNarrative = previewIntegral;
+				}
 
 				const generated_style = generate_style(intentStr);
 				bib = render_bibliography(generated_style, refsStr);
@@ -689,7 +740,7 @@ app.post("/v1/preview", async (c) => {
 		return c.json({
 			in_text_parenthetical: htmlParenthetical,
 			in_text_narrative: htmlNarrative,
-			note: null,
+			note: htmlNote,
 			bibliography: bib,
 		});
 	} catch (e) {

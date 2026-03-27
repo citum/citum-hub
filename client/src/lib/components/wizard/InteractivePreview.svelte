@@ -10,7 +10,11 @@
 	);
 	const showNarrative = $derived(wizardStore.family === "author-date");
 	const showNote = $derived(wizardStore.family === "note");
-	const showBibliography = $derived(wizardStore.family !== "numeric");
+	const showBibliography = $derived(true);
+	const citationHeading = $derived(
+		wizardStore.family === "numeric" ? "Citation" : "Parenthetical Citation"
+	);
+	const noteHeading = $derived("Note");
 
 	function getComponentInfo(
 		el: HTMLElement
@@ -97,7 +101,13 @@
 
 	$effect(() => {
 		// Add interactive class to elements for CSS styling
-		if (containerRef && wizardStore.previewHtml.bibliography) {
+		if (
+			containerRef &&
+			(wizardStore.previewHtml.parenthetical ||
+				wizardStore.previewHtml.narrative ||
+				wizardStore.previewHtml.note ||
+				wizardStore.previewHtml.bibliography)
+		) {
 			const elements = containerRef.querySelectorAll('[class^="csln-"]');
 			elements.forEach((el) => {
 				if (!el.classList.contains("csln-entry") && !el.classList.contains("csln-bibliography")) {
@@ -141,7 +151,7 @@
 			>
 				{#if showParenthetical && wizardStore.previewHtml.parenthetical}
 					<div class="space-y-2">
-						<h4 class="font-semibold text-text-main text-sm">Parenthetical Citation</h4>
+						<h4 class="font-semibold text-text-main text-sm">{citationHeading}</h4>
 						<div
 							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
 						>
@@ -165,7 +175,7 @@
 
 				{#if showNote && wizardStore.previewHtml.note}
 					<div class="space-y-2">
-						<h4 class="font-semibold text-text-main text-sm">Footnote</h4>
+						<h4 class="font-semibold text-text-main text-sm">{noteHeading}</h4>
 						<div
 							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
 						>
@@ -185,7 +195,7 @@
 							{@html wizardStore.previewHtml.bibliography}
 						</div>
 					</div>
-				{:else if !showParenthetical && !showNarrative && !showNote && !showBibliography}
+				{:else if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.bibliography}
 					<div class="text-center py-8">
 						<p class="text-text-secondary">No preview available yet</p>
 					</div>
