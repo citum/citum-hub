@@ -100,19 +100,35 @@
 				/>
 
 				<!-- Action Buttons -->
-				<div class="flex gap-3 pt-4">
+				<div class="flex flex-col gap-3 pt-4">
 					<button
 						onclick={skipToReview}
-						class="flex-1 rounded-lg bg-primary px-4 py-2 font-semibold text-white hover:bg-blue-700 transition-colors"
+						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
 					>
-						Continue to Review
+						Save & Continue
 					</button>
-					<button
-						onclick={skipToReview}
-						class="flex-1 rounded-lg border border-border-light bg-surface-light px-4 py-2 font-semibold text-text-main hover:bg-background-light transition-colors"
-					>
-						Skip — use defaults
-					</button>
+					<div class="grid grid-cols-2 gap-3">
+						<button
+							onclick={() => {
+								wizardStore.setStep(3);
+								goto("/create/style");
+							}}
+							class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+						>
+							<span class="material-symbols-outlined text-lg">undo</span>
+							Back
+						</button>
+						<button
+							onclick={() => {
+								wizardStore.reset();
+								goto("/create/field");
+							}}
+							class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+						>
+							<span class="material-symbols-outlined text-lg">restart_alt</span>
+							Start Over
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>

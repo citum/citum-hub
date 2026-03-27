@@ -1,10 +1,10 @@
-name: CI
+name: CI # Trigger run for UX fixes
 
 on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, spec/update-wizard-v2-schema ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true

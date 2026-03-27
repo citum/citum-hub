@@ -435,14 +435,14 @@
 						onclick={useThisAnyhow}
 						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
 					>
-						Fine-tune Details
+						Continue to Refinement
 					</button>
 				{:else}
 					<button
 						onclick={useThisAnyhow}
 						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
 					>
-						Use these settings
+						{currentAxisIndex === 0 ? "Skip to Refinement" : "Next: Refine Details"}
 					</button>
 					{#if currentAxisIndex < axes.length - 1}
 						<p class="mt-2 text-xs text-text-secondary italic">
@@ -452,13 +452,25 @@
 					{/if}
 				{/if}
 
-				<button
-					onclick={customizeFurther}
-					class="w-full rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-				>
-					<span class="material-symbols-outlined text-lg">settings_suggest</span>
-					Open Visual Editor
-				</button>
+				<div class="grid grid-cols-2 gap-3">
+					<button
+						onclick={customizeFurther}
+						class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+					>
+						<span class="material-symbols-outlined text-lg">settings_suggest</span>
+						Visual Editor
+					</button>
+					<button
+						onclick={() => {
+							wizardStore.reset();
+							goto("/create/field");
+						}}
+						class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+					>
+						<span class="material-symbols-outlined text-lg">restart_alt</span>
+						Start Over
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>
