@@ -1,5 +1,12 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import {
+		branchLabel,
+		shouldShowBibliographyPreview,
+		shouldShowInTextPreview,
+		shouldShowNarrativePreview,
+		shouldShowNotePreview,
+	} from "$lib/types/wizard";
 
 	interface Props {
 		activeHighlight?: string | null;
@@ -7,12 +14,20 @@
 
 	const { activeHighlight = null }: Props = $props();
 
-	const showParenthetical = $derived(
-		wizardStore.family === "author-date" || wizardStore.family === "numeric"
+	const branch = $derived(wizardStore.branch);
+	const showParenthetical = $derived(shouldShowInTextPreview(branch));
+	const showNarrative = $derived(shouldShowNarrativePreview(branch));
+	const showNote = $derived(shouldShowNotePreview(branch));
+	const showBibliography = $derived(
+		shouldShowBibliographyPreview(branch, wizardStore.styleIntent.has_bibliography)
 	);
-	const showNarrative = $derived(wizardStore.family === "author-date");
-	const showNote = $derived(wizardStore.family === "note");
-	const showBibliography = $derived(wizardStore.family !== "numeric");
+	const previewHeading = $derived(
+		branch === "note-law"
+			? "Legal Footnote Preview"
+			: branch === "note-humanities"
+				? "Notes Preview"
+				: `${branchLabel(branch)} Preview`
+	);
 </script>
 
 <div class="rounded-lg border border-border-light bg-surface-light">
@@ -34,7 +49,9 @@
 		>
 			{#if showParenthetical && wizardStore.previewHtml.parenthetical}
 				<div class="space-y-2">
-					<h4 class="font-semibold text-text-main">Parenthetical Citation</h4>
+					<h4 class="font-semibold text-text-main">
+						{branch === "numeric" ? "In-Text Citation" : "Parenthetical Citation"}
+					</h4>
 					<div
 						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
 					>
@@ -56,15 +73,31 @@
 				</div>
 			{/if}
 
-			{#if showNote && wizardStore.previewHtml.note}
+			{#if showNote && (wizardStore.previewHtml.note || wizardStore.previewHtml.noteRepeat)}
 				<div class="space-y-2">
-					<h4 class="font-semibold text-text-main">Footnote</h4>
-					<div
-						class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
-					>
-						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-						{@html wizardStore.previewHtml.note}
-					</div>
+					<h4 class="font-semibold text-text-main">{previewHeading}</h4>
+					{#if wizardStore.previewHtml.note}
+						<div class="space-y-1">
+							<p class="text-xs font-bold uppercase tracking-widest text-slate-400">First Note</p>
+							<div
+								class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+							>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+								{@html wizardStore.previewHtml.note}
+							</div>
+						</div>
+					{/if}
+					{#if wizardStore.previewHtml.noteRepeat}
+						<div class="space-y-1">
+							<p class="text-xs font-bold uppercase tracking-widest text-slate-400">Repeat Note</p>
+							<div
+								class="live-preview-content rounded bg-background-light p-3 font-serif text-text-main"
+							>
+								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+								{@html wizardStore.previewHtml.noteRepeat}
+							</div>
+						</div>
+					{/if}
 				</div>
 			{/if}
 
@@ -80,7 +113,7 @@
 				</div>
 			{/if}
 
-			{#if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.bibliography}
+			{#if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.noteRepeat && !wizardStore.previewHtml.bibliography}
 				<div class="text-center py-8">
 					<p class="text-text-secondary">No preview available yet</p>
 				</div>

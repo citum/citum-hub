@@ -2,6 +2,7 @@
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { isNoteBranch, type WizardBranch } from "$lib/types/wizard";
 	import InteractivePreview from "./InteractivePreview.svelte";
 	import ComponentEditor from "./ComponentEditor.svelte";
 	import RefinementControls from "./RefinementControls.svelte";
@@ -46,7 +47,9 @@
 	}
 
 	function updateOptionField(path: string, value: unknown) {
-		wizardStore.updateStyleField(`options.${path}`, value);
+		const resolvedPath =
+			path.startsWith("options.") || path.startsWith("citation.") ? path : `options.${path}`;
+		wizardStore.updateStyleField(resolvedPath, value);
 		debouncedFetchPreview();
 	}
 
@@ -70,6 +73,108 @@
 	}
 
 	const currentOptions = $derived(wizardStore.getOptions());
+	const branch = $derived(wizardStore.branch);
+
+	type CustomizerTab = { id: string; label: string; icon: string };
+
+	function tabsForBranch(activeBranch: WizardBranch | null): CustomizerTab[] {
+		switch (activeBranch) {
+			case "numeric":
+				return [
+					{ id: "structure", label: "Structure", icon: "schema" },
+					{ id: "punctuation", label: "Citations", icon: "format_quote" },
+					{ id: "authors", label: "Authors", icon: "group" },
+					{ id: "dates", label: "Dates", icon: "event" },
+					{ id: "titles", label: "References", icon: "title" },
+				];
+			case "note-humanities":
+				return [
+					{ id: "structure", label: "Structure", icon: "schema" },
+					{ id: "punctuation", label: "Notes", icon: "format_quote" },
+					{ id: "authors", label: "Contributors", icon: "group" },
+					{ id: "dates", label: "Dates", icon: "event" },
+					{ id: "titles", label: "Titles", icon: "title" },
+				];
+			case "note-law":
+				return [
+					{ id: "structure", label: "Structure", icon: "schema" },
+					{ id: "punctuation", label: "Legal Notes", icon: "gavel" },
+					{ id: "authors", label: "Contributors", icon: "group" },
+					{ id: "dates", label: "Dates", icon: "event" },
+					{ id: "titles", label: "Authorities", icon: "title" },
+				];
+			case "author-date":
+			default:
+				return [
+					{ id: "structure", label: "Structure", icon: "schema" },
+					{ id: "punctuation", label: "Citations", icon: "format_quote" },
+					{ id: "authors", label: "Authors", icon: "group" },
+					{ id: "dates", label: "Dates", icon: "event" },
+					{ id: "titles", label: "Titles", icon: "title" },
+				];
+		}
+	}
+
+	const tabs = $derived(tabsForBranch(branch));
+
+	function editorTitle(activeBranch: WizardBranch | null, tab: string): string {
+		if (tab === "structure") return "Structure Editor";
+		if (tab === "punctuation") {
+			if (activeBranch === "note-law") return "Legal Notes Editor";
+			if (isNoteBranch(activeBranch)) return "Notes Editor";
+			if (activeBranch === "numeric") return "Citation Numbers Editor";
+			return "Citation Editor";
+		}
+		if (tab === "titles" && activeBranch === "note-law") return "Authorities Editor";
+		if (tab === "titles" && activeBranch === "numeric") return "Reference List Editor";
+		return `${tab.charAt(0).toUpperCase() + tab.slice(1)} Editor`;
+	}
+
+	function editorDescription(activeBranch: WizardBranch | null, tab: string): string {
+		if (tab === "structure") {
+			return `Arrange fields and groups to define the layout for ${wizardStore.activeRefType}.`;
+		}
+		if (tab === "punctuation") {
+			if (activeBranch === "author-date") {
+				return "Adjust author-date citation punctuation and bibliography-facing details.";
+			}
+			if (activeBranch === "numeric") {
+				return "Adjust citation number wrappers, locators, and numeric citation behavior.";
+			}
+			if (activeBranch === "note-law") {
+				return "Adjust legal footnotes, short-form note behavior, and optional reference-list usage.";
+			}
+			return "Adjust full-note, repeat-note, and bibliography behavior for note styles.";
+		}
+		if (tab === "titles") {
+			if (activeBranch === "numeric") {
+				return "These controls affect reference-list titles only, not the in-text number.";
+			}
+			if (activeBranch === "note-law") {
+				return "These controls affect legal titles and authority grouping where titles are visible.";
+			}
+			if (isNoteBranch(activeBranch)) {
+				return "These controls affect how book and article titles appear in notes and the bibliography.";
+			}
+			return "Refine title formatting where titles actually appear in the bibliography or citation context.";
+		}
+		return `Refine global ${tab} settings for this style branch.`;
+	}
+
+	function previewShellHeading(activeBranch: WizardBranch | null): string {
+		switch (activeBranch) {
+			case "author-date":
+				return "Author-Date Preview";
+			case "numeric":
+				return "Numeric Citation Preview";
+			case "note-law":
+				return "Legal Notes Preview";
+			case "note-humanities":
+				return "Notes Preview";
+			default:
+				return "Live Preview";
+		}
+	}
 
 	onMount(() => {
 		if (wizardStore.styleYaml) {
@@ -144,51 +249,18 @@
 				</div>
 
 				<nav class="space-y-1">
-					<button
-						onclick={() => (activeTab = "structure")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'structure'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">schema</span> Structure
-					</button>
-					<button
-						onclick={() => (activeTab = "punctuation")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'punctuation'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">format_quote</span> Punctuation
-					</button>
-					<button
-						onclick={() => (activeTab = "authors")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'authors'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">group</span> Authors
-					</button>
-					<button
-						onclick={() => (activeTab = "dates")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'dates'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">event</span> Dates
-					</button>
-					<button
-						onclick={() => (activeTab = "titles")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'titles'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">title</span> Titles
-					</button>
+					{#each tabs as tab (tab.id)}
+						<button
+							onclick={() => (activeTab = tab.id)}
+							class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
+							tab.id
+								? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
+								: 'text-slate-500 hover:bg-slate-100'}"
+						>
+							<span class="material-symbols-outlined text-lg">{tab.icon}</span>
+							{tab.label}
+						</button>
+					{/each}
 				</nav>
 
 				<div class="mt-8 border-t border-slate-200 px-6 pt-4 dark:border-slate-800">
@@ -229,19 +301,10 @@
 							</div>
 
 							<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-								{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Editor
+								{editorTitle(branch, activeTab)}
 							</h1>
 							<p class="text-sm text-slate-500 mt-2 leading-relaxed">
-								{#if activeTab === "structure"}
-									Arrange fields and groups to define the citation layout for <span
-										class="font-semibold">{wizardStore.activeRefType}</span
-									>.
-								{:else if activeTab === "punctuation"}
-									Set rule-based punctuation like prefixes, suffixes, and quote logic.
-								{:else}
-									Refine global settings for <span class="font-semibold">{activeTab}</span> across all
-									types.
-								{/if}
+								{editorDescription(branch, activeTab)}
 							</p>
 						</header>
 
@@ -291,9 +354,9 @@
 				<section class="flex flex-col items-center bg-stone-100 p-8 lg:p-12">
 					<div class="w-full max-w-2xl">
 						<div class="flex items-center justify-between mb-4 w-full px-2">
-							<span class="text-xs font-bold uppercase tracking-widest text-slate-400"
-								>Live Preview</span
-							>
+							<span class="text-xs font-bold uppercase tracking-widest text-slate-400">
+								{previewShellHeading(branch)}
+							</span>
 						</div>
 
 						<!-- Preview Document Surface -->
@@ -304,7 +367,7 @@
 								<h4
 									class="text-stone-400 text-xs font-bold tracking-widest uppercase mb-2 font-headline"
 								>
-									Bibliography
+									{previewShellHeading(branch)}
 								</h4>
 								<div class="h-0.5 w-8 bg-primary mx-auto"></div>
 							</div>

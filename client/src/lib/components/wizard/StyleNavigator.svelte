@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import PreviewPane from "$lib/components/wizard/PreviewPane.svelte";
-	import type { AxisChoices } from "$lib/types/wizard";
+	import { resolveWizardBranch, type AxisChoices } from "$lib/types/wizard";
 	import { goto } from "$app/navigation";
 
-	// Define the axes based on the selected family
 	const authorDateAxes = [
 		{
 			id: "nameForm",
@@ -94,11 +93,12 @@
 			],
 		},
 		{
-			id: "articleTitleEmphasis",
-			question: "How are article titles formatted?",
+			id: "authorConnector",
+			question: "How should multiple contributors connect?",
 			options: [
-				{ value: "plain", label: "plain" },
-				{ value: "quoted", label: '"In quotes"' },
+				{ value: "symbol", label: "&" },
+				{ value: "text", label: "and" },
+				{ value: "none", label: "," },
 			],
 		},
 		{
@@ -111,18 +111,17 @@
 			],
 		},
 		{
-			id: "rolePreset",
-			question: "How should contributor roles be formatted?",
+			id: "locatorLabel",
+			question: "How should locators appear?",
 			options: [
-				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
-				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
-				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
-				{ value: "none", label: "None (suppress role)" },
+				{ value: "short", label: "p. 123" },
+				{ value: "long", label: "page 123" },
+				{ value: "none", label: "123" },
 			],
 		},
 	];
 
-	const noteAxes = [
+	const noteHumanitiesAxes = [
 		{
 			id: "citationLocation",
 			question: "Where should citations appear?",
@@ -141,7 +140,7 @@
 		},
 		{
 			id: "bookEmphasis",
-			question: "How are book titles shown?",
+			question: "How are book titles shown in notes?",
 			options: [
 				{ value: "italic", label: "Italic" },
 				{ value: "plain", label: "plain" },
@@ -165,24 +164,74 @@
 			],
 		},
 		{
-			id: "rolePreset",
-			question: "How should contributor roles be formatted?",
+			id: "articleTitleEmphasis",
+			question: "How are article titles shown in notes?",
 			options: [
-				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
-				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
-				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
-				{ value: "none", label: "None (suppress role)" },
+				{ value: "quoted", label: '"In quotes"' },
+				{ value: "italic", label: "Italic" },
+				{ value: "plain", label: "plain" },
 			],
 		},
 	];
 
-	const axes = $derived(
-		wizardStore.family === "author-date"
-			? authorDateAxes
-			: wizardStore.family === "numeric"
-				? numericAxes
-				: noteAxes
-	);
+	const noteLawAxes = [
+		{
+			id: "legalSystem",
+			question: "Which legal tradition is closest?",
+			options: [
+				{ value: "bluebook", label: "Bluebook" },
+				{ value: "oscola", label: "OSCOLA" },
+			],
+		},
+		{
+			id: "citationLocation",
+			question: "Where should legal citations appear?",
+			options: [
+				{ value: "footnote", label: "Footnotes" },
+				{ value: "endnote", label: "Endnotes" },
+			],
+		},
+		{
+			id: "repeatCitation",
+			question: "What should repeat footnotes prefer?",
+			options: [
+				{ value: "short-title", label: "Short form" },
+				{ value: "ibid", label: "Ibid." },
+				{ value: "full", label: "Full repeat" },
+			],
+		},
+		{
+			id: "groupAuthorities",
+			question: "How should authorities be organized?",
+			options: [
+				{ value: true, label: "Grouped by authority/type" },
+				{ value: false, label: "Single combined list" },
+			],
+		},
+		{
+			id: "hasBibliography",
+			question: "Include a table of authorities or references?",
+			options: [
+				{ value: true, label: "Yes" },
+				{ value: false, label: "Footnotes only" },
+			],
+		},
+	];
+
+	const branch = $derived(resolveWizardBranch(wizardStore.field, wizardStore.family));
+	const axes = $derived.by(() => {
+		switch (branch) {
+			case "author-date":
+				return authorDateAxes;
+			case "numeric":
+				return numericAxes;
+			case "note-law":
+				return noteLawAxes;
+			case "note-humanities":
+			default:
+				return noteHumanitiesAxes;
+		}
+	});
 
 	let currentAxisIndex = $state(0);
 
@@ -226,11 +275,7 @@
 				);
 				break;
 			case "locatorLabel":
-				if (value === "none") {
-					wizardStore.updateStyleField("options.locators", undefined);
-				} else {
-					wizardStore.updateStyleField("options.locators", value);
-				}
+				wizardStore.updateStyleField("options.locators.default-label-form", value);
 				break;
 			case "datePosition":
 				// Standard Citum doesn't have a top-level position for dates in options.
@@ -239,9 +284,14 @@
 				break;
 			case "articleTitleEmphasis":
 				if (value === "quoted") {
-					wizardStore.updateStyleField("options.titles.serial.wrap", "quotes");
+					wizardStore.updateStyleField("options.titles.component.quote", true);
+					wizardStore.updateStyleField("options.titles.component.emph", false);
+				} else if (value === "italic") {
+					wizardStore.updateStyleField("options.titles.component.quote", false);
+					wizardStore.updateStyleField("options.titles.component.emph", true);
 				} else if (value === "plain") {
-					wizardStore.updateStyleField("options.titles.serial.wrap", undefined);
+					wizardStore.updateStyleField("options.titles.component.quote", false);
+					wizardStore.updateStyleField("options.titles.component.emph", false);
 				}
 				break;
 			case "yearPosition":
@@ -249,11 +299,17 @@
 				break;
 			case "numberBracket":
 				if (value === "square") {
-					wizardStore.updateStyleField("citation.non-integral.wrap", "brackets");
+					wizardStore.updateStyleField("citation.template.0.wrap", "brackets");
+					wizardStore.updateStyleField("citation.template.0.suffix", undefined);
 				} else if (value === "paren") {
-					wizardStore.updateStyleField("citation.non-integral.wrap", "parentheses");
+					wizardStore.updateStyleField("citation.template.0.wrap", "parentheses");
+					wizardStore.updateStyleField("citation.template.0.suffix", undefined);
+				} else if (value === "period") {
+					wizardStore.updateStyleField("citation.template.0.wrap", "none");
+					wizardStore.updateStyleField("citation.template.0.suffix", ".");
 				} else {
-					wizardStore.updateStyleField("citation.non-integral.wrap", "none");
+					wizardStore.updateStyleField("citation.template.0.wrap", "none");
+					wizardStore.updateStyleField("citation.template.0.suffix", undefined);
 				}
 				break;
 			case "citationLocation":
@@ -272,13 +328,24 @@
 				wizardStore.updateStyleField("options.titles.monograph.emph", value === "italic");
 				break;
 			case "repeatCitation":
-				// Template-based logic, skip for basic options
+				wizardStore.updateStyleField(
+					"options.subsequent",
+					value === "short-title" ? "short" : value
+				);
 				break;
 			case "hasBibliography":
-				// Intent field, not a direct Style field
+				wizardStore.setBibliographyUsage(Boolean(value));
+				break;
+			case "legalSystem":
+				wizardStore.setStyleIntent({
+					from_preset: value === "oscola" ? "oscola" : "bluebook_legal",
+				});
+				break;
+			case "groupAuthorities":
+				wizardStore.setAxisChoices({ groupAuthorities: Boolean(value) });
 				break;
 			case "rolePreset":
-				wizardStore.updateStyleField("options.contributors.editor-label-format", value);
+				wizardStore.updateStyleField("options.contributors.role.preset", value);
 				break;
 		}
 	};
@@ -287,6 +354,18 @@
 		// eslint-disable-next-line @typescript-eslint/no-explicit-any
 		wizardStore.setAxisChoices({ [axisId]: value } as any);
 		updateStyleForAxis(axisId, value);
+
+		if (axisId === "legalSystem") {
+			await wizardStore.generateFromIntent({
+				...wizardStore.styleIntent,
+				class: wizardStore.styleIntent.class ?? "footnote",
+				from_preset: value === "oscola" ? "oscola" : "bluebook_legal",
+				has_bibliography:
+					wizardStore.styleIntent.has_bibliography ??
+					wizardStore.axisChoices.hasBibliography ??
+					true,
+			});
+		}
 
 		// Re-fetch preview to show the change immediately
 		await wizardStore.fetchPreview();

@@ -11,8 +11,15 @@ import type {
 	ComponentSelection,
 	WizardStyleOptions,
 	AxisChoices,
+	WizardIntentState,
+	WizardPreviewHtml,
+	WizardBranch,
 } from "$lib/types/wizard";
-import { FIELD_DEFAULTS } from "$lib/types/wizard";
+import {
+	FIELD_DEFAULTS,
+	resolveWizardBranch,
+	shouldShowBibliographyPreview,
+} from "$lib/types/wizard";
 import {
 	APA_BASELINE,
 	cloneBaseTemplateIntoTypeTemplate,
@@ -31,6 +38,17 @@ let field = $state<CitationField | null>(null);
 let family = $state<StyleFamily | null>(null);
 let axisChoices = $state<Partial<AxisChoices>>({});
 let presetId = $state<string | null>(null);
+let styleIntent = $state<WizardIntentState>({
+	class: null,
+	from_preset: null,
+	contributor_preset: null,
+	role_preset: null,
+	date_preset: null,
+	title_preset: null,
+	sort_preset: null,
+	bib_template: null,
+	has_bibliography: null,
+});
 let styleYaml = $state("");
 let styleName = $state("");
 let styleInfo = $state<Record<string, any> | null>(null);
@@ -39,12 +57,13 @@ let activeRefType = $state("article-journal");
 let testLocator = $state<string>("123-125");
 
 // Preview HTML from the server
-let previewHtml = $state<{
-	parenthetical: string | null;
-	narrative: string | null;
-	note: string | null;
-	bibliography: string | null;
-}>({ parenthetical: null, narrative: null, note: null, bibliography: null });
+let previewHtml = $state<WizardPreviewHtml>({
+	parenthetical: null,
+	narrative: null,
+	note: null,
+	noteRepeat: null,
+	bibliography: null,
+});
 
 // Undo history
 let history = $state<string[]>([]);
@@ -53,6 +72,47 @@ let historyIndex = $state(-1);
 // Loading / error state
 let isLoading = $state(false);
 let error = $state<string | null>(null);
+
+function createEmptyIntentState(): WizardIntentState {
+	return {
+		class: null,
+		from_preset: null,
+		contributor_preset: null,
+		role_preset: null,
+		date_preset: null,
+		title_preset: null,
+		sort_preset: null,
+		bib_template: null,
+		has_bibliography: null,
+	};
+}
+
+function currentBranch(): WizardBranch | null {
+	return resolveWizardBranch(field, family);
+}
+
+function currentHasBibliography(): boolean | null {
+	if (!currentBranch()) return null;
+	return shouldShowBibliographyPreview(currentBranch(), styleIntent.has_bibliography)
+		? true
+		: false;
+}
+
+function bibliographyPresetName(): string {
+	switch (styleIntent.bib_template) {
+		case "chicago":
+		case "chicago_author_date":
+			return "chicago";
+		case "vancouver":
+			return "vancouver";
+		case "harvard":
+			return "harvard";
+		case "apa":
+			return "apa";
+		default:
+			return family === "numeric" ? "vancouver" : family === "author-date" ? "apa" : "chicago";
+	}
+}
 
 function pushHistory() {
 	if (!styleYaml) return;
@@ -290,12 +350,15 @@ async function fetchPreview() {
 	isLoading = true;
 	error = null;
 	try {
+		const branch = currentBranch();
 		// Use "citum" variant of the preview API
 		const res = await fetch("/api/v1/preview", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				citum: styleYaml,
+				branch,
+				has_bibliography: styleIntent.has_bibliography,
 				test_locator: testLocator || undefined,
 				inject_ast_indices: true,
 				reference_type: activeRefType,
@@ -307,6 +370,7 @@ async function fetchPreview() {
 			parenthetical: data.in_text_parenthetical ?? null,
 			narrative: data.in_text_narrative ?? null,
 			note: data.note ?? null,
+			noteRepeat: data.note_repeat ?? null,
 			bibliography: data.bibliography ?? null,
 		};
 	} catch (e) {
@@ -321,18 +385,22 @@ async function generateFromIntent(intentFields: Record<string, string | boolean 
 	isLoading = true;
 	error = null;
 	try {
+		styleIntent = {
+			...styleIntent,
+			class: (intentFields["class"] as WizardIntentState["class"]) ?? null,
+			from_preset: (intentFields["from_preset"] as string | null) ?? null,
+			contributor_preset: (intentFields["contributor_preset"] as string | null) ?? null,
+			role_preset: (intentFields["role_preset"] as string | null) ?? null,
+			date_preset: (intentFields["date_preset"] as string | null) ?? null,
+			title_preset: (intentFields["title_preset"] as string | null) ?? null,
+			sort_preset: (intentFields["sort_preset"] as string | null) ?? null,
+			bib_template: (intentFields["bib_template"] as string | null) ?? null,
+			has_bibliography: (intentFields["has_bibliography"] as boolean | null) ?? null,
+		};
 		const intentObj = {
-			field: field,
-			class: intentFields["class"] ?? null,
-			from_preset: intentFields["from_preset"] ?? null,
+			field,
+			...styleIntent,
 			customize_target: null,
-			contributor_preset: intentFields["contributor_preset"] ?? null,
-			role_preset: intentFields["role_preset"] ?? null,
-			date_preset: intentFields["date_preset"] ?? null,
-			title_preset: intentFields["title_preset"] ?? null,
-			sort_preset: null,
-			bib_template: intentFields["bib_template"] ?? null,
-			has_bibliography: intentFields["has_bibliography"] ?? null,
 		};
 		const res = await fetch("/api/v1/generate", {
 			method: "POST",
@@ -354,6 +422,7 @@ async function generateFromIntent(intentFields: Record<string, string | boolean 
 		// Reset history with new base
 		history = [styleYaml];
 		historyIndex = 0;
+		persist();
 		await fetchPreview();
 	} catch (e) {
 		error = e instanceof Error ? e.message : "Generation error";
@@ -385,6 +454,7 @@ function reset() {
 	family = null;
 	axisChoices = {};
 	presetId = null;
+	styleIntent = createEmptyIntentState();
 	styleYaml = "";
 	styleName = "";
 	styleInfo = null;
@@ -394,6 +464,7 @@ function reset() {
 		parenthetical: null,
 		narrative: null,
 		note: null,
+		noteRepeat: null,
 		bibliography: null,
 	};
 	history = [];
@@ -418,6 +489,7 @@ function persist() {
 				family,
 				axisChoices,
 				presetId,
+				styleIntent,
 				styleYaml,
 				styleName,
 				styleInfo,
@@ -441,6 +513,7 @@ function restore(): boolean {
 		family = data.family ?? null;
 		axisChoices = data.axisChoices ?? {};
 		presetId = data.presetId ?? null;
+		styleIntent = data.styleIntent ?? createEmptyIntentState();
 		styleYaml = data.styleYaml ?? "";
 		styleName = data.styleName ?? "";
 		styleInfo = data.styleInfo ?? null;
@@ -471,6 +544,15 @@ export const wizardStore = {
 	},
 	get axisChoices() {
 		return axisChoices;
+	},
+	get styleIntent() {
+		return styleIntent;
+	},
+	get branch() {
+		return currentBranch();
+	},
+	get hasBibliography() {
+		return currentHasBibliography();
 	},
 	get presetId() {
 		return presetId;
@@ -531,6 +613,10 @@ export const wizardStore = {
 		axisChoices = { ...axisChoices, ...c };
 		persist();
 	},
+	setStyleIntent(nextIntent: Partial<WizardIntentState>) {
+		styleIntent = { ...styleIntent, ...nextIntent };
+		persist();
+	},
 	setPresetId(id: string) {
 		presetId = id;
 		persist();
@@ -553,6 +639,24 @@ export const wizardStore = {
 	setTestLocator(l: string) {
 		testLocator = l;
 		fetchPreview();
+	},
+	setBibliographyUsage(enabled: boolean) {
+		styleIntent = { ...styleIntent, has_bibliography: enabled };
+		axisChoices = { ...axisChoices, hasBibliography: enabled };
+
+		const obj = parseStyle();
+		if (obj) {
+			pushHistory();
+			if (!enabled) {
+				delete obj.bibliography;
+			} else if (!obj.bibliography || typeof obj.bibliography !== "object") {
+				obj.bibliography = { "use-preset": bibliographyPresetName() };
+			}
+			styleYaml = serializeStyle(obj);
+		}
+
+		persist();
+		void fetchPreview();
 	},
 
 	// Actions
