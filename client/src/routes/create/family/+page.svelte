@@ -1,17 +1,12 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import FamilySelector from "$lib/components/wizard/FamilySelector.svelte";
 
 	onMount(() => {
-		if (!wizardStore.field) {
-			goto("/create/field", { replaceState: true });
-			return;
-		}
-		wizardStore.setPhase("quick-start");
-		wizardStore.setStep(2);
+		goto("/create/build/family", { replaceState: true });
 	});
 </script>
 
-<FamilySelector />
+<div class="flex items-center justify-center py-20">
+	<p class="text-sm text-slate-500">Redirecting to the Build flow...</p>
+</div>

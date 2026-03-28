@@ -23,6 +23,7 @@ import {
 	toScopedTemplatePath,
 	type TemplateScope,
 } from "$lib/utils/wizard-template";
+import type { PreviewContext } from "$lib/types/decision";
 
 // Reactive state using module-level $state runes
 let phase = $state<WizardPhase>("quick-start");
@@ -37,6 +38,7 @@ let styleInfo = $state<Record<string, any> | null>(null);
 let selectedComponent = $state<ComponentSelection | null>(null);
 let activeRefType = $state("article-journal");
 let testLocator = $state<string>("123-125");
+let previewContext = $state<PreviewContext>("default");
 
 // Preview HTML from the server
 let previewHtml = $state<{
@@ -299,6 +301,7 @@ async function fetchPreview() {
 				test_locator: testLocator || undefined,
 				inject_ast_indices: true,
 				reference_type: activeRefType,
+				preview_context: previewContext,
 			}),
 		});
 		if (!res.ok) throw new Error(`Preview failed: ${res.status}`);
@@ -390,6 +393,7 @@ function reset() {
 	styleInfo = null;
 	selectedComponent = null;
 	activeRefType = "article-journal";
+	previewContext = "default";
 	previewHtml = {
 		parenthetical: null,
 		narrative: null,
@@ -445,6 +449,7 @@ function restore(): boolean {
 		styleName = data.styleName ?? "";
 		styleInfo = data.styleInfo ?? null;
 		activeRefType = data.activeRefType ?? "article-journal";
+		previewContext = "default";
 		if (styleYaml) {
 			history = [styleYaml];
 			historyIndex = 0;
@@ -492,6 +497,9 @@ export const wizardStore = {
 	},
 	get testLocator() {
 		return testLocator;
+	},
+	get previewContext() {
+		return previewContext;
 	},
 	get previewHtml() {
 		return previewHtml;
@@ -553,6 +561,9 @@ export const wizardStore = {
 	setTestLocator(l: string) {
 		testLocator = l;
 		fetchPreview();
+	},
+	setPreviewContext(nextContext: PreviewContext) {
+		previewContext = nextContext;
 	},
 
 	// Actions

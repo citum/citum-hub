@@ -7,7 +7,7 @@
 	async function selectField(fieldId: CitationField) {
 		wizardStore.setField(fieldId);
 		wizardStore.setStep(2);
-		await goto("/create/family");
+		await goto("/create/build/family");
 	}
 </script>
 
@@ -65,7 +65,7 @@
 					class: "author_date",
 					from_preset: "apa",
 				});
-				goto("/create/customize");
+				goto("/create/build/customize");
 			}}
 			class="text-sm font-medium text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
 		>

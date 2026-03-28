@@ -248,6 +248,10 @@
 						<select
 							id="rc-name-order"
 							onchange={(e) => updateNameOrder(e.currentTarget.value)}
+							onfocus={() => onHighlightChange?.("contributors")}
+							onblur={() => onHighlightChange?.(null)}
+							onpointerenter={() => onHighlightChange?.("contributors")}
+							onpointerleave={() => onHighlightChange?.(null)}
 							value={getNameOrderValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
@@ -263,6 +267,10 @@
 						<select
 							id="rc-and-connector"
 							onchange={(e) => updateAndConnector(e.currentTarget.value)}
+							onfocus={() => onHighlightChange?.("contributors")}
+							onblur={() => onHighlightChange?.(null)}
+							onpointerenter={() => onHighlightChange?.("contributors")}
+							onpointerleave={() => onHighlightChange?.(null)}
 							value={getAndValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
@@ -296,6 +304,10 @@
 						<select
 							id="rc-initials"
 							onchange={(e) => updateInitials(e.currentTarget.value)}
+							onfocus={() => onHighlightChange?.("contributors")}
+							onblur={() => onHighlightChange?.(null)}
+							onpointerenter={() => onHighlightChange?.("contributors")}
+							onpointerleave={() => onHighlightChange?.(null)}
 							value={getInitialsValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
@@ -312,6 +324,10 @@
 						<select
 							id="rc-role-preset"
 							onchange={(e) => updateRolePreset(e.currentTarget.value)}
+							onfocus={() => onHighlightChange?.("roles")}
+							onblur={() => onHighlightChange?.(null)}
+							onpointerenter={() => onHighlightChange?.("roles")}
+							onpointerleave={() => onHighlightChange?.(null)}
 							value={getRolePresetValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>

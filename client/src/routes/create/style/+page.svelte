@@ -1,17 +1,12 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import { goto } from "$app/navigation";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import StyleNavigator from "$lib/components/wizard/StyleNavigator.svelte";
+	import { onMount } from "svelte";
 
 	onMount(() => {
-		if (!wizardStore.family) {
-			goto("/create/family", { replaceState: true });
-			return;
-		}
-		wizardStore.setPhase("quick-start");
-		wizardStore.setStep(3);
+		goto("/create/build/style", { replaceState: true });
 	});
 </script>
 
-<StyleNavigator />
+<div class="flex items-center justify-center py-20">
+	<p class="text-sm text-slate-500">Redirecting to the Build flow...</p>
+</div>

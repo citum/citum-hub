@@ -10,7 +10,7 @@
 
 	function goBack() {
 		wizardStore.setPhase("quick-start");
-		goto("/create/style");
+		goto("/create/build/style");
 	}
 
 	async function downloadStyle() {
@@ -33,7 +33,7 @@
 	function handleSave() {
 		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(5);
-		goto("/create/review");
+		goto("/create/build/review");
 	}
 
 	let activeTab = $state("structure");
