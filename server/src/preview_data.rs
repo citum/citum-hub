@@ -53,6 +53,7 @@ fn empty_monograph(id: &str, r#type: MonographType, title: Title) -> Monograph {
         container_title: None,
         recipient: None,
         interviewer: None,
+        guest: None,
     }
 }
 
