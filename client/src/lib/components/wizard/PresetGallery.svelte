@@ -45,7 +45,7 @@
 		wizardStore.setPresetId(preset.id);
 		wizardStore.setStep(4);
 		await wizardStore.generateFromIntent(preset.intentFields);
-		await goto("/create/refine");
+		await goto("/create/build/refine");
 	}
 
 	$effect(() => {

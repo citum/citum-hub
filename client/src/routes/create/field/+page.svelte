@@ -1,12 +1,12 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import FieldSelector from "$lib/components/wizard/FieldSelector.svelte";
 
 	onMount(() => {
-		wizardStore.setPhase("quick-start");
-		wizardStore.setStep(1);
+		goto("/create/build/field", { replaceState: true });
 	});
 </script>
 
-<FieldSelector />
+<div class="flex items-center justify-center py-20">
+	<p class="text-sm text-slate-500">Redirecting to the Build flow...</p>
+</div>

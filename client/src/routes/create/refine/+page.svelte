@@ -1,17 +1,12 @@
 <script lang="ts">
-	import { onMount } from "svelte";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import RefinementPanel from "$lib/components/wizard/RefinementPanel.svelte";
 	import { goto } from "$app/navigation";
+	import { onMount } from "svelte";
 
 	onMount(() => {
-		if (!wizardStore.styleYaml) {
-			goto("/create/field", { replaceState: true });
-			return;
-		}
-		wizardStore.setPhase("quick-start");
-		wizardStore.setStep(4);
+		goto("/create/build/refine", { replaceState: true });
 	});
 </script>
 
-<RefinementPanel />
+<div class="flex items-center justify-center py-20">
+	<p class="text-sm text-slate-500">Redirecting to the Build flow...</p>
+</div>

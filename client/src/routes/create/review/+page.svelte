@@ -1,17 +1,12 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import ReviewScreen from "$lib/components/wizard/ReviewScreen.svelte";
 
 	onMount(() => {
-		if (!wizardStore.styleYaml) {
-			goto("/create/field", { replaceState: true });
-			return;
-		}
-		wizardStore.setPhase("quick-start");
-		wizardStore.setStep(5);
+		goto("/create/build/review", { replaceState: true });
 	});
 </script>
 
-<ReviewScreen />
+<div class="flex items-center justify-center py-20">
+	<p class="text-sm text-slate-500">Redirecting to the Build flow...</p>
+</div>

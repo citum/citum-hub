@@ -22,7 +22,7 @@
 			from_preset: presetId,
 		});
 
-		await goto("/create/style");
+		await goto("/create/build/style");
 	}
 
 	const isDefaultFamily = (familyId: StyleFamily): boolean => {
@@ -128,7 +128,7 @@
 								: "footnote",
 					from_preset: presetId,
 				});
-				goto("/create/customize");
+				goto("/create/build/customize");
 			}}
 			class="text-sm font-medium text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
 		>

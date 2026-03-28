@@ -7,6 +7,13 @@
 	let debounceTimer: number | undefined;
 	let activeHighlight = $state<string | null>(null);
 
+	function syncPreviewContext(field: string | null) {
+		const nextContext = field === "contributors" || field === "roles" ? "contributors" : "default";
+		if (wizardStore.previewContext === nextContext) return;
+		wizardStore.setPreviewContext(nextContext);
+		void wizardStore.fetchPreview();
+	}
+
 	function debouncedFetchPreview() {
 		clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
@@ -36,7 +43,7 @@
 
 	function skipToReview() {
 		wizardStore.setStep(5);
-		goto("/create/review");
+		goto("/create/build/review");
 	}
 
 	const currentOptions = $derived(wizardStore.getOptions());
@@ -92,6 +99,7 @@
 					onUpdateLocatorLabel={updateLocatorLabel}
 					onHighlightChange={(field) => {
 						activeHighlight = field;
+						syncPreviewContext(field);
 					}}
 				/>
 
@@ -107,7 +115,7 @@
 						<button
 							onclick={() => {
 								wizardStore.setStep(3);
-								goto("/create/style");
+								goto("/create/build/style");
 							}}
 							class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
 						>
@@ -117,7 +125,7 @@
 						<button
 							onclick={() => {
 								wizardStore.reset();
-								goto("/create/field");
+								goto("/create/build/field");
 							}}
 							class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
 						>

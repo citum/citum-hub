@@ -70,10 +70,35 @@ void bootstrapHubApiData()
 		console.error("[Setup] Hub API bootstrap failed:", error);
 	});
 
+type PreviewContext = "default" | "contributors";
+
+interface PreviewSet {
+	in_text_parenthetical: string | null;
+	in_text_narrative: string | null;
+	note: string | null;
+	bibliography: string | null;
+}
+
+interface FixtureCitation {
+	items: Array<Record<string, unknown>>;
+	mode: "non-integral" | "integral";
+}
+
+interface FixtureData {
+	references: Record<string, unknown>;
+	citations: {
+		nonIntegral: FixtureCitation;
+		integral: FixtureCitation;
+	};
+}
+
 /**
  * --- Fixture Loading Logic ---
  */
-async function getFixtureData(type: string = "expanded") {
+async function getFixtureData(
+	type: string = "expanded",
+	previewContext: PreviewContext = "default"
+) {
 	const fixtureMap: Record<string, string> = {
 		author_date: "references-author-date.json",
 		footnote: "references-humanities-note.json",
@@ -89,8 +114,6 @@ async function getFixtureData(type: string = "expanded") {
 
 	try {
 		const raw = await file(filePath).json();
-		const refs: Record<string, unknown> = {};
-
 		const entries = Array.isArray(raw)
 			? raw
 			: Object.entries(raw)
@@ -104,8 +127,6 @@ async function getFixtureData(type: string = "expanded") {
 
 		entries.forEach((ref: any) => {
 			if (ref && typeof ref === "object" && "id" in ref) {
-				refs[String(ref.id)] = ref;
-
 				// Priority 1: 4+ authors (to test et al.)
 				if (!multiAuthorItem && ref.author && Array.isArray(ref.author) && ref.author.length >= 4) {
 					multiAuthorItem = ref;
@@ -148,11 +169,40 @@ async function getFixtureData(type: string = "expanded") {
 			multiAuthorItem = otherItems.pop();
 		}
 
-		// Ensure we always have 4 items if possible
-		const selectedItems = [multiAuthorItem, editorItem, translatorItem, ...otherItems]
+		const roleItems = entries
+			.filter(
+				(ref: any) =>
+					ref &&
+					typeof ref === "object" &&
+					"id" in ref &&
+					((ref.editor && Array.isArray(ref.editor) && ref.editor.length > 0) ||
+						(ref.translator && Array.isArray(ref.translator) && ref.translator.length > 0))
+			)
+			.sort((left: any, right: any) => {
+				const leftWeight =
+					left.author && Array.isArray(left.author) && left.author.length > 0 ? 1 : 0;
+				const rightWeight =
+					right.author && Array.isArray(right.author) && right.author.length > 0 ? 1 : 0;
+				return leftWeight - rightWeight;
+			});
+
+		const defaultItems = [multiAuthorItem, editorItem, translatorItem, ...otherItems]
 			.filter(Boolean)
 			.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index) // Unique
 			.slice(0, 4);
+		const contributorItems = roleItems
+			.filter(Boolean)
+			.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index)
+			.slice(0, 4);
+		const selectedItems =
+			previewContext === "contributors" && contributorItems.length > 0
+				? contributorItems
+				: defaultItems;
+		const references = Object.fromEntries(
+			(previewContext === "contributors" ? selectedItems : entries)
+				.filter((item): item is Record<string, unknown> => Boolean(item))
+				.map((item) => [String(item.id), item])
+		);
 
 		const cite1Items = [];
 		const cite2Items = [];
@@ -164,28 +214,26 @@ async function getFixtureData(type: string = "expanded") {
 			if (selectedItems.length > 3) cite2Items.push({ id: selectedItems[3].id });
 		}
 
-		const nonIntegralCitation = { items: cite1Items, mode: "non-integral" };
-		const integralCitation = { items: cite2Items, mode: "integral" };
+		const nonIntegralCitation: FixtureCitation = { items: cite1Items, mode: "non-integral" };
+		const integralCitation: FixtureCitation = { items: cite2Items, mode: "integral" };
 
 		return {
-			references: refs, // Full bibliography restored
-			citation: nonIntegralCitation, // fallback for decide route
+			references,
 			citations: {
 				nonIntegral: nonIntegralCitation,
 				integral: integralCitation,
 			},
-		};
+		} satisfies FixtureData;
 	} catch (e) {
 		console.error(
 			`[Fixture] Failed to load ${fileName} from ${filePath}. Previews will be empty.`,
 			e
 		);
-		const emptyCite = { items: [], mode: "non-integral" };
+		const emptyCite: FixtureCitation = { items: [], mode: "non-integral" };
 		return {
 			references: {},
-			citation: emptyCite,
 			citations: { nonIntegral: emptyCite, integral: emptyCite },
-		};
+		} satisfies FixtureData;
 	}
 }
 
@@ -222,6 +270,127 @@ function resolvePreviewClass(
 	}
 
 	return "expanded";
+}
+
+function resolvePreviewContext(body: Record<string, unknown>): PreviewContext {
+	const value =
+		typeof body.preview_context === "string"
+			? body.preview_context
+			: typeof body.preview_focus === "string"
+				? body.preview_focus
+				: "default";
+
+	return value === "contributors" || value === "roles" ? "contributors" : "default";
+}
+
+function createEmptyPreviewSet(): PreviewSet {
+	return {
+		in_text_parenthetical: null,
+		in_text_narrative: null,
+		note: null,
+		bibliography: null,
+	};
+}
+
+function injectLocatorIntoCitation(
+	citation: FixtureCitation,
+	testLocator: string
+): FixtureCitation {
+	if (!citation.items.length) return citation;
+	const items = [...citation.items];
+	items[0] = {
+		...items[0],
+		locator: { label: "page", value: testLocator },
+	};
+
+	return { ...citation, items };
+}
+
+function getChoicePreviewHtml(previewSet: PreviewSet): string {
+	return (
+		previewSet.note ??
+		previewSet.in_text_parenthetical ??
+		previewSet.bibliography ??
+		previewSet.in_text_narrative ??
+		""
+	);
+}
+
+async function renderPreviewSet(params: {
+	intent?: Record<string, unknown>;
+	previewStyleYaml?: string;
+	testLocator: string;
+	previewContext?: PreviewContext;
+}): Promise<PreviewSet> {
+	const { intent, previewStyleYaml, testLocator, previewContext = "default" } = params;
+	const previewSource = intent ?? params;
+	const fixtureType = resolvePreviewClass(previewSource, previewStyleYaml);
+	const isNotePreview = fixtureType === "footnote" || fixtureType === "endnote";
+
+	const previewSet = createEmptyPreviewSet();
+	const fixture = await getFixtureData(fixtureType, previewContext);
+	const refsStr = JSON.stringify(fixture.references);
+	const citeNonIntegral = injectLocatorIntoCitation(fixture.citations.nonIntegral, testLocator);
+	const citeIntegral = injectLocatorIntoCitation(fixture.citations.integral, testLocator);
+	const citeNonIntegralStr = JSON.stringify(citeNonIntegral);
+	const citeIntegralStr = JSON.stringify(citeIntegral);
+
+	if (previewStyleYaml && previewStyleYaml.trim().length > 0) {
+		const renderedNonIntegral = render_citation(
+			previewStyleYaml,
+			refsStr,
+			citeNonIntegralStr,
+			"non-integral"
+		);
+		const renderedIntegral = render_citation(
+			previewStyleYaml,
+			refsStr,
+			citeIntegralStr,
+			"integral"
+		);
+		const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
+		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
+
+		if (isNotePreview) {
+			previewSet.note = previewNonIntegral;
+		} else {
+			previewSet.in_text_parenthetical = previewNonIntegral;
+			previewSet.in_text_narrative = previewIntegral;
+		}
+
+		previewSet.bibliography = render_bibliography(previewStyleYaml, refsStr);
+		return previewSet;
+	}
+
+	if (intent) {
+		const intentStr = JSON.stringify(intent);
+		const renderedNonIntegral = render_intent_citation(
+			intentStr,
+			refsStr,
+			citeNonIntegralStr,
+			"non-integral"
+		);
+		const renderedIntegral = render_intent_citation(
+			intentStr,
+			refsStr,
+			citeIntegralStr,
+			"integral"
+		);
+		const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
+		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
+
+		if (isNotePreview) {
+			previewSet.note = previewNonIntegral;
+		} else {
+			previewSet.in_text_parenthetical = previewNonIntegral;
+			previewSet.in_text_narrative = previewIntegral;
+		}
+
+		const generatedStyle = generate_style(intentStr);
+		previewSet.bibliography = render_bibliography(generatedStyle, refsStr);
+	}
+
+	return previewSet;
 }
 
 // --- Middleware: Auth ---
@@ -580,32 +749,18 @@ app.post("/v1/decide", async (c) => {
 			return c.json({ error: "Intent evaluation failed", details: String(wasmError) }, 500);
 		}
 
-		const fixture = await getFixtureData(intent.class || intent.field);
-		const refsStr = JSON.stringify(fixture.references);
-
-		// Inject locator into citation items
-		const test_locator = "123-125";
-		const injectLocator = (cite: any) => {
-			if (!cite || !cite.items || cite.items.length === 0) return cite;
-			const items = [...cite.items];
-			items[0] = { ...items[0], locator: { label: "page", value: test_locator } };
-			return { ...cite, items };
-		};
-
-		const cite = injectLocator(fixture.citation);
-		const citeStr = JSON.stringify(cite);
+		const testLocator = "123-125";
 
 		// Try generating main previews
 		try {
-			decision.in_text_parenthetical = render_intent_citation(
-				intentStr,
-				refsStr,
-				citeStr,
-				"NonIntegral"
-			);
-			decision.in_text_narrative = render_intent_citation(intentStr, refsStr, citeStr, "Integral");
-			const style_yaml = generate_style(intentStr);
-			decision.bibliography = render_bibliography(style_yaml, refsStr);
+			const previewSet = await renderPreviewSet({
+				intent,
+				testLocator,
+			});
+			decision.in_text_parenthetical = previewSet.in_text_parenthetical;
+			decision.in_text_narrative = previewSet.in_text_narrative;
+			decision.note = previewSet.note;
+			decision.bibliography = previewSet.bibliography;
 		} catch (previewError) {
 			console.warn("[Decide] Main preview rendering failed:", previewError);
 			// Non-fatal, just no preview
@@ -616,13 +771,14 @@ app.post("/v1/decide", async (c) => {
 			for (const preview of decision.previews) {
 				try {
 					const previewIntent = { ...intent, ...preview.choice_value };
-					preview.html = render_intent_citation(
-						JSON.stringify(previewIntent),
-						refsStr,
-						citeStr,
-						"non-integral"
-					);
+					const previewSet = await renderPreviewSet({
+						intent: previewIntent,
+						testLocator,
+					});
+					preview.preview_set = previewSet;
+					preview.html = getChoicePreviewHtml(previewSet);
 				} catch {
+					preview.preview_set = createEmptyPreviewSet();
 					preview.html = "";
 				}
 			}
@@ -640,109 +796,28 @@ app.post("/v1/preview", async (c) => {
 		const style_yaml = body.style_yaml || body.citum;
 		const previewStyleYaml =
 			typeof style_yaml === "string" ? normalizeStyleYamlForPreview(style_yaml) : style_yaml;
-		const test_locator = body.test_locator || "123-125";
-		const fixtureType = resolvePreviewClass(
-			body,
-			typeof previewStyleYaml === "string" ? previewStyleYaml : undefined
-		);
-		const isNotePreview = fixtureType === "footnote" || fixtureType === "endnote";
-
-		const fixture = await getFixtureData(fixtureType);
-		const refsStr = JSON.stringify(fixture.references);
-
-		// Inject locator into citation items
-		const injectLocator = (cite: any) => {
-			if (!cite || !cite.items || cite.items.length === 0) return cite;
-			const items = [...cite.items];
-			items[0] = { ...items[0], locator: { label: "page", value: test_locator } };
-			return { ...cite, items };
-		};
-
-		const citeNonIntegral = injectLocator(fixture.citations.nonIntegral);
-		const citeIntegral = injectLocator(fixture.citations.integral);
-
-		const citeNonIntegralStr = JSON.stringify(citeNonIntegral);
-		const citeIntegralStr = JSON.stringify(citeIntegral);
-
-		let htmlParenthetical = "",
-			htmlNarrative = "",
-			htmlNote = "",
-			bib = "";
+		const testLocator = body.test_locator || "123-125";
+		const previewContext = resolvePreviewContext(body);
 
 		try {
-			if (
-				previewStyleYaml &&
-				typeof previewStyleYaml === "string" &&
-				previewStyleYaml.trim().length > 0
-			) {
-				console.log("[Preview] Rendering with explicit style YAML");
-				const renderedNonIntegral = render_citation(
-					previewStyleYaml,
-					refsStr,
-					citeNonIntegralStr,
-					"non-integral"
-				);
-				const renderedIntegral = render_citation(
-					previewStyleYaml,
-					refsStr,
-					citeIntegralStr,
-					"integral"
-				);
-				const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
-				const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
+			const previewSet = await renderPreviewSet({
+				intent:
+					body.intent || body.field || body.class
+						? ((body.intent || body) as Record<string, unknown>)
+						: undefined,
+				previewStyleYaml:
+					typeof previewStyleYaml === "string" && previewStyleYaml.trim().length > 0
+						? previewStyleYaml
+						: undefined,
+				testLocator,
+				previewContext,
+			});
 
-				if (isNotePreview) {
-					htmlNote = previewNonIntegral;
-				} else {
-					htmlParenthetical = previewNonIntegral;
-					htmlNarrative = previewIntegral;
-				}
-
-				bib = render_bibliography(previewStyleYaml, refsStr);
-			} else if (body.intent || body.field || body.class) {
-				const intent = body.intent || body;
-				console.log(
-					"[Preview] Rendering with intent (field=%s, class=%s)",
-					(intent as any).field ?? "unknown",
-					(intent as any).class ?? "unknown"
-				);
-				const intentStr = JSON.stringify(intent);
-				const renderedNonIntegral = render_intent_citation(
-					intentStr,
-					refsStr,
-					citeNonIntegralStr,
-					"non-integral"
-				);
-				const renderedIntegral = render_intent_citation(
-					intentStr,
-					refsStr,
-					citeIntegralStr,
-					"integral"
-				);
-				const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
-				const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
-
-				if (isNotePreview) {
-					htmlNote = previewNonIntegral;
-				} else {
-					htmlParenthetical = previewNonIntegral;
-					htmlNarrative = previewIntegral;
-				}
-
-				const generated_style = generate_style(intentStr);
-				bib = render_bibliography(generated_style, refsStr);
-			}
+			return c.json(previewSet);
 		} catch (renderError) {
 			console.error("[Preview] WASM render error details:", renderError);
 			return c.json({ error: "Rendering failed", details: String(renderError) }, 500);
 		}
-
-		return c.json({
-			in_text_parenthetical: htmlParenthetical,
-			in_text_narrative: htmlNarrative,
-			note: htmlNote,
-			bibliography: bib,
-		});
 	} catch (e) {
 		console.error("[Preview] Fatal Handler Error:", e);
 		return c.json({ error: "Internal Server Error during preview generation" }, 500);

@@ -101,12 +101,12 @@
 
 	function customizeFurther() {
 		wizardStore.setPhase("visual-customizer");
-		goto("/create/customize");
+		goto("/create/build/customize");
 	}
 
 	function startOver() {
 		wizardStore.reset();
-		goto("/create/field");
+		goto("/create/build/field");
 	}
 
 	// Use $auth reactive store subscription for template access
@@ -370,7 +370,7 @@
 			onclick={() => {
 				wizardStore.setPhase("quick-start");
 				wizardStore.setStep(4);
-				goto("/create/refine");
+				goto("/create/build/refine");
 			}}
 			class="flex items-center justify-center w-full sm:w-auto min-w-[200px] gap-2 rounded-xl border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-8 py-3 font-bold text-slate-700 dark:text-slate-300 hover:border-slate-300 hover:bg-slate-50 transition-all focus:ring-4 focus:ring-slate-100"
 		>

@@ -6,8 +6,8 @@
 
 	let { children } = $props();
 	const isCustomizerRoute = $derived(
-		$page.url.pathname.startsWith("/create/customize") ||
-			$page.url.pathname.startsWith("/create/refine")
+		$page.url.pathname.startsWith("/create/build/customize") ||
+			$page.url.pathname.startsWith("/create/build/refine")
 	);
 
 	function handleLogin() {

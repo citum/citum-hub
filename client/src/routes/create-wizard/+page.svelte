@@ -3,10 +3,10 @@
 	import { onMount } from "svelte";
 
 	onMount(() => {
-		goto("/create", { replaceState: true });
+		goto("/create/build", { replaceState: true });
 	});
 </script>
 
 <div class="flex items-center justify-center py-20">
-	<p class="text-text-secondary text-sm">Redirecting to the new Style Builder...</p>
+	<p class="text-text-secondary text-sm">Redirecting to the guided Build flow...</p>
 </div>

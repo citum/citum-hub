@@ -273,7 +273,7 @@
 
 							<div class="mt-6 flex flex-wrap gap-3">
 								<a
-									href={`/create?source=${encodeURIComponent(style.id)}`}
+									href={`/create/tweak?source=${encodeURIComponent(style.id)}`}
 									class="inline-flex flex-1 items-center justify-center gap-2 rounded-[1.2rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-primary/30 hover:text-primary"
 								>
 									<span class="material-symbols-outlined text-lg">edit</span>
