@@ -17,6 +17,7 @@
 			wizardStore.selectedComponent.scope === "local" ? "local" : "all",
 			{ ensureLocal: wizardStore.selectedComponent.scope === "local" }
 		);
+		if (!path) return null;
 		return wizardStore.getTemplateNode(path);
 	}
 
@@ -29,6 +30,7 @@
 			selection.scope === "local" ? "local" : "all",
 			{ ensureLocal: selection.scope === "local" }
 		);
+		if (!path) return;
 
 		wizardStore.updateStyleField(`${path}.${key}`, value || undefined);
 		debouncedFetchPreview();

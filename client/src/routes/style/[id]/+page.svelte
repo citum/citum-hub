@@ -19,8 +19,8 @@
 
 	type TabId = "overview" | "style" | "aliases" | "history" | "permissions";
 
-	let detail: HubStyleDetail | null = $state(null);
-	let legacyStyle: LegacyStyle | null = $state(null);
+	let detail = $state<HubStyleDetail | null>(null);
+	let legacyStyle = $state<LegacyStyle | null>(null);
 	let loading = $state(true);
 	let previewLoading = $state(false);
 	let error = $state<string | null>(null);
@@ -42,20 +42,21 @@
 		{ id: "permissions", label: "Permissions", icon: "shield" },
 	] as const;
 
-	const aliasRows = $derived(detail?.aliases.items || []);
-	const styleTitle = $derived(detail?.style.title || legacyStyle?.title || "Style");
+	const detailStyle = $derived((detail ? detail.style : null) as HubStyleDetail["style"] | null);
+	const aliasRows = $derived((detail ? detail.aliases.items : []) as HubAliasRecord[]);
+	const styleTitle = $derived(detailStyle?.title || legacyStyle?.title || "Style");
 	const styleDescription = $derived(
-		detail?.style.description ||
+		detailStyle?.description ||
 			legacyStyle?.description ||
-			`Registry entry for ${detail?.style.title || legacyStyle?.title || "this style"}.`
+			`Registry entry for ${detailStyle?.title || legacyStyle?.title || "this style"}.`
 	);
-	const styleFields = $derived(detail?.style.fields || legacyStyle?.fields || []);
-	const styleYaml = $derived(detail?.style.citum || legacyStyle?.citum || null);
+	const styleFields = $derived(detailStyle?.fields || legacyStyle?.fields || []);
+	const styleYaml = $derived(detailStyle?.citum || legacyStyle?.citum || null);
 	const styleLicense = $derived(
-		detail?.style.source_license || legacyStyle?.source?.license || "Open Source"
+		detailStyle?.source_license || legacyStyle?.source?.license || "Open Source"
 	);
 	const originalAuthors = $derived(
-		detail?.style.original_authors || legacyStyle?.source?.original_authors || []
+		detailStyle?.original_authors || legacyStyle?.source?.original_authors || []
 	);
 
 	const HASH_TO_TAB: Record<string, TabId> = {

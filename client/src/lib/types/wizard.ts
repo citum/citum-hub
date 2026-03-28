@@ -107,6 +107,7 @@ export interface WizardStyleOptions {
 	titles?: string | TitleConfig;
 	locators?: string | LocatorConfig;
 	punctuation?: Record<string, unknown>;
+	"punctuation-in-quote"?: boolean;
 	"page-range-format"?: string;
 }
 
