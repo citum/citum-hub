@@ -79,7 +79,10 @@ void bootstrapHubApiData()
 /**
  * --- Fixture Loading Logic ---
  */
-async function getFixtureData(type: string = "expanded", previewContext: PreviewContext = "default") {
+async function getFixtureData(
+	type: string = "expanded",
+	previewContext: PreviewContext = "default"
+) {
 	const fixtureMap: Record<string, string> = {
 		author_date: "references-author-date.json",
 		footnote: "references-humanities-note.json",
@@ -174,15 +177,13 @@ async function getFixtureData(type: string = "expanded", previewContext: Preview
 		const defaultItems = [multiAuthorItem, editorItem, translatorItem, ...otherItems]
 			.filter((item): item is Record<string, unknown> => Boolean(item))
 			.filter(
-				(item, index, self) =>
-					self.findIndex((t) => String(t.id) === String(item.id)) === index
+				(item, index, self) => self.findIndex((t) => String(t.id) === String(item.id)) === index
 			)
 			.slice(0, 4);
 		const contributorItems = roleItems
 			.filter(Boolean)
 			.filter(
-				(item, index, self) =>
-					self.findIndex((t) => String(t.id) === String(item.id)) === index
+				(item, index, self) => self.findIndex((t) => String(t.id) === String(item.id)) === index
 			)
 			.slice(0, 4);
 		const selectedItems =
