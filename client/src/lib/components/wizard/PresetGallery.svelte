@@ -1,11 +1,20 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import { getPresetsForFamily } from "$lib/data/presets";
-	import type { PresetInfo } from "$lib/types/wizard";
+	import { getPresetsForBranch } from "$lib/data/presets";
+	import { branchLabel, isNoteBranch, type PresetInfo, type WizardBranch } from "$lib/types/wizard";
 
-	let presets = $derived(getPresetsForFamily(wizardStore.family!));
-	let previewsLoaded = $state<Record<string, string | null>>({});
+	type PresetPreview = {
+		in_text_parenthetical: string | null;
+		in_text_narrative: string | null;
+		note: string | null;
+		note_repeat: string | null;
+		bibliography: string | null;
+	};
+
+	let branch = $derived(wizardStore.branch);
+	let presets = $derived(getPresetsForBranch(branch, wizardStore.family));
+	let previewsLoaded = $state<Record<string, PresetPreview | null>>({});
 	let isLoadingPreviews = $state(true);
 
 	async function loadPreview(preset: PresetInfo) {
@@ -20,6 +29,9 @@
 						...preset.intentFields,
 						field: wizardStore.field,
 					},
+					branch: preset.branch || branch,
+					has_bibliography:
+						preset.intentFields["has_bibliography"] ?? wizardStore.styleIntent.has_bibliography,
 				}),
 			});
 
@@ -29,13 +41,7 @@
 			}
 
 			const data = await res.json();
-			const html =
-				data.in_text_parenthetical ||
-				data.in_text_narrative ||
-				data.note ||
-				data.bibliography ||
-				"";
-			previewsLoaded[preset.id] = html;
+			previewsLoaded[preset.id] = data;
 		} catch {
 			previewsLoaded[preset.id] = null;
 		}
@@ -59,13 +65,18 @@
 		};
 		loadAll();
 	});
+
+	function previewBranchForPreset(preset: PresetInfo): WizardBranch | null {
+		return preset.branch || branch;
+	}
 </script>
 
 <div class="space-y-4 sm:space-y-6">
 	<div>
 		<h2 class="font-display text-2xl font-semibold text-text-main">Pick the closest match</h2>
 		<p class="mt-2 text-text-secondary">
-			We'll generate a style from your selection. You can customize it later.
+			We'll generate a {branchLabel(branch).toLowerCase()} style from your selection. You can customize
+			it later.
 		</p>
 	</div>
 
@@ -99,14 +110,95 @@
 					</p>
 
 					{#if previewsLoaded[preset.id]}
+						{@const preview = previewsLoaded[preset.id]}
+						{@const previewBranch = previewBranchForPreset(preset)}
 						<div class="mt-auto rounded bg-background-light p-3 font-serif text-sm text-text-main">
-							<div class="live-preview-content line-clamp-4">
-								<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-								{@html previewsLoaded[preset.id]}
+							<div class="space-y-3">
+								{#if previewBranch === "author-date"}
+									{#if preview?.in_text_narrative}
+										<div>
+											<p
+												class="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+											>
+												Narrative
+											</p>
+											<div class="live-preview-content">
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html preview.in_text_narrative}
+											</div>
+										</div>
+									{/if}
+									{#if preview?.in_text_parenthetical}
+										<div>
+											<p
+												class="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+											>
+												Parenthetical
+											</p>
+											<div class="live-preview-content">
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html preview.in_text_parenthetical}
+											</div>
+										</div>
+									{/if}
+								{:else if previewBranch === "numeric"}
+									{#if preview?.in_text_parenthetical}
+										<div>
+											<p
+												class="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+											>
+												In-Text
+											</p>
+											<div class="live-preview-content">
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html preview.in_text_parenthetical}
+											</div>
+										</div>
+									{/if}
+								{:else if isNoteBranch(previewBranch)}
+									{#if preview?.note}
+										<div>
+											<p
+												class="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+											>
+												First Note
+											</p>
+											<div class="live-preview-content">
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html preview.note}
+											</div>
+										</div>
+									{/if}
+									{#if preview?.note_repeat}
+										<div>
+											<p
+												class="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400"
+											>
+												Repeat Note
+											</p>
+											<div class="live-preview-content">
+												<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+												{@html preview.note_repeat}
+											</div>
+										</div>
+									{/if}
+								{/if}
+
+								{#if preview?.bibliography}
+									<div>
+										<p class="mb-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+											Bibliography
+										</p>
+										<div class="live-preview-content text-xs">
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+											{@html preview.bibliography}
+										</div>
+									</div>
+								{/if}
 							</div>
 						</div>
 					{:else}
-						<div class="mt-auto h-16 rounded bg-background-light"></div>
+						<div class="mt-auto h-24 rounded bg-background-light"></div>
 					{/if}
 				</button>
 			{/each}

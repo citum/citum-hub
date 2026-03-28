@@ -1,20 +1,39 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import {
+		isNoteBranch,
+		shouldShowBibliographyPreview,
+		shouldShowNarrativePreview,
+		type WizardBranch,
+	} from "$lib/types/wizard";
 
 	let containerRef: HTMLDivElement | undefined = $state();
 	let tooltipPos = $state({ x: 0, y: 0 });
 	let tooltipInfo = $state<{ type: string; label: string } | null>(null);
 
-	const showParenthetical = $derived(
-		wizardStore.family === "author-date" || wizardStore.family === "numeric"
+	const branch = $derived(wizardStore.branch);
+	const showParenthetical = $derived(branch === "author-date" || branch === "numeric");
+	const showNarrative = $derived(shouldShowNarrativePreview(branch));
+	const showNote = $derived(isNoteBranch(branch));
+	const showBibliography = $derived(
+		shouldShowBibliographyPreview(branch, wizardStore.styleIntent.has_bibliography)
 	);
-	const showNarrative = $derived(wizardStore.family === "author-date");
-	const showNote = $derived(wizardStore.family === "note");
-	const showBibliography = $derived(true);
-	const citationHeading = $derived(
-		wizardStore.family === "numeric" ? "Citation" : "Parenthetical Citation"
-	);
-	const noteHeading = $derived("Note");
+
+	function inTextLabel(activeBranch: WizardBranch | null): string {
+		return activeBranch === "numeric" ? "In-Text Citation" : "Parenthetical Citation";
+	}
+
+	function noteHeading(activeBranch: WizardBranch | null): string {
+		return activeBranch === "note-law" ? "Legal Footnote" : "First Note";
+	}
+
+	function repeatNoteHeading(activeBranch: WizardBranch | null): string {
+		return activeBranch === "note-law" ? "Short-Form Footnote" : "Repeat Note";
+	}
+
+	function bibliographyHeading(activeBranch: WizardBranch | null): string {
+		return activeBranch === "note-law" ? "Authorities / Reference List" : "Bibliography";
+	}
 
 	function getComponentInfo(
 		el: HTMLElement
@@ -106,6 +125,7 @@
 			(wizardStore.previewHtml.parenthetical ||
 				wizardStore.previewHtml.narrative ||
 				wizardStore.previewHtml.note ||
+				wizardStore.previewHtml.noteRepeat ||
 				wizardStore.previewHtml.bibliography)
 		) {
 			const elements = containerRef.querySelectorAll('[class^="csln-"]');
@@ -151,7 +171,7 @@
 			>
 				{#if showParenthetical && wizardStore.previewHtml.parenthetical}
 					<div class="space-y-2">
-						<h4 class="font-semibold text-text-main text-sm">{citationHeading}</h4>
+						<h4 class="font-semibold text-text-main text-sm">{inTextLabel(branch)}</h4>
 						<div
 							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
 						>
@@ -175,7 +195,7 @@
 
 				{#if showNote && wizardStore.previewHtml.note}
 					<div class="space-y-2">
-						<h4 class="font-semibold text-text-main text-sm">{noteHeading}</h4>
+						<h4 class="font-semibold text-text-main text-sm">{noteHeading(branch)}</h4>
 						<div
 							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
 						>
@@ -185,9 +205,21 @@
 					</div>
 				{/if}
 
+				{#if showNote && wizardStore.previewHtml.noteRepeat}
+					<div class="space-y-2">
+						<h4 class="font-semibold text-text-main text-sm">{repeatNoteHeading(branch)}</h4>
+						<div
+							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html wizardStore.previewHtml.noteRepeat}
+						</div>
+					</div>
+				{/if}
+
 				{#if showBibliography && wizardStore.previewHtml.bibliography}
 					<div class="space-y-2">
-						<h4 class="font-semibold text-text-main text-sm">Bibliography</h4>
+						<h4 class="font-semibold text-text-main text-sm">{bibliographyHeading(branch)}</h4>
 						<div
 							class="interactive-preview rounded bg-background-light p-4 font-serif text-sm text-text-main"
 						>
@@ -195,7 +227,7 @@
 							{@html wizardStore.previewHtml.bibliography}
 						</div>
 					</div>
-				{:else if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.bibliography}
+				{:else if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.noteRepeat && !wizardStore.previewHtml.bibliography}
 					<div class="text-center py-8">
 						<p class="text-text-secondary">No preview available yet</p>
 					</div>

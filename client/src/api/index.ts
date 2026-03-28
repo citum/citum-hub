@@ -4,13 +4,11 @@ import path from "node:path";
 // @ts-expect-error - Bun is the runtime
 import { file, sql } from "bun";
 import { Hono, type Context } from "hono";
-import yaml from "js-yaml";
 import { jwtVerify, SignJWT } from "jose";
 import {
 	generate_style,
 	renderBibliography as render_bibliography,
 	renderCitation as render_citation,
-	render_intent_citation,
 	decide as wasm_decide,
 } from "../../../server/crates/wasm-bridge/pkg/wasm_bridge.js";
 import {
@@ -23,8 +21,14 @@ import {
 	queryHubStyles,
 	syncRegistryData,
 } from "../lib/server/registry";
-import { normalizeCitationPreviewHtml } from "../lib/utils/preview-output";
+import {
+	resolveWizardBranch,
+	isNoteBranch,
+	shouldShowBibliographyPreview,
+	type WizardBranch,
+} from "../lib/types/wizard";
 import { normalizeStyleYamlForPreview } from "../lib/utils/preview-style";
+import { normalizeCitationPreviewHtml } from "../lib/utils/preview-output";
 
 const app = new Hono().basePath("/api");
 
@@ -62,6 +66,8 @@ const JWT_SECRET = new TextEncoder().encode(
 	process.env.JWT_SECRET || "default_secret_for_development"
 );
 
+type PreviewContext = "default" | "contributors";
+
 void bootstrapHubApiData()
 	.then((summary) => {
 		console.log("[Setup] Hub API bootstrap complete:", summary);
@@ -70,35 +76,10 @@ void bootstrapHubApiData()
 		console.error("[Setup] Hub API bootstrap failed:", error);
 	});
 
-type PreviewContext = "default" | "contributors";
-
-interface PreviewSet {
-	in_text_parenthetical: string | null;
-	in_text_narrative: string | null;
-	note: string | null;
-	bibliography: string | null;
-}
-
-interface FixtureCitation {
-	items: Array<Record<string, unknown>>;
-	mode: "non-integral" | "integral";
-}
-
-interface FixtureData {
-	references: Record<string, unknown>;
-	citations: {
-		nonIntegral: FixtureCitation;
-		integral: FixtureCitation;
-	};
-}
-
 /**
  * --- Fixture Loading Logic ---
  */
-async function getFixtureData(
-	type: string = "expanded",
-	previewContext: PreviewContext = "default"
-) {
+async function getFixtureData(type: string = "expanded", previewContext: PreviewContext = "default") {
 	const fixtureMap: Record<string, string> = {
 		author_date: "references-author-date.json",
 		footnote: "references-humanities-note.json",
@@ -114,19 +95,23 @@ async function getFixtureData(
 
 	try {
 		const raw = await file(filePath).json();
+		const refs: Record<string, unknown> = {};
+
 		const entries = Array.isArray(raw)
 			? raw
 			: Object.entries(raw)
 					.filter(([key]) => key !== "comment")
 					.map(([, val]) => val);
 
-		let multiAuthorItem: any = null;
-		let editorItem: any = null;
-		let translatorItem: any = null;
-		const otherItems: unknown[] = [];
+		let multiAuthorItem: Record<string, unknown> | null = null;
+		let editorItem: Record<string, unknown> | null = null;
+		let translatorItem: Record<string, unknown> | null = null;
+		const otherItems: Record<string, unknown>[] = [];
 
 		entries.forEach((ref: any) => {
 			if (ref && typeof ref === "object" && "id" in ref) {
+				refs[String(ref.id)] = ref;
+
 				// Priority 1: 4+ authors (to test et al.)
 				if (!multiAuthorItem && ref.author && Array.isArray(ref.author) && ref.author.length >= 4) {
 					multiAuthorItem = ref;
@@ -166,7 +151,7 @@ async function getFixtureData(
 		}
 
 		if (!multiAuthorItem && otherItems.length > 0) {
-			multiAuthorItem = otherItems.pop();
+			multiAuthorItem = otherItems.pop() ?? null;
 		}
 
 		const roleItems = entries
@@ -187,12 +172,18 @@ async function getFixtureData(
 			});
 
 		const defaultItems = [multiAuthorItem, editorItem, translatorItem, ...otherItems]
-			.filter(Boolean)
-			.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index) // Unique
+			.filter((item): item is Record<string, unknown> => Boolean(item))
+			.filter(
+				(item, index, self) =>
+					self.findIndex((t) => String(t.id) === String(item.id)) === index
+			)
 			.slice(0, 4);
 		const contributorItems = roleItems
 			.filter(Boolean)
-			.filter((item, index, self) => self.findIndex((t) => t.id === item.id) === index)
+			.filter(
+				(item, index, self) =>
+					self.findIndex((t) => String(t.id) === String(item.id)) === index
+			)
 			.slice(0, 4);
 		const selectedItems =
 			previewContext === "contributors" && contributorItems.length > 0
@@ -214,62 +205,50 @@ async function getFixtureData(
 			if (selectedItems.length > 3) cite2Items.push({ id: selectedItems[3].id });
 		}
 
-		const nonIntegralCitation: FixtureCitation = { items: cite1Items, mode: "non-integral" };
-		const integralCitation: FixtureCitation = { items: cite2Items, mode: "integral" };
+		const nonIntegralCitation = { items: cite1Items, mode: "non-integral" };
+		const integralCitation = { items: cite2Items, mode: "integral" };
+		const notePrimaryItem = selectedItems[0]?.id;
+		const noteInitialCitation = notePrimaryItem
+			? {
+					items: [{ id: notePrimaryItem, locator: { label: "page", value: "42" } }],
+					mode: "non-integral",
+				}
+			: nonIntegralCitation;
+		const noteRepeatCitation = notePrimaryItem
+			? {
+					items: [{ id: notePrimaryItem, locator: { label: "page", value: "43" } }],
+					mode: "non-integral",
+					position: "subsequent",
+				}
+			: integralCitation;
 
 		return {
 			references,
+			citation: nonIntegralCitation, // fallback for decide route
 			citations: {
 				nonIntegral: nonIntegralCitation,
 				integral: integralCitation,
+				noteInitial: noteInitialCitation,
+				noteRepeat: noteRepeatCitation,
 			},
-		} satisfies FixtureData;
+		};
 	} catch (e) {
 		console.error(
 			`[Fixture] Failed to load ${fileName} from ${filePath}. Previews will be empty.`,
 			e
 		);
-		const emptyCite: FixtureCitation = { items: [], mode: "non-integral" };
+		const emptyCite = { items: [], mode: "non-integral" };
 		return {
 			references: {},
-			citations: { nonIntegral: emptyCite, integral: emptyCite },
-		} satisfies FixtureData;
+			citation: emptyCite,
+			citations: {
+				nonIntegral: emptyCite,
+				integral: emptyCite,
+				noteInitial: emptyCite,
+				noteRepeat: emptyCite,
+			},
+		};
 	}
-}
-
-function resolvePreviewClass(
-	body: Record<string, unknown>,
-	previewStyleYaml: string | undefined
-): "author_date" | "numeric" | "footnote" | "endnote" | "expanded" {
-	const explicitClass =
-		(typeof body.intent === "object" &&
-			body.intent &&
-			typeof (body.intent as Record<string, unknown>).class === "string" &&
-			((body.intent as Record<string, unknown>).class as string)) ||
-		(typeof body.class === "string" ? body.class : null);
-
-	if (explicitClass === "numeric") return "numeric";
-	if (explicitClass === "footnote" || explicitClass === "endnote") return explicitClass;
-	if (explicitClass === "author_date" || explicitClass === "author-date") return "author_date";
-
-	if (!previewStyleYaml) return "expanded";
-
-	try {
-		const parsed = yaml.load(previewStyleYaml);
-		if (!parsed || typeof parsed !== "object") return "expanded";
-
-		const options = (parsed as Record<string, unknown>).options;
-		if (!options || typeof options !== "object") return "expanded";
-
-		const processing = (options as Record<string, unknown>).processing;
-		if (processing === "numeric") return "numeric";
-		if (processing === "note") return "footnote";
-		if (processing === "author-date" || processing === "author_date") return "author_date";
-	} catch {
-		return "expanded";
-	}
-
-	return "expanded";
 }
 
 function resolvePreviewContext(body: Record<string, unknown>): PreviewContext {
@@ -283,114 +262,180 @@ function resolvePreviewContext(body: Record<string, unknown>): PreviewContext {
 	return value === "contributors" || value === "roles" ? "contributors" : "default";
 }
 
-function createEmptyPreviewSet(): PreviewSet {
-	return {
+type PreviewResponse = {
+	in_text_parenthetical: string | null;
+	in_text_narrative: string | null;
+	note: string | null;
+	note_repeat: string | null;
+	bibliography: string | null;
+};
+
+const PRESET_STYLE_PATHS: Record<string, string> = {
+	turabian: "chicago-shortened-notes-bibliography.yaml",
+	oscola: "oscola.yaml",
+	bluebook_legal: "experimental/bluebook-legal.yaml",
+};
+
+function inferBranch(input: {
+	field?: string | null;
+	family?: string | null;
+	branch?: string | null;
+	class?: string | null;
+}): WizardBranch | null {
+	if (input.branch === "author-date" || input.branch === "numeric") return input.branch;
+	if (input.branch === "note-humanities" || input.branch === "note-law") return input.branch;
+
+	const normalizedField =
+		input.field === "social_science" ? "social-sciences" : ((input.field as any) ?? null);
+	const normalizedFamily =
+		input.family === "author_date"
+			? "author-date"
+			: input.family === "footnote" || input.family === "endnote"
+				? "note"
+				: input.family;
+	const familyFromClass =
+		input.class === "author_date"
+			? "author-date"
+			: input.class === "numeric"
+				? "numeric"
+				: input.class === "footnote" || input.class === "endnote"
+					? "note"
+					: null;
+
+	return resolveWizardBranch(normalizedField, (normalizedFamily || familyFromClass) as any);
+}
+
+function fixtureTypeForBranch(branch: WizardBranch | null, field?: string | null): string {
+	if (branch === "note-law" || field === "law") return "legal";
+	if (branch === "note-humanities") return "footnote";
+	if (branch === "numeric") return "numeric";
+	if (branch === "author-date") return "author_date";
+	return "expanded";
+}
+
+function wrapParenthetical(rendered: string): string {
+	return `Recent studies have shown significant results ${rendered}. As we can see, these findings are critical.`;
+}
+
+function wrapNarrative(rendered: string): string {
+	return `According to ${rendered}, the implications are broad and warrant further research in the field.`;
+}
+
+function composeChoicePreviewHtml(preview: PreviewResponse, branch: WizardBranch | null): string {
+	const parts: string[] = [];
+
+	if (branch === "author-date") {
+		if (preview.in_text_narrative) {
+			parts.push(`<div class='preview-cit-n'>${preview.in_text_narrative}</div>`);
+		}
+		if (preview.in_text_parenthetical) {
+			parts.push(`<div class='preview-cit-p mt-2'>${preview.in_text_parenthetical}</div>`);
+		}
+	} else if (branch === "numeric") {
+		if (preview.in_text_parenthetical) {
+			parts.push(`<div class='preview-cit-p'>${preview.in_text_parenthetical}</div>`);
+		}
+	} else if (isNoteBranch(branch)) {
+		if (preview.note) {
+			parts.push(`<div class='preview-note'>${preview.note}</div>`);
+		}
+		if (preview.note_repeat) {
+			parts.push(`<div class='preview-note mt-2'>${preview.note_repeat}</div>`);
+		}
+	}
+
+	if (preview.bibliography) {
+		parts.push(`<div class='preview-bib mt-2'>${preview.bibliography}</div>`);
+	}
+
+	return parts.join("");
+}
+
+async function loadPresetStyleYaml(
+	presetId: string | null,
+	hasBibliography: boolean | null
+): Promise<string | null> {
+	if (!presetId) return null;
+
+	let relativePath = PRESET_STYLE_PATHS[presetId];
+	if (!relativePath && presetId === "chicago_notes") {
+		relativePath =
+			hasBibliography === false
+				? "chicago-notes.yaml"
+				: "chicago-shortened-notes-bibliography.yaml";
+	}
+	if (!relativePath) return null;
+
+	const stylePath = path.join(stylesDir, relativePath);
+	if (!fs.existsSync(stylePath)) return null;
+
+	return await file(stylePath).text();
+}
+
+async function resolveStyleYamlFromIntent(intent: Record<string, unknown>): Promise<string> {
+	const presetYaml = await loadPresetStyleYaml(
+		(intent.from_preset as string | null) ?? null,
+		(intent.has_bibliography as boolean | null) ?? null
+	);
+	if (presetYaml) {
+		return presetYaml;
+	}
+	return generate_style(JSON.stringify(intent));
+}
+
+function renderPreviewSetFromStyle(
+	styleYaml: string,
+	fixture: Awaited<ReturnType<typeof getFixtureData>>,
+	branch: WizardBranch | null,
+	hasBibliography: boolean | null
+): PreviewResponse {
+	const refsStr = JSON.stringify(fixture.references);
+	const citeNonIntegralStr = JSON.stringify(fixture.citations.nonIntegral);
+	const citeIntegralStr = JSON.stringify(fixture.citations.integral);
+	const citeNoteInitialStr = JSON.stringify(fixture.citations.noteInitial);
+	const citeNoteRepeatStr = JSON.stringify(fixture.citations.noteRepeat);
+
+	const response: PreviewResponse = {
 		in_text_parenthetical: null,
 		in_text_narrative: null,
 		note: null,
+		note_repeat: null,
 		bibliography: null,
 	};
+
+	if (branch === "author-date") {
+		const renderedNonIntegral = normalizeCitationPreviewHtml(
+			render_citation(styleYaml, refsStr, citeNonIntegralStr, "non-integral")
+		);
+		const renderedIntegral = normalizeCitationPreviewHtml(
+			render_citation(styleYaml, refsStr, citeIntegralStr, "integral")
+		);
+		response.in_text_parenthetical = wrapParenthetical(renderedNonIntegral);
+		response.in_text_narrative = wrapNarrative(renderedIntegral);
+	} else if (branch === "numeric") {
+		const renderedNumeric = normalizeCitationPreviewHtml(
+			render_citation(styleYaml, refsStr, citeNonIntegralStr, "non-integral")
+		);
+		response.in_text_parenthetical = wrapParenthetical(renderedNumeric);
+	} else if (isNoteBranch(branch)) {
+		response.note = render_citation(styleYaml, refsStr, citeNoteInitialStr, "non-integral");
+		response.note_repeat = render_citation(styleYaml, refsStr, citeNoteRepeatStr, "non-integral");
+	}
+
+	if (shouldShowBibliographyPreview(branch, hasBibliography)) {
+		response.bibliography = render_bibliography(styleYaml, refsStr);
+	}
+
+	return response;
 }
 
-function injectLocatorIntoCitation(
-	citation: FixtureCitation,
-	testLocator: string
-): FixtureCitation {
-	if (!citation.items.length) return citation;
-	const items = [...citation.items];
-	items[0] = {
-		...items[0],
-		locator: { label: "page", value: testLocator },
+function toDecisionPreviewSet(preview: PreviewResponse) {
+	return {
+		in_text_parenthetical: preview.in_text_parenthetical,
+		in_text_narrative: preview.in_text_narrative,
+		note: preview.note,
+		bibliography: preview.bibliography,
 	};
-
-	return { ...citation, items };
-}
-
-function getChoicePreviewHtml(previewSet: PreviewSet): string {
-	return (
-		previewSet.note ??
-		previewSet.in_text_parenthetical ??
-		previewSet.bibliography ??
-		previewSet.in_text_narrative ??
-		""
-	);
-}
-
-async function renderPreviewSet(params: {
-	intent?: Record<string, unknown>;
-	previewStyleYaml?: string;
-	testLocator: string;
-	previewContext?: PreviewContext;
-}): Promise<PreviewSet> {
-	const { intent, previewStyleYaml, testLocator, previewContext = "default" } = params;
-	const previewSource = intent ?? params;
-	const fixtureType = resolvePreviewClass(previewSource, previewStyleYaml);
-	const isNotePreview = fixtureType === "footnote" || fixtureType === "endnote";
-
-	const previewSet = createEmptyPreviewSet();
-	const fixture = await getFixtureData(fixtureType, previewContext);
-	const refsStr = JSON.stringify(fixture.references);
-	const citeNonIntegral = injectLocatorIntoCitation(fixture.citations.nonIntegral, testLocator);
-	const citeIntegral = injectLocatorIntoCitation(fixture.citations.integral, testLocator);
-	const citeNonIntegralStr = JSON.stringify(citeNonIntegral);
-	const citeIntegralStr = JSON.stringify(citeIntegral);
-
-	if (previewStyleYaml && previewStyleYaml.trim().length > 0) {
-		const renderedNonIntegral = render_citation(
-			previewStyleYaml,
-			refsStr,
-			citeNonIntegralStr,
-			"non-integral"
-		);
-		const renderedIntegral = render_citation(
-			previewStyleYaml,
-			refsStr,
-			citeIntegralStr,
-			"integral"
-		);
-		const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
-		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
-
-		if (isNotePreview) {
-			previewSet.note = previewNonIntegral;
-		} else {
-			previewSet.in_text_parenthetical = previewNonIntegral;
-			previewSet.in_text_narrative = previewIntegral;
-		}
-
-		previewSet.bibliography = render_bibliography(previewStyleYaml, refsStr);
-		return previewSet;
-	}
-
-	if (intent) {
-		const intentStr = JSON.stringify(intent);
-		const renderedNonIntegral = render_intent_citation(
-			intentStr,
-			refsStr,
-			citeNonIntegralStr,
-			"non-integral"
-		);
-		const renderedIntegral = render_intent_citation(
-			intentStr,
-			refsStr,
-			citeIntegralStr,
-			"integral"
-		);
-		const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
-		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
-
-		if (isNotePreview) {
-			previewSet.note = previewNonIntegral;
-		} else {
-			previewSet.in_text_parenthetical = previewNonIntegral;
-			previewSet.in_text_narrative = previewIntegral;
-		}
-
-		const generatedStyle = generate_style(intentStr);
-		previewSet.bibliography = render_bibliography(generatedStyle, refsStr);
-	}
-
-	return previewSet;
 }
 
 // --- Middleware: Auth ---
@@ -749,18 +794,30 @@ app.post("/v1/decide", async (c) => {
 			return c.json({ error: "Intent evaluation failed", details: String(wasmError) }, 500);
 		}
 
-		const testLocator = "123-125";
+		const branch = inferBranch({
+			field: intent.field,
+			class: intent.class,
+			branch: intent.branch,
+		});
+		const fixture = await getFixtureData(
+			fixtureTypeForBranch(branch, intent.field),
+			resolvePreviewContext(intent)
+		);
 
 		// Try generating main previews
 		try {
-			const previewSet = await renderPreviewSet({
-				intent,
-				testLocator,
-			});
-			decision.in_text_parenthetical = previewSet.in_text_parenthetical;
-			decision.in_text_narrative = previewSet.in_text_narrative;
-			decision.note = previewSet.note;
-			decision.bibliography = previewSet.bibliography;
+			const styleYaml = await resolveStyleYamlFromIntent(intent);
+			const preview = renderPreviewSetFromStyle(
+				styleYaml,
+				fixture,
+				branch,
+				(intent.has_bibliography as boolean | null) ?? null
+			);
+			decision.in_text_parenthetical = preview.in_text_parenthetical;
+			decision.in_text_narrative = preview.in_text_narrative;
+			decision.note = preview.note;
+			decision.bibliography = preview.bibliography;
+			decision.preview_set = toDecisionPreviewSet(preview);
 		} catch (previewError) {
 			console.warn("[Decide] Main preview rendering failed:", previewError);
 			// Non-fatal, just no preview
@@ -771,14 +828,28 @@ app.post("/v1/decide", async (c) => {
 			for (const preview of decision.previews) {
 				try {
 					const previewIntent = { ...intent, ...preview.choice_value };
-					const previewSet = await renderPreviewSet({
-						intent: previewIntent,
-						testLocator,
+					const previewBranch = inferBranch({
+						field: previewIntent.field,
+						class: previewIntent.class,
+						branch: previewIntent.branch,
 					});
-					preview.preview_set = previewSet;
-					preview.html = getChoicePreviewHtml(previewSet);
+					const previewStyleYaml = await resolveStyleYamlFromIntent(previewIntent);
+					const previewSet = renderPreviewSetFromStyle(
+						previewStyleYaml,
+						fixture,
+						previewBranch,
+						(previewIntent.has_bibliography as boolean | null) ?? null
+					);
+					preview.preview_set = toDecisionPreviewSet(previewSet);
+					preview.html = composeChoicePreviewHtml(previewSet, previewBranch);
 				} catch {
-					preview.preview_set = createEmptyPreviewSet();
+					preview.preview_set = toDecisionPreviewSet({
+						in_text_parenthetical: null,
+						in_text_narrative: null,
+						note: null,
+						note_repeat: null,
+						bibliography: null,
+					});
 					preview.html = "";
 				}
 			}
@@ -796,24 +867,42 @@ app.post("/v1/preview", async (c) => {
 		const style_yaml = body.style_yaml || body.citum;
 		const previewStyleYaml =
 			typeof style_yaml === "string" ? normalizeStyleYamlForPreview(style_yaml) : style_yaml;
-		const testLocator = body.test_locator || "123-125";
-		const previewContext = resolvePreviewContext(body);
+		const intent = body.intent || body;
+		const branch = inferBranch({
+			field: intent.field,
+			class: intent.class,
+			branch: body.branch || intent.branch || null,
+		});
+		const fixture = await getFixtureData(
+			fixtureTypeForBranch(branch, intent.field),
+			resolvePreviewContext(body)
+		);
 
 		try {
-			const previewSet = await renderPreviewSet({
-				intent:
-					body.intent || body.field || body.class
-						? ((body.intent || body) as Record<string, unknown>)
-						: undefined,
-				previewStyleYaml:
-					typeof previewStyleYaml === "string" && previewStyleYaml.trim().length > 0
-						? previewStyleYaml
-						: undefined,
-				testLocator,
-				previewContext,
-			});
+			let resolvedStyleYaml = previewStyleYaml;
+			if (!resolvedStyleYaml && (body.intent || body.field || body.class || body.from_preset)) {
+				resolvedStyleYaml = await resolveStyleYamlFromIntent(intent);
+			}
+			if (!resolvedStyleYaml || typeof resolvedStyleYaml !== "string") {
+				return c.json({
+					in_text_parenthetical: null,
+					in_text_narrative: null,
+					note: null,
+					note_repeat: null,
+					bibliography: null,
+				});
+			}
 
-			return c.json(previewSet);
+			const preview = renderPreviewSetFromStyle(
+				resolvedStyleYaml,
+				fixture,
+				branch,
+				(body.has_bibliography as boolean | null) ??
+					(intent.has_bibliography as boolean | null) ??
+					null
+			);
+
+			return c.json(preview);
 		} catch (renderError) {
 			console.error("[Preview] WASM render error details:", renderError);
 			return c.json({ error: "Rendering failed", details: String(renderError) }, 500);
@@ -826,7 +915,7 @@ app.post("/v1/preview", async (c) => {
 app.post("/v1/generate", async (c) => {
 	try {
 		const intent = await c.req.json();
-		const yaml = generate_style(JSON.stringify(intent));
+		const yaml = await resolveStyleYamlFromIntent(intent);
 		return c.text(yaml);
 	} catch (e) {
 		return c.json({ error: String(e) }, 500);

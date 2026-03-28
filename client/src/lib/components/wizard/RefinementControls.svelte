@@ -1,10 +1,7 @@
 <script lang="ts">
+	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { isNoteBranch, supportsBibliographyToggle, type WizardBranch } from "$lib/types/wizard";
 	import type { WizardStyleOptions, ContributorConfig, LocatorConfig } from "$lib/types/wizard";
-	import {
-		getArticleTitleStyleUpdates,
-		getRolePresetUpdates,
-		type WizardStyleUpdate,
-	} from "$lib/utils/wizard-style-updates";
 
 	interface Props {
 		activeTab?: string;
@@ -35,12 +32,6 @@
 
 	function toggleSection(section: string) {
 		expandedSections[section] = !expandedSections[section];
-	}
-
-	function applyOptionUpdates(updates: WizardStyleUpdate[]) {
-		for (const update of updates) {
-			onUpdateOption(update.path.replace(/^options\./, ""), update.value);
-		}
 	}
 
 	function updateNameOrder(order: string) {
@@ -75,11 +66,20 @@
 	}
 
 	function updateRolePreset(preset: string) {
-		applyOptionUpdates(getRolePresetUpdates(preset));
+		onUpdateOption("contributors.role.preset", preset);
 	}
 
 	function updateArticleStyle(style: "plain" | "quoted" | "italic") {
-		applyOptionUpdates(getArticleTitleStyleUpdates(style));
+		if (style === "quoted") {
+			onUpdateOption("titles.component.quote", true);
+			onUpdateOption("titles.component.emph", false);
+		} else if (style === "italic") {
+			onUpdateOption("titles.component.quote", false);
+			onUpdateOption("titles.component.emph", true);
+		} else {
+			onUpdateOption("titles.component.quote", false);
+			onUpdateOption("titles.component.emph", false);
+		}
 	}
 
 	function updateBookEmphasis(italic: boolean) {
@@ -96,8 +96,6 @@
 			const titles = currentOptions.titles as Record<string, Record<string, unknown>>;
 			if (titles.component?.quote) return "quoted";
 			if (titles.component?.emph) return "italic";
-			if (titles.serial?.wrap === "quotes") return "quoted";
-			if (titles.serial?.emph) return "italic";
 		}
 		return "plain";
 	};
@@ -178,6 +176,77 @@
 		}
 		return "short-suffix";
 	};
+
+	const branch = $derived(wizardStore.branch);
+	const isAuthorDate = $derived(branch === "author-date");
+	const isNumeric = $derived(branch === "numeric");
+	const isHumanitiesNote = $derived(branch === "note-humanities");
+	const isLawNote = $derived(branch === "note-law");
+	const noteBranch = $derived(isNoteBranch(branch));
+	const showBibliographyToggle = $derived(supportsBibliographyToggle(branch));
+
+	function sectionIntro(activeBranch: WizardBranch | null): string {
+		switch (activeBranch) {
+			case "author-date":
+				return "Configure author-date citations and bibliography details that actually appear in preview.";
+			case "numeric":
+				return "Configure numeric in-text citations and reference-list conventions.";
+			case "note-law":
+				return "Configure legal footnotes, short-form notes, and reference-list behavior.";
+			case "note-humanities":
+				return "Configure full notes, repeat notes, and bibliography behavior.";
+			default:
+				return "Configure citation behavior for this style.";
+		}
+	}
+
+	function getCitationWrapperValue() {
+		const citation = wizardStore.parseStyle()?.citation as Record<string, unknown> | undefined;
+		const template = Array.isArray(citation?.template)
+			? (citation.template[0] as Record<string, unknown> | undefined)
+			: undefined;
+		const wrap = template?.wrap ?? citation?.wrap;
+		const suffix = template?.suffix;
+
+		if (suffix === ".") return "period";
+		if (wrap === "parentheses") return "paren";
+		if (wrap === "none") return "superscript";
+		return "square";
+	}
+
+	function updateCitationWrapper(wrapper: string) {
+		if (wrapper === "square") {
+			onUpdateOption("citation.template.0.wrap", "brackets");
+			onUpdateOption("citation.template.0.suffix", undefined);
+		} else if (wrapper === "paren") {
+			onUpdateOption("citation.template.0.wrap", "parentheses");
+			onUpdateOption("citation.template.0.suffix", undefined);
+		} else if (wrapper === "period") {
+			onUpdateOption("citation.template.0.wrap", "none");
+			onUpdateOption("citation.template.0.suffix", ".");
+		} else {
+			onUpdateOption("citation.template.0.wrap", "none");
+			onUpdateOption("citation.template.0.suffix", undefined);
+		}
+	}
+
+	function updateRepeatCitation(mode: string) {
+		if (mode === "ibid") {
+			onUpdateOption("subsequent", "ibid");
+		} else if (mode === "full") {
+			onUpdateOption("subsequent", "full");
+		} else {
+			onUpdateOption("subsequent", "short");
+		}
+	}
+
+	function getRepeatCitationValue() {
+		const options = wizardStore.getOptions() as Record<string, unknown> | null;
+		const subsequent = options?.subsequent;
+		if (subsequent === "ibid") return "ibid";
+		if (subsequent === "full") return "full";
+		return "short-title";
+	}
 </script>
 
 <div class="space-y-4">
@@ -199,13 +268,30 @@
 
 			{#if expandedSections.citations}
 				<div class="space-y-4 border-t border-border-light px-6 py-4">
-					<p class="text-xs text-text-secondary">
-						Applies across the style. The first preview citation shows a pinpoint example so you can
-						see the label change immediately.
-					</p>
+					<p class="text-xs text-text-secondary">{sectionIntro(branch)}</p>
+
+					{#if isNumeric}
+						<div>
+							<label for="rc-citation-wrapper" class="block text-sm font-medium text-text-main mb-2"
+								>Citation Number Style</label
+							>
+							<select
+								id="rc-citation-wrapper"
+								onchange={(e) => updateCitationWrapper(e.currentTarget.value)}
+								value={getCitationWrapperValue()}
+								class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+							>
+								<option value="square">Bracketed [1]</option>
+								<option value="paren">Parenthesized (1)</option>
+								<option value="period">Trailing period 1.</option>
+								<option value="superscript">Bare / superscript 1</option>
+							</select>
+						</div>
+					{/if}
+
 					<div>
 						<label for="rc-locator-label" class="block text-sm font-medium text-text-main mb-2"
-							>Locator Labels</label
+							>{isLawNote ? "Pinpoint Label Format" : "Locator Label Format"}</label
 						>
 						<select
 							id="rc-locator-label"
@@ -219,6 +305,50 @@
 							<option value="none">None (42)</option>
 						</select>
 					</div>
+
+					{#if noteBranch}
+						<div>
+							<label for="rc-repeat-note" class="block text-sm font-medium text-text-main mb-2"
+								>{isLawNote ? "Repeat Footnote Form" : "Repeat Note Form"}</label
+							>
+							<select
+								id="rc-repeat-note"
+								onchange={(e) => updateRepeatCitation(e.currentTarget.value)}
+								value={getRepeatCitationValue()}
+								class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+							>
+								<option value="short-title">
+									{isLawNote ? "Short form" : "Shortened title"}
+								</option>
+								<option value="ibid">Ibid.</option>
+								<option value="full">Repeat full note</option>
+							</select>
+						</div>
+					{/if}
+
+					{#if showBibliographyToggle}
+						<div>
+							<label
+								for="rc-has-bibliography"
+								class="block text-sm font-medium text-text-main mb-2"
+							>
+								{isLawNote ? "Reference List" : "Bibliography"}
+							</label>
+							<select
+								id="rc-has-bibliography"
+								onchange={(e) => wizardStore.setBibliographyUsage(e.currentTarget.value === "yes")}
+								value={wizardStore.styleIntent.has_bibliography === false ? "no" : "yes"}
+								class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+							>
+								<option value="yes">
+									{isLawNote ? "Include grouped references" : "Include bibliography"}
+								</option>
+								<option value="no">
+									{isLawNote ? "Footnotes only" : "Notes only"}
+								</option>
+							</select>
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>
@@ -243,15 +373,11 @@
 				<div class="space-y-4 border-t border-border-light px-6 py-4">
 					<div>
 						<label for="rc-name-order" class="block text-sm font-medium text-text-main mb-2"
-							>Name Order</label
+							>{noteBranch ? "Name Order in Notes" : "Name Order"}</label
 						>
 						<select
 							id="rc-name-order"
 							onchange={(e) => updateNameOrder(e.currentTarget.value)}
-							onfocus={() => onHighlightChange?.("contributors")}
-							onblur={() => onHighlightChange?.(null)}
-							onpointerenter={() => onHighlightChange?.("contributors")}
-							onpointerleave={() => onHighlightChange?.(null)}
 							value={getNameOrderValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
@@ -267,10 +393,6 @@
 						<select
 							id="rc-and-connector"
 							onchange={(e) => updateAndConnector(e.currentTarget.value)}
-							onfocus={() => onHighlightChange?.("contributors")}
-							onblur={() => onHighlightChange?.(null)}
-							onpointerenter={() => onHighlightChange?.("contributors")}
-							onpointerleave={() => onHighlightChange?.(null)}
 							value={getAndValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
@@ -299,20 +421,16 @@
 
 					<div>
 						<label for="rc-initials" class="block text-sm font-medium text-text-main mb-2"
-							>Initials</label
+							>{isNumeric ? "Contributor Compaction" : "Initials"}</label
 						>
 						<select
 							id="rc-initials"
 							onchange={(e) => updateInitials(e.currentTarget.value)}
-							onfocus={() => onHighlightChange?.("contributors")}
-							onblur={() => onHighlightChange?.(null)}
-							onpointerenter={() => onHighlightChange?.("contributors")}
-							onpointerleave={() => onHighlightChange?.(null)}
 							value={getInitialsValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
 							<option value="abbreviated">Abbreviated (J. A.)</option>
-							<option value="compact">Compact (JA)</option>
+							<option value="compact">{isNumeric ? "Compact (JA)" : "Compact (JA)"}</option>
 							<option value="full">Full names</option>
 						</select>
 					</div>
@@ -324,10 +442,6 @@
 						<select
 							id="rc-role-preset"
 							onchange={(e) => updateRolePreset(e.currentTarget.value)}
-							onfocus={() => onHighlightChange?.("roles")}
-							onblur={() => onHighlightChange?.(null)}
-							onpointerenter={() => onHighlightChange?.("roles")}
-							onpointerleave={() => onHighlightChange?.(null)}
 							value={getRolePresetValue()}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
 						>
@@ -360,7 +474,15 @@
 			{#if expandedSections.dates}
 				<div class="space-y-4 border-t border-border-light px-6 py-4">
 					<p class="text-xs text-text-secondary">
-						Affects dates and number ranges in your bibliography and citations.
+						{#if isAuthorDate}
+							Controls year and date formatting in author-date citations and bibliography entries.
+						{:else if isNumeric}
+							Controls year placement in the reference list and numeric bibliography formatting.
+						{:else if isLawNote}
+							Controls date display inside legal footnotes and any grouped references.
+						{:else}
+							Controls date display inside notes and the bibliography.
+						{/if}
 					</p>
 					<div>
 						<label for="rc-month-format" class="block text-sm font-medium text-text-main mb-2"
@@ -392,18 +514,22 @@
 
 					<div class="pt-2">
 						<label for="rc-date-position" class="block text-sm font-medium text-text-main mb-2"
-							>Position</label
+							>{isNumeric ? "Year Placement" : "Position"}</label
 						>
 						<select
 							id="rc-date-position"
 							disabled
-							value="after-author"
+							value={isNumeric ? "reference-list" : "after-author"}
 							class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main opacity-50 cursor-not-allowed"
 						>
-							<option value="after-author">After author</option>
+							{#if isNumeric}
+								<option value="reference-list">Driven by preset/reference layout</option>
+							{:else}
+								<option value="after-author">After author</option>
+							{/if}
 						</select>
 						<p class="mt-1 text-xs text-text-secondary">
-							Structural position is set by style family.
+							Structural position is controlled by the selected branch template.
 						</p>
 					</div>
 
@@ -445,9 +571,22 @@
 
 			{#if expandedSections.titles}
 				<div class="space-y-4 border-t border-border-light px-6 py-4">
+					<p class="text-xs text-text-secondary">
+						{#if isAuthorDate}
+							Title settings apply to bibliography entries and title-bearing citation contexts.
+						{:else if isNumeric}
+							Title settings here affect the reference list, not the in-text citation number.
+						{:else if isLawNote}
+							Use legal-note title styling only for sources that actually show titles in footnotes.
+						{:else}
+							These controls affect how book and article titles appear in notes and the
+							bibliography.
+						{/if}
+					</p>
+
 					<div>
 						<label for="rc-title-case" class="block text-sm font-medium text-text-main mb-2"
-							>Capitalization</label
+							>{isLawNote ? "Case Style" : "Capitalization"}</label
 						>
 						<select
 							id="rc-title-case"
@@ -463,7 +602,7 @@
 
 					<div>
 						<label for="rc-article-style" class="block text-sm font-medium text-text-main mb-2"
-							>Article Style</label
+							>{noteBranch ? "Article Titles in Notes" : "Article Style"}</label
 						>
 						<select
 							id="rc-article-style"
@@ -480,7 +619,7 @@
 
 					<div>
 						<label for="rc-book-emphasis" class="block text-sm font-medium text-text-main mb-2"
-							>Book Titles</label
+							>{noteBranch ? "Book Titles in Notes" : "Book Titles"}</label
 						>
 						<select
 							id="rc-book-emphasis"
@@ -492,6 +631,33 @@
 							<option value="plain">No decoration</option>
 						</select>
 					</div>
+
+					{#if isLawNote}
+						<div>
+							<label for="rc-legal-grouping" class="block text-sm font-medium text-text-main mb-2"
+								>Authority Grouping</label
+							>
+							<select
+								id="rc-legal-grouping"
+								onchange={(e) =>
+									wizardStore.setAxisChoices({
+										groupAuthorities: e.currentTarget.value === "grouped",
+									})}
+								value={wizardStore.axisChoices.groupAuthorities ? "grouped" : "flat"}
+								class="w-full rounded border border-border-light bg-surface-light px-3 py-2 text-text-main focus:outline-none focus:ring-2 focus:ring-primary"
+							>
+								<option value="flat">Single list</option>
+								<option value="grouped">Group by authority / type</option>
+							</select>
+						</div>
+					{/if}
+
+					{#if isHumanitiesNote}
+						<div class="rounded-md bg-background-light px-3 py-2 text-xs text-text-secondary">
+							Preview shows both the first note and the shortened repeat note so these title choices
+							stay visible.
+						</div>
+					{/if}
 				</div>
 			{/if}
 		</div>

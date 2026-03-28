@@ -1,6 +1,7 @@
 /** Wizard-specific types for the v2 style creation flow. */
 
 export type StyleFamily = "author-date" | "numeric" | "note";
+export type WizardBranch = "author-date" | "numeric" | "note-humanities" | "note-law";
 
 export type CitationField =
 	| "sciences"
@@ -11,6 +12,79 @@ export type CitationField =
 	| "other";
 
 export type WizardPhase = "quick-start" | "visual-customizer" | "advanced";
+
+export interface WizardIntentState {
+	class: "author_date" | "numeric" | "footnote" | "endnote" | "label" | null;
+	from_preset: string | null;
+	contributor_preset: string | null;
+	role_preset: string | null;
+	date_preset: string | null;
+	title_preset: string | null;
+	sort_preset: string | null;
+	bib_template: string | null;
+	has_bibliography: boolean | null;
+}
+
+export interface WizardPreviewHtml {
+	parenthetical: string | null;
+	narrative: string | null;
+	note: string | null;
+	noteRepeat: string | null;
+	bibliography: string | null;
+}
+
+export function resolveWizardBranch(
+	field: CitationField | null,
+	family: StyleFamily | null
+): WizardBranch | null {
+	if (!family) return null;
+	if (family === "author-date" || family === "numeric") return family;
+	return field === "law" ? "note-law" : "note-humanities";
+}
+
+export function isNoteBranch(branch: WizardBranch | null): boolean {
+	return branch === "note-humanities" || branch === "note-law";
+}
+
+export function supportsBibliographyToggle(branch: WizardBranch | null): boolean {
+	return isNoteBranch(branch);
+}
+
+export function shouldShowNarrativePreview(branch: WizardBranch | null): boolean {
+	return branch === "author-date";
+}
+
+export function shouldShowInTextPreview(branch: WizardBranch | null): boolean {
+	return branch === "author-date" || branch === "numeric";
+}
+
+export function shouldShowNotePreview(branch: WizardBranch | null): boolean {
+	return isNoteBranch(branch);
+}
+
+export function shouldShowBibliographyPreview(
+	branch: WizardBranch | null,
+	hasBibliography: boolean | null
+): boolean {
+	if (branch === "author-date" || branch === "numeric") return true;
+	if (isNoteBranch(branch)) return hasBibliography !== false;
+	return false;
+}
+
+export function branchLabel(branch: WizardBranch | null): string {
+	switch (branch) {
+		case "author-date":
+			return "Author-Date";
+		case "numeric":
+			return "Numeric";
+		case "note-humanities":
+			return "Notes";
+		case "note-law":
+			return "Legal Notes";
+		default:
+			return "Style";
+	}
+}
 
 /** Maps fields to their default style families. */
 export const FIELD_DEFAULTS: Record<CitationField, StyleFamily> = {
@@ -163,12 +237,16 @@ export interface AxisChoices {
 	bookEmphasis?: "italic" | "plain";
 	repeatCitation?: "ibid" | "short-title" | "full";
 	hasBibliography?: boolean;
+	// Legal note
+	legalSystem?: "bluebook" | "oscola";
+	groupAuthorities?: boolean;
 }
 
 export interface PresetInfo {
 	id: string;
 	name: string;
 	family: StyleFamily;
+	branch?: WizardBranch;
 	/** Intent fields to set when this preset is selected. */
 	intentFields: Record<string, string | boolean | null>;
 	/** Short description of visual traits. */

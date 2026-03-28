@@ -1,4 +1,4 @@
-import type { PresetInfo, StyleFamily } from "$lib/types/wizard";
+import type { PresetInfo, StyleFamily, WizardBranch } from "$lib/types/wizard";
 
 /** Preset metadata for the gallery. Each entry maps to intent-engine fields. */
 export const PRESETS: PresetInfo[] = [
@@ -129,6 +129,7 @@ export const PRESETS: PresetInfo[] = [
 		id: "chicago-notes",
 		name: "Chicago Notes",
 		family: "note",
+		branch: "note-humanities",
 		intentFields: {
 			from_preset: "chicago_notes",
 			class: "footnote",
@@ -145,6 +146,7 @@ export const PRESETS: PresetInfo[] = [
 		id: "turabian",
 		name: "Turabian",
 		family: "note",
+		branch: "note-humanities",
 		intentFields: {
 			from_preset: "chicago_notes",
 			class: "footnote",
@@ -157,8 +159,53 @@ export const PRESETS: PresetInfo[] = [
 		},
 		traits: "Similar to Chicago Notes with minor variations",
 	},
+	{
+		id: "bluebook-legal",
+		name: "Bluebook",
+		family: "note",
+		branch: "note-law",
+		intentFields: {
+			from_preset: "bluebook_legal",
+			class: "footnote",
+			contributor_preset: "chicago",
+			role_preset: "verb-prefix",
+			date_preset: "year",
+			title_preset: "chicago",
+			bib_template: "chicago",
+			has_bibliography: true,
+		},
+		traits: "Full legal footnotes with grouped references and shortened repeat notes",
+	},
+	{
+		id: "oscola",
+		name: "OSCOLA",
+		family: "note",
+		branch: "note-law",
+		intentFields: {
+			from_preset: "oscola",
+			class: "footnote",
+			contributor_preset: "chicago",
+			role_preset: "verb-prefix",
+			date_preset: "year",
+			title_preset: "chicago",
+			bib_template: "chicago",
+			has_bibliography: false,
+		},
+		traits: "Compact legal footnotes with short-form repeats and notes-first behavior",
+	},
 ];
 
 export function getPresetsForFamily(family: StyleFamily): PresetInfo[] {
 	return PRESETS.filter((p) => p.family === family);
+}
+
+export function getPresetsForBranch(
+	branch: WizardBranch | null,
+	family: StyleFamily | null
+): PresetInfo[] {
+	if (!family) return [];
+	if (!branch) return getPresetsForFamily(family);
+	return PRESETS.filter(
+		(preset) => preset.family === family && (!preset.branch || preset.branch === branch)
+	);
 }
