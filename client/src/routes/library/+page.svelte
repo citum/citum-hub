@@ -7,7 +7,7 @@
 	let styles: Style[] = $state([]);
 	let bookmarks: Style[] = $state([]);
 	let loading = $state(true);
-	let error = $state(null);
+	let error = $state<string | null>(null);
 
 	onMount(async () => {
 		if (!$auth.user) {
