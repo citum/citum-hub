@@ -51,11 +51,18 @@ Env vars live in `client/.env`.
 - **Components**: One component per file, max 300 lines
 - **API Proxy**: Frontend calls relative paths (`/api/*`) which SvelteKit proxies to the Bun API on port 3002.
 
+## Knowledge Base
+
+**For cross-repo architectural context, system decisions, and domain concepts, read the markdown files in the sibling repository at `../citum-brain/docs/`.**
+
 ## Specs
 
 Product vision and user stories live in `specs/`. Start there for feature context:
 - `specs/STYLE_EDITOR_VISION.md` — Style editor and wizard vision
 - `specs/BUN_ADOPTION_PLAN.md` — Roadmap for Bun-native migration
+- `specs/CREATE_REWRITE_ARCHITECTURE.md` — Find / Tweak / Build architecture
+- `specs/STYLE_WIZARD_V2.md` — Wizard design specification (Build sub-flow)
+- `specs/WIZARD_LEGACY_NOTES.md` — Salvage notes from `codex/wizard-style-branches` (delete once items are ported)
 
 ## Commit Conventions
 
