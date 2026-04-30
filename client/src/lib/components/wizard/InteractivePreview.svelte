@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
+	import { LoaderCircle } from "lucide-svelte";
 
 	let containerRef: HTMLDivElement | undefined = $state();
 	let tooltipPos = $state({ x: 0, y: 0 });
@@ -121,7 +122,7 @@
 <div class="rounded-lg border border-border-light bg-surface-light overflow-hidden">
 	{#if wizardStore.isLoading}
 		<div class="flex items-center justify-center gap-2 p-8">
-			<span class="material-symbols-outlined animate-spin text-primary">hourglass</span>
+			<LoaderCircle class="size-5 animate-spin text-emerald-700" />
 			<span class="text-text-secondary">Loading preview...</span>
 		</div>
 	{:else if wizardStore.error}

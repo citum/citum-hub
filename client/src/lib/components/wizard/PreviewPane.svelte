@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import { getRefinementPreviewPanels } from "$lib/utils/refinement-preview";
+	import { LoaderCircle } from "lucide-svelte";
 
 	interface Props {
 		activeHighlight?: string | null;
@@ -12,11 +13,13 @@
 	);
 </script>
 
-<div class="rounded-lg border border-border-light bg-surface-light">
+<div
+	class="rounded-2xl border border-slate-200 bg-white shadow-[0_4px_20px_-4px_rgba(15,23,42,0.12)]"
+>
 	{#if wizardStore.isLoading}
 		<div class="flex items-center justify-center gap-2 p-8">
-			<span class="material-symbols-outlined animate-spin text-primary">hourglass</span>
-			<span class="text-text-secondary">Loading preview...</span>
+			<LoaderCircle class="size-5 animate-spin text-emerald-700" />
+			<span class="text-slate-500">Loading preview...</span>
 		</div>
 	{:else if wizardStore.error}
 		<div class="space-y-2 rounded bg-red-50 p-4">
@@ -32,9 +35,11 @@
 			{#if panels.length > 0}
 				{#each panels as panel}
 					<div class="space-y-2">
-						<h4 class="font-semibold text-text-main">{panel.label}</h4>
+						<h4 class="font-sans text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+							{panel.label}
+						</h4>
 						<div
-							class={`live-preview-content rounded bg-background-light font-serif text-text-main ${panel.key === "bibliography" ? "p-3 text-sm" : "p-3"}`}
+							class={`live-preview-content rounded-xl border border-slate-100 bg-slate-50 font-serif text-slate-900 ${panel.key === "bibliography" ? "p-4 text-sm" : "p-4"}`}
 						>
 							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							{@html panel.html}

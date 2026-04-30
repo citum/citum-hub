@@ -3,6 +3,7 @@
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import PreviewPane from "./PreviewPane.svelte";
 	import RefinementControls from "./RefinementControls.svelte";
+	import { ArrowLeft, RotateCcw, Save } from "lucide-svelte";
 
 	let debounceTimer: number | undefined;
 	let activeHighlight = $state<string | null>(null);
@@ -27,7 +28,7 @@
 	}
 
 	function updateMonthFormat(month: string) {
-		wizardStore.updateStyleField("options.dates", month);
+		wizardStore.updateStyleField("options.dates.month", month);
 		debouncedFetchPreview();
 	}
 
@@ -43,6 +44,7 @@
 
 	function skipToReview() {
 		wizardStore.setStep(5);
+		wizardStore.setRouteStep("review");
 		goto("/create/build/review");
 	}
 
@@ -57,13 +59,13 @@
 				onclick={() => history.back()}
 				class="absolute top-0 sm:top-2 left-0 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
 			>
-				<span class="material-symbols-outlined">arrow_back</span>
+				<ArrowLeft class="size-5" />
 			</button>
-			<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 4 of 5</p>
+			<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 4 of 7</p>
 			<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
 				<div
-					class="h-full bg-primary rounded-full transition-all duration-500"
-					style="width: 80%"
+					class="h-full bg-emerald-600 rounded-full transition-all duration-500"
+					style="width: 57.1429%"
 				></div>
 			</div>
 			<h1 class="text-2xl font-bold mt-4 text-slate-900 dark:text-white">Refine your style</h1>
@@ -107,19 +109,21 @@
 				<div class="flex flex-col gap-3 pt-4">
 					<button
 						onclick={skipToReview}
-						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
+						class="flex w-full items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-3 font-semibold text-white hover:bg-emerald-700 transition-colors shadow-sm"
 					>
+						<Save class="size-4" />
 						Save & Continue
 					</button>
 					<div class="grid grid-cols-2 gap-3">
 						<button
 							onclick={() => {
 								wizardStore.setStep(3);
+								wizardStore.setRouteStep("style");
 								goto("/create/build/style");
 							}}
 							class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
 						>
-							<span class="material-symbols-outlined text-lg">undo</span>
+							<ArrowLeft class="size-4" />
 							Back
 						</button>
 						<button
@@ -129,7 +133,7 @@
 							}}
 							class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
 						>
-							<span class="material-symbols-outlined text-lg">restart_alt</span>
+							<RotateCcw class="size-4" />
 							Start Over
 						</button>
 					</div>

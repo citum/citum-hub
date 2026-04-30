@@ -10,6 +10,7 @@
 			return;
 		}
 		wizardStore.setPhase("visual-customizer");
+		wizardStore.setRouteStep("customize");
 	});
 </script>
 

@@ -1,16 +1,12 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
-	import { wizardStore } from "$lib/stores/wizard.svelte";
-	import PresetGallery from "$lib/components/wizard/PresetGallery.svelte";
 
 	onMount(() => {
-		if (!wizardStore.family) {
-			goto("/create/build/field", { replaceState: true });
-			return;
-		}
-		wizardStore.setStep(3);
+		goto("/create/build/style", { replaceState: true });
 	});
 </script>
 
-<PresetGallery />
+<div class="flex items-center justify-center py-20">
+	<p class="text-sm text-slate-500">Redirecting to the style navigator...</p>
+</div>

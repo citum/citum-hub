@@ -5,6 +5,7 @@
 		getRolePresetUpdates,
 		type WizardStyleUpdate,
 	} from "$lib/utils/wizard-style-updates";
+	import { ChevronDown } from "lucide-svelte";
 
 	interface Props {
 		activeTab?: string;
@@ -189,12 +190,9 @@
 				class="flex w-full items-center justify-between px-6 py-4 hover:bg-background-light transition-colors"
 			>
 				<h2 class="font-semibold text-text-main">Citations</h2>
-				<span
-					class="material-symbols-outlined transition-transform duration-200"
-					class:rotate-180={expandedSections.citations}
-				>
-					expand_more
-				</span>
+				<ChevronDown
+					class={`size-4 transition-transform duration-200 ${expandedSections.citations ? "rotate-180" : ""}`}
+				/>
 			</button>
 
 			{#if expandedSections.citations}
@@ -231,12 +229,9 @@
 				class="flex w-full items-center justify-between px-6 py-4 hover:bg-background-light transition-colors"
 			>
 				<h2 class="font-semibold text-text-main">Names</h2>
-				<span
-					class="material-symbols-outlined transition-transform duration-200"
-					class:rotate-180={expandedSections.names}
-				>
-					expand_more
-				</span>
+				<ChevronDown
+					class={`size-4 transition-transform duration-200 ${expandedSections.names ? "rotate-180" : ""}`}
+				/>
 			</button>
 
 			{#if expandedSections.names}
@@ -349,12 +344,9 @@
 				class="flex w-full items-center justify-between px-6 py-4 hover:bg-background-light transition-colors"
 			>
 				<h2 class="font-semibold text-text-main">Date Display</h2>
-				<span
-					class="material-symbols-outlined transition-transform duration-200"
-					class:rotate-180={expandedSections.dates}
-				>
-					expand_more
-				</span>
+				<ChevronDown
+					class={`size-4 transition-transform duration-200 ${expandedSections.dates ? "rotate-180" : ""}`}
+				/>
 			</button>
 
 			{#if expandedSections.dates}
@@ -435,12 +427,9 @@
 				class="flex w-full items-center justify-between px-6 py-4 hover:bg-background-light transition-colors"
 			>
 				<h2 class="font-semibold text-text-main">Titles</h2>
-				<span
-					class="material-symbols-outlined transition-transform duration-200"
-					class:rotate-180={expandedSections.titles}
-				>
-					expand_more
-				</span>
+				<ChevronDown
+					class={`size-4 transition-transform duration-200 ${expandedSections.titles ? "rotate-180" : ""}`}
+				/>
 			</button>
 
 			{#if expandedSections.titles}
