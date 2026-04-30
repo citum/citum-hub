@@ -14,9 +14,8 @@
 				Find a style, tweak a close match, or build a new one.
 			</h1>
 			<p class="mt-4 text-lg leading-8 text-slate-600">
-				Pick the path that fits. Browse the library if a published style is close enough, start
-				from one and change only what differs, or build a new style from scratch with the guided
-				flow.
+				Pick the path that fits. Browse the library if a published style is close enough, start from
+				one and change only what differs, or build a new style from scratch with the guided flow.
 			</p>
 		</div>
 

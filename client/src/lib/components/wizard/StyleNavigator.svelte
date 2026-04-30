@@ -1,478 +1,219 @@
 <script lang="ts">
+	import { goto } from "$app/navigation";
+	import { onMount } from "svelte";
+	import { ArrowLeft, Check, Eye, RotateCcw, SlidersHorizontal } from "lucide-svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import PreviewPane from "$lib/components/wizard/PreviewPane.svelte";
-	import type { AxisChoices } from "$lib/types/wizard";
-	import { goto } from "$app/navigation";
+	import type { AxisChoice, AxisChoices } from "$lib/types/wizard";
 	import {
-		getArticleTitleStyleUpdates,
-		getCitationNumberUpdates,
-		getLocatorLabelUpdates,
-		getRolePresetUpdates,
-		type WizardStyleUpdate,
-	} from "$lib/utils/wizard-style-updates";
-
-	// Define the axes based on the selected family
-	const authorDateAxes = [
-		{
-			id: "nameForm",
-			question: "How should author names look?",
-			options: [
-				{ value: "family-first-initials", label: "Smith, J. A." },
-				{ value: "given-first-initials", label: "J. A. Smith" },
-				{ value: "family-first-full", label: "Smith, John A." },
-			],
-		},
-		{
-			id: "datePosition",
-			question: "Where does the year appear?",
-			options: [
-				{ value: "after-author-parens", label: "Smith (2024)." },
-				{ value: "after-author-bare", label: "Smith 2024." },
-				{ value: "after-author-comma", label: "Smith, 2024." },
-			],
-		},
-		{
-			id: "articleTitleEmphasis",
-			question: "How are article titles formatted?",
-			options: [
-				{ value: "plain", label: "plain" },
-				{ value: "quoted", label: '"In quotes"' },
-				{ value: "italic", label: "Italic" },
-			],
-		},
-		{
-			id: "etAlThreshold",
-			question: 'How many authors before "et al."?',
-			options: [
-				{ value: 2, label: "after 2" },
-				{ value: 3, label: "after 3" },
-				{ value: 6, label: "after 6" },
-				{ value: null, label: "show all" },
-			],
-		},
-		{
-			id: "authorConnector",
-			question: "Author connector",
-			options: [
-				{ value: "symbol", label: "&" },
-				{ value: "text", label: "and" },
-				{ value: "none", label: "," },
-			],
-		},
-		{
-			id: "locatorLabel",
-			question: "How should page numbers be labeled?",
-			options: [
-				{ value: "short", label: "p. 123" },
-				{ value: "long", label: "page 123" },
-				{ value: "none", label: "123 (no label)" },
-			],
-		},
-		{
-			id: "rolePreset",
-			question: "How should contributor roles be formatted?",
-			options: [
-				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
-				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
-				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
-				{ value: "none", label: "None (suppress role)" },
-			],
-		},
-	];
-
-	const numericAxes = [
-		{
-			id: "numberBracket",
-			question: "How is the reference number shown?",
-			options: [
-				{ value: "square", label: "[1]" },
-				{ value: "period", label: "1." },
-				{ value: "paren", label: "(1)" },
-				{ value: "superscript", label: "superscript¹" },
-			],
-		},
-		{
-			id: "nameForm", // Reuse nameForm for simplicity
-			question: "How should author names look?",
-			options: [
-				{ value: "compact", label: "Smith JA (initials, no dots)" },
-				{ value: "family-first-initials", label: "Smith, J. A." },
-				{ value: "given-first-initials", label: "J. A. Smith" },
-			],
-		},
-		{
-			id: "articleTitleEmphasis",
-			question: "How are article titles formatted?",
-			options: [
-				{ value: "plain", label: "plain" },
-				{ value: "quoted", label: '"In quotes"' },
-			],
-		},
-		{
-			id: "yearPosition",
-			question: "Where does the year appear?",
-			options: [
-				{ value: "volume-issue", label: "after volume/issue (2024;12(3))" },
-				{ value: "end-parens", label: "at the end (2024)" },
-				{ value: "after-title", label: "after title" },
-			],
-		},
-		{
-			id: "rolePreset",
-			question: "How should contributor roles be formatted?",
-			options: [
-				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
-				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
-				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
-				{ value: "none", label: "None (suppress role)" },
-			],
-		},
-	];
-
-	const noteAxes = [
-		{
-			id: "citationLocation",
-			question: "Where should citations appear?",
-			options: [
-				{ value: "footnote", label: "Footnotes" },
-				{ value: "endnote", label: "Endnotes" },
-			],
-		},
-		{
-			id: "footnoteNameForm",
-			question: "How are names written in footnotes?",
-			options: [
-				{ value: "full", label: "John A. Smith" },
-				{ value: "inverted", label: "Smith, John A." },
-			],
-		},
-		{
-			id: "bookEmphasis",
-			question: "How are book titles shown?",
-			options: [
-				{ value: "italic", label: "Italic" },
-				{ value: "plain", label: "plain" },
-			],
-		},
-		{
-			id: "repeatCitation",
-			question: "On second citation, use...",
-			options: [
-				{ value: "ibid", label: "Ibid." },
-				{ value: "short-title", label: "shortened title" },
-				{ value: "full", label: "full repeat" },
-			],
-		},
-		{
-			id: "hasBibliography",
-			question: "Do you also need a bibliography?",
-			options: [
-				{ value: true, label: "Yes" },
-				{ value: false, label: "Footnotes only" },
-			],
-		},
-		{
-			id: "rolePreset",
-			question: "How should contributor roles be formatted?",
-			options: [
-				{ value: "short-suffix", label: "Smith, J. (ed.) / Doe, J. (trans.)" },
-				{ value: "long-suffix", label: "Smith, J. (editor) / Doe, J. (translator)" },
-				{ value: "verb-prefix", label: "edited by J. Smith / translated by J. Doe" },
-				{ value: "none", label: "None (suppress role)" },
-			],
-		},
-	];
-
-	const axes = $derived(
-		wizardStore.family === "author-date"
-			? authorDateAxes
-			: wizardStore.family === "numeric"
-				? numericAxes
-				: noteAxes
-	);
+		AXES_BY_FAMILY,
+		getAxisChoiceUpdates,
+		getPreviewHtmlForAxis,
+		isExactPresetMatch,
+		matchPreset,
+	} from "$lib/utils/wizard-flow";
 
 	let currentAxisIndex = $state(0);
+	let optionPreviews = $state<Record<string, string>>({});
+	let isLoadingChoicePreviews = $state(false);
+	let previewRequestId = 0;
+	const choicePreviewCache = new Map<string, string>();
 
-	function applyStyleUpdates(updates: WizardStyleUpdate[]) {
-		for (const update of updates) {
-			wizardStore.updateStyleField(update.path, update.value);
-		}
+	const axes = $derived(wizardStore.family ? AXES_BY_FAMILY[wizardStore.family] : []);
+	const currentAxis = $derived(axes[currentAxisIndex] ?? null);
+	const presetMatch = $derived(
+		wizardStore.family ? matchPreset(wizardStore.family, wizardStore.axisChoices) : null
+	);
+	const exactMatch = $derived(
+		wizardStore.family ? isExactPresetMatch(wizardStore.family, wizardStore.axisChoices) : false
+	);
+
+	function choiceKey(axisId: string, choice: AxisChoice) {
+		return `${axisId}:${String(choice.value)}`;
 	}
 
-	// Mapping of axis choice values to style fields
-	const updateStyleForAxis = (axisId: string, value: unknown) => {
-		switch (axisId) {
-			case "nameForm":
-				if (value === "family-first-initials") {
-					wizardStore.updateStyleField("options.contributors.display-as-sort", "all");
-					wizardStore.updateStyleField("options.contributors.name-form", "initials");
-					wizardStore.updateStyleField("options.contributors.initialize-with", ". ");
-				} else if (value === "given-first-initials") {
-					wizardStore.updateStyleField("options.contributors.display-as-sort", "none");
-					wizardStore.updateStyleField("options.contributors.name-form", "initials");
-					wizardStore.updateStyleField("options.contributors.initialize-with", ". ");
-				} else if (value === "family-first-full") {
-					wizardStore.updateStyleField("options.contributors.display-as-sort", "all");
-					wizardStore.updateStyleField("options.contributors.name-form", "full");
-					wizardStore.updateStyleField("options.contributors.initialize-with", undefined);
-				} else if (value === "compact") {
-					wizardStore.updateStyleField("options.contributors.display-as-sort", "all");
-					wizardStore.updateStyleField("options.contributors.name-form", "initials");
-					wizardStore.updateStyleField("options.contributors.initialize-with", "");
-				}
-				break;
-			case "etAlThreshold":
-				if (value === null) {
-					wizardStore.updateStyleField("options.contributors.shorten", undefined);
-				} else {
-					wizardStore.updateStyleField("options.contributors.shorten", {
-						min: value,
-						"use-first": 1,
-						"and-others": "et-al",
-					});
-				}
-				break;
-			case "authorConnector":
-				wizardStore.updateStyleField(
-					"options.contributors.and",
-					value === "none" ? undefined : value
-				);
-				break;
-			case "locatorLabel":
-				applyStyleUpdates(getLocatorLabelUpdates(String(value)));
-				break;
-			case "datePosition":
-				// Standard Citum doesn't have a top-level position for dates in options.
-				// We'll set a standard form for now to avoid invalid YAML.
-				wizardStore.updateStyleField("options.dates", "long");
-				break;
-			case "articleTitleEmphasis":
-				applyStyleUpdates(getArticleTitleStyleUpdates(value as "plain" | "quoted" | "italic"));
-				break;
-			case "yearPosition":
-				// Skip non-existent field to avoid 500
-				break;
-			case "numberBracket":
-				applyStyleUpdates(
-					getCitationNumberUpdates(value as "square" | "period" | "paren" | "superscript")
-				);
-				break;
-			case "citationLocation":
-				wizardStore.updateStyleField(
-					"options.processing",
-					value === "footnote" || value === "endnote" ? "note" : "author-date"
-				);
-				break;
-			case "footnoteNameForm":
-				wizardStore.updateStyleField(
-					"options.contributors.display-as-sort",
-					value === "inverted" ? "all" : "none"
-				);
-				break;
-			case "bookEmphasis":
-				wizardStore.updateStyleField("options.titles.monograph.emph", value === "italic");
-				break;
-			case "repeatCitation":
-				// Template-based logic, skip for basic options
-				break;
-			case "hasBibliography":
-				// Intent field, not a direct Style field
-				break;
-			case "rolePreset":
-				applyStyleUpdates(getRolePresetUpdates(String(value)));
-				break;
-		}
-	};
+	function previewCacheKey(axisId: string, choice: AxisChoice, styleYaml: string) {
+		return `${axisId}:${String(choice.value)}:${styleYaml}`;
+	}
 
-	async function selectOption(axisId: string, value: unknown, index: number) {
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		wizardStore.setAxisChoices({ [axisId]: value } as any);
-		updateStyleForAxis(axisId, value);
+	async function loadChoicePreviews() {
+		if (!wizardStore.family || !currentAxis || !wizardStore.styleYaml) return;
+		const requestId = ++previewRequestId;
+		const axis = currentAxis;
+		const family = wizardStore.family;
+		const styleYaml = wizardStore.styleYaml;
+		isLoadingChoicePreviews = true;
 
-		// Re-fetch preview to show the change immediately
-		await wizardStore.fetchPreview();
+		const previewEntries = await Promise.all(
+			axis.choices.map(async (choice) => {
+				const cacheKey = previewCacheKey(axis.id, choice, styleYaml);
+				const cached = choicePreviewCache.get(cacheKey);
+				if (cached) return [choiceKey(axis.id, choice), cached] as const;
 
-		if (index === currentAxisIndex && currentAxisIndex < axes.length - 1) {
+				const preview = await wizardStore.previewStyleWithUpdates(
+					getAxisChoiceUpdates(axis.id, choice.value)
+				);
+				const html = getPreviewHtmlForAxis(family, axis.id, preview);
+				choicePreviewCache.set(cacheKey, html);
+				return [choiceKey(axis.id, choice), html] as const;
+			})
+		);
+
+		if (requestId !== previewRequestId) return;
+
+		optionPreviews = Object.fromEntries(previewEntries);
+		isLoadingChoicePreviews = false;
+	}
+
+	async function selectOption(axisId: keyof AxisChoices, value: AxisChoice["value"]) {
+		await wizardStore.selectAxisChoice(axisId, value);
+		if (currentAxisIndex < axes.length - 1) {
 			currentAxisIndex++;
 		}
 	}
 
-	async function customizeFurther() {
-		// Ensure YAML is generated if missing
-		if (!wizardStore.styleYaml) {
-			const presetId =
-				wizardStore.family === "author-date"
-					? "apa"
-					: wizardStore.family === "numeric"
-						? "vancouver"
-						: "chicago-note";
-			await wizardStore.generateFromIntent({
-				class:
-					wizardStore.family === "author-date"
-						? "author_date"
-						: wizardStore.family === "numeric"
-							? "numeric"
-							: "footnote",
-				from_preset: presetId,
-			});
-		}
-		wizardStore.setPhase("visual-customizer");
-		goto("/create/build/customize");
+	async function continueToRefine() {
+		wizardStore.setStep(4);
+		wizardStore.setRouteStep("refine");
+		await goto("/create/build/refine");
 	}
 
-	async function useThisAnyhow() {
-		// Ensure we have a preview ready for the next step
-		if (!wizardStore.styleYaml) {
-			const presetId =
-				wizardStore.family === "author-date"
-					? "apa"
-					: wizardStore.family === "numeric"
-						? "vancouver"
-						: "chicago-note";
-			await wizardStore.generateFromIntent({
-				class:
-					wizardStore.family === "author-date"
-						? "author_date"
-						: wizardStore.family === "numeric"
-							? "numeric"
-							: "footnote",
-				from_preset: presetId,
-			});
-		} else {
+	async function customizeFurther() {
+		wizardStore.setPhase("visual-customizer");
+		wizardStore.setRouteStep("customize");
+		await goto("/create/build/customize");
+	}
+
+	function startOver() {
+		wizardStore.reset();
+		goto("/create/build/field");
+	}
+
+	onMount(async () => {
+		wizardStore.setRouteStep("style");
+		if (!wizardStore.styleYaml && wizardStore.family) {
+			await wizardStore.generateDefaultStyle();
+		} else if (wizardStore.styleYaml) {
 			await wizardStore.fetchPreview();
 		}
-		wizardStore.setStep(4);
-		goto("/create/build/refine");
-	}
+	});
+
+	$effect(() => {
+		if (!currentAxis || !wizardStore.styleYaml) return;
+		void loadChoicePreviews();
+	});
 </script>
 
-<div class="max-w-7xl mx-auto px-4 sm:px-6 py-4 w-full h-full flex flex-col">
-	<!-- Progress Indicator -->
-	<div class="mb-6 max-w-2xl mx-auto w-full text-center shrink-0 relative">
+<div class="mx-auto flex w-full max-w-7xl flex-col px-4 py-6 sm:px-6">
+	<div class="mx-auto mb-6 w-full max-w-2xl text-center">
 		<button
 			onclick={() => history.back()}
-			class="absolute top-0 sm:top-2 left-0 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
+			class="absolute left-4 top-24 flex items-center justify-center rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 sm:left-8"
+			aria-label="Go back"
 		>
-			<span class="material-symbols-outlined">arrow_back</span>
+			<ArrowLeft class="size-5" />
 		</button>
-		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Step 3 of 5</p>
-		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
+		<p class="mb-2 text-sm font-medium text-slate-500">Step 3 of 7</p>
+		<div class="h-1.5 w-full overflow-hidden rounded-full bg-slate-200">
 			<div
-				class="h-full bg-primary rounded-full transition-all duration-500"
-				style="width: 60%"
+				class="h-full rounded-full bg-emerald-600 transition-all duration-500"
+				style="width: 42.8571%"
 			></div>
 		</div>
-		<h2 class="text-2xl font-bold mt-4 text-slate-900 dark:text-white">Style Navigator</h2>
+		<h1 class="mt-4 text-2xl font-bold text-slate-950">Style Navigator</h1>
+		<p class="mt-2 text-sm leading-6 text-slate-600">
+			Choose the rendered example that looks closest. The left preview updates after every choice.
+		</p>
 	</div>
 
-	<div class="flex flex-1 min-h-0 gap-6">
-		<!-- Left: Live Preview (Takes up 2/3 width) -->
-		<div
-			class="flex w-2/3 flex-col rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm overflow-hidden"
+	<div class="grid min-h-[620px] gap-6 lg:grid-cols-[minmax(0,1.45fr)_minmax(340px,0.85fr)]">
+		<section
+			class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"
 		>
-			<div
-				class="flex items-center justify-between border-b border-border-light bg-surface-light px-4 py-3"
-			>
-				<h3 class="font-semibold text-text-main">Live Preview</h3>
-			</div>
-			<div class="flex-1 overflow-auto bg-surface-main p-6">
-				{#if wizardStore.isLoading}
-					<div class="flex h-full items-center justify-center">
-						<div class="animate-pulse text-text-secondary">Generating preview...</div>
-					</div>
-				{:else if wizardStore.styleYaml}
-					<PreviewPane />
-				{:else}
-					<div class="flex h-full items-center justify-center text-text-secondary text-center p-8">
-						Make your selections on the right to see the preview update.
-					</div>
-				{/if}
-			</div>
-			<div class="border-t border-border-light bg-surface-light px-4 py-3">
-				<p class="text-sm font-medium text-text-secondary">
-					Closest match:
-					<span class="text-text-main">
-						{wizardStore.styleInfo?.short_title ??
-							wizardStore.styleInfo?.title ??
-							(wizardStore.presetId ? wizardStore.presetId.toUpperCase() : "Computing...")}
-						{wizardStore.styleInfo?.edition ? ` (${wizardStore.styleInfo.edition})` : ""}
-					</span>
-				</p>
-			</div>
-		</div>
-
-		<!-- Right: Axis Cards (Takes up 1/3 width) -->
-		<div class="flex w-1/3 flex-col gap-4 overflow-y-auto pr-2 pb-8">
-			{#each axes.slice(0, currentAxisIndex + 1) as axis, i}
-				<div
-					class="rounded-lg border-2 {i === currentAxisIndex
-						? 'border-primary shadow-md'
-						: 'border-border-light opacity-60'} bg-surface-light p-4 transition-all"
-				>
-					<h4 class="mb-3 font-semibold text-text-main">{axis.question}</h4>
-					<div class="flex flex-col gap-2">
-						{#each axis.options as option}
-							<label
-								class="flex cursor-pointer items-center gap-3 rounded-md border border-border-light bg-surface-main p-3 hover:border-primary"
-							>
-								<input
-									type="radio"
-									name={axis.id}
-									value={option.value}
-									checked={wizardStore.axisChoices[axis.id as keyof AxisChoices] === option.value}
-									onclick={() => selectOption(axis.id, option.value, i)}
-									class="h-4 w-4 text-primary focus:ring-primary"
-								/>
-								<span class="text-sm text-text-main">{option.label}</span>
-							</label>
-						{/each}
-					</div>
+			<div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+				<div>
+					<p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Live Preview</p>
+					<p class="mt-1 text-sm font-semibold text-slate-950">
+						{exactMatch ? "Exact match" : "Closest match"}:
+						<span class="text-emerald-700"
+							>{presetMatch?.presetId ?? wizardStore.presetId ?? "working"}</span
+						>
+					</p>
 				</div>
-			{/each}
+				<Eye class="size-5 text-slate-400" />
+			</div>
+			<div class="min-h-0 flex-1 overflow-auto bg-slate-50 p-5">
+				<PreviewPane />
+			</div>
+		</section>
 
-			<div class="pt-4 space-y-3">
-				{#if currentAxisIndex === axes.length - 1 && wizardStore.axisChoices[axes[currentAxisIndex].id as keyof AxisChoices]}
-					<button
-						onclick={useThisAnyhow}
-						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
-					>
-						Continue to Refinement
-					</button>
-				{:else}
-					<button
-						onclick={useThisAnyhow}
-						class="w-full rounded-lg bg-primary px-4 py-3 font-semibold text-white hover:bg-blue-700 transition-colors shadow-sm"
-					>
-						{currentAxisIndex === 0 ? "Skip to Refinement" : "Next: Refine Details"}
-					</button>
-					{#if currentAxisIndex < axes.length - 1}
-						<p class="mt-2 text-xs text-text-secondary italic">
-							You can skip the remaining {axes.length - 1 - currentAxisIndex} questions and refine further
-							in the next step.
-						</p>
-					{/if}
-				{/if}
+		<aside class="flex min-h-0 flex-col gap-4 overflow-y-auto pb-8">
+			{#if currentAxis}
+				<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+					<p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">
+						Axis {currentAxisIndex + 1} of {axes.length}
+					</p>
+					<h2 class="mt-2 text-xl font-bold text-slate-950">{currentAxis.question}</h2>
+				</div>
 
+				<div class="grid gap-3">
+					{#each currentAxis.choices as choice}
+						{@const selected = wizardStore.axisChoices[currentAxis.id] === choice.value}
+						<button
+							onclick={() => selectOption(currentAxis.id, choice.value)}
+							class={`rounded-2xl border bg-white p-4 text-left shadow-sm transition hover:border-emerald-300 ${
+								selected ? "border-emerald-500 ring-2 ring-emerald-100" : "border-slate-200"
+							}`}
+						>
+							<div class="flex items-start justify-between gap-4">
+								<div class="min-w-0">
+									<p class="text-sm font-bold text-slate-950">{choice.label}</p>
+									<div
+										class="mt-3 rounded-xl border border-slate-100 bg-slate-50 p-3 font-serif text-sm leading-7 text-slate-700"
+									>
+										{#if isLoadingChoicePreviews && !optionPreviews[choiceKey(currentAxis.id, choice)]}
+											<span class="font-sans text-xs text-slate-400">Rendering...</span>
+										{:else if optionPreviews[choiceKey(currentAxis.id, choice)]}
+											<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+											{@html optionPreviews[choiceKey(currentAxis.id, choice)]}
+										{:else}
+											<span class="font-sans text-xs text-slate-400">Preview unavailable</span>
+										{/if}
+									</div>
+								</div>
+								{#if selected}
+									<Check class="mt-1 size-5 shrink-0 text-emerald-700" />
+								{/if}
+							</div>
+						</button>
+					{/each}
+				</div>
+			{/if}
+
+			<div class="grid gap-3 pt-2">
+				<button
+					onclick={continueToRefine}
+					class="rounded-lg bg-emerald-600 px-4 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-emerald-700"
+				>
+					{currentAxisIndex >= axes.length - 1 ? "Continue to Refinement" : "Use this and refine"}
+				</button>
 				<div class="grid grid-cols-2 gap-3">
 					<button
 						onclick={customizeFurther}
-						class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+						class="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-slate-300"
 					>
-						<span class="material-symbols-outlined text-lg">settings_suggest</span>
-						Visual Editor
+						<SlidersHorizontal class="size-4" />
+						Customize
 					</button>
 					<button
-						onclick={() => {
-							wizardStore.reset();
-							goto("/create/build/field");
-						}}
-						class="rounded-lg border-2 border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-2 text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+						onclick={startOver}
+						class="flex items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:border-slate-300"
 					>
-						<span class="material-symbols-outlined text-lg">restart_alt</span>
+						<RotateCcw class="size-4" />
 						Start Over
 					</button>
 				</div>
 			</div>
-		</div>
+		</aside>
 	</div>
 </div>

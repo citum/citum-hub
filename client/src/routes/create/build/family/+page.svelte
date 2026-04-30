@@ -11,6 +11,7 @@
 		}
 		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(2);
+		wizardStore.setRouteStep("family");
 	});
 </script>
 

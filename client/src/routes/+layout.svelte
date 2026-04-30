@@ -5,10 +5,7 @@
 	import { auth } from "$lib/stores/auth";
 
 	let { children } = $props();
-	const isCustomizerRoute = $derived(
-		$page.url.pathname.startsWith("/create/build/customize") ||
-			$page.url.pathname.startsWith("/create/build/refine")
-	);
+	const isCustomizerRoute = $derived($page.url.pathname.startsWith("/create"));
 
 	function handleLogin() {
 		window.location.href = "/api/auth/github";

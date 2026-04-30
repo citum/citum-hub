@@ -40,7 +40,7 @@ The Hub uses **two typefaces with distinct roles**:
 - **UI chrome — Lexend (sans-serif).** Designed for reading proficiency. Friendly to readers across fluency levels (including dyslexic users), which matters for an academic tool that includes student users. All chrome, controls, navigation, headings, and body copy.
 - **Citation output — Merriweather (serif).** The rendered citation preview and bibliography. Serif here preserves the "this is the published output" feel exactly where it has emotional payoff. Reach for this only inside `.live-preview-content` and bibliography rendering.
 
-The split mirrors the user's mental model: sans for *I'm operating a tool*, serif for *I'm reading the deliverable*. Don't introduce a third typeface without retiring one.
+The split mirrors the user's mental model: sans for _I'm operating a tool_, serif for _I'm reading the deliverable_. Don't introduce a third typeface without retiring one.
 
 ### Hierarchy
 
@@ -111,21 +111,21 @@ The split mirrors the user's mental model: sans for *I'm operating a tool*, seri
 
 ### 6.1 Tokens defined in `client/src/index.css`
 
-| Token | Value | Vision §? | Currently used in components |
-|-------|-------|-----------|-------------------------------|
-| `--color-primary` | `#135bec` | §2 ✓ | Yes (root chrome buttons, eyebrow links) |
-| `--color-background-light` | `#f6f7f8` | §2 (close to "Cool Mist White" `#f6f6f8`) | `bg-background-light` on root layout only |
-| `--color-background-dark` | `#111821` | §2 ✓ (Obsidian Navy) | Not used directly |
-| `--color-surface-light` | `#ffffff` | §2 ✓ (Pure Paper White) | Not referenced — `bg-white` used instead |
-| `--color-border-light` | `#e7ebf3` | §2 ✓ (Soft Border Gray) | Used in `.preview-bibliography` only |
-| `--color-text-main` | `#0d121b` | §2 ✓ (Ink Black) | `:root` color only — not in components |
-| `--color-text-secondary` | `#4c669a` | §2 ✓ (Muted Steel Blue) | `.preview-bibliography h4` and `.csln-tooltip` only |
-| `--font-display` | `Lexend` | §3 ✗ — vision says **Newsreader** | `:root font-family` |
-| `--font-sans` | `Lexend` | §3 ✗ | (alias) |
-| `--font-serif` | `Merriweather` | §3 ✗ — vision says Newsreader for everything | `.live-preview-content`, `.bib-entry` |
-| `--radius-lg` | `0.5rem` | §4 ✓ (matches button rounded-lg) | Not referenced — components use `rounded-lg` directly |
-| `--radius-xl` | `0.75rem` | §4 ✓ | Not referenced |
-| `--radius-2xl` | `1rem` | §4 (vision says rounded-md for paper, rounded-xl for panels) | Not referenced |
+| Token                      | Value          | Vision §?                                                    | Currently used in components                          |
+| -------------------------- | -------------- | ------------------------------------------------------------ | ----------------------------------------------------- |
+| `--color-primary`          | `#135bec`      | §2 ✓                                                         | Yes (root chrome buttons, eyebrow links)              |
+| `--color-background-light` | `#f6f7f8`      | §2 (close to "Cool Mist White" `#f6f6f8`)                    | `bg-background-light` on root layout only             |
+| `--color-background-dark`  | `#111821`      | §2 ✓ (Obsidian Navy)                                         | Not used directly                                     |
+| `--color-surface-light`    | `#ffffff`      | §2 ✓ (Pure Paper White)                                      | Not referenced — `bg-white` used instead              |
+| `--color-border-light`     | `#e7ebf3`      | §2 ✓ (Soft Border Gray)                                      | Used in `.preview-bibliography` only                  |
+| `--color-text-main`        | `#0d121b`      | §2 ✓ (Ink Black)                                             | `:root` color only — not in components                |
+| `--color-text-secondary`   | `#4c669a`      | §2 ✓ (Muted Steel Blue)                                      | `.preview-bibliography h4` and `.csln-tooltip` only   |
+| `--font-display`           | `Lexend`       | §3 ✗ — vision says **Newsreader**                            | `:root font-family`                                   |
+| `--font-sans`              | `Lexend`       | §3 ✗                                                         | (alias)                                               |
+| `--font-serif`             | `Merriweather` | §3 ✗ — vision says Newsreader for everything                 | `.live-preview-content`, `.bib-entry`                 |
+| `--radius-lg`              | `0.5rem`       | §4 ✓ (matches button rounded-lg)                             | Not referenced — components use `rounded-lg` directly |
+| `--radius-xl`              | `0.75rem`      | §4 ✓                                                         | Not referenced                                        |
+| `--radius-2xl`             | `1rem`         | §4 (vision says rounded-md for paper, rounded-xl for panels) | Not referenced                                        |
 
 ### 6.2 Tailwind palette in active use (not tokenized)
 
@@ -138,6 +138,7 @@ The split mirrors the user's mental model: sans for *I'm operating a tool*, seri
 These appear in 3+ places. Treat them as canonical until §7 is resolved.
 
 #### 6.3.1 Mode-hub hero (`/create/*` mode pages)
+
 ```
 <section>
   <p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-{accent}-600">{Mode}</p>
@@ -145,31 +146,40 @@ These appear in 3+ places. Treat them as canonical until §7 is resolved.
   <p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">{Lede}</p>
 </section>
 ```
+
 Used by `/create`, `/create/find`, `/create/tweak`, `/create/build`.
 
 #### 6.3.2 Surface card
+
 ```
 <div class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">…</div>
 ```
+
 Used by mode hub cards and Build's primary section.
 
 #### 6.3.3 Inset notice / sidecar panel
+
 ```
 <div class="rounded-[1.6rem] border border-{accent}-100 bg-{accent}-50 px-5 py-4">…</div>
 ```
+
 Used by Build's progress panel and "Starting Point" block.
 
 #### 6.3.4 Pill button
+
 - Primary: `inline-flex items-center justify-center rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-slate-800`
 - Secondary: `inline-flex items-center justify-center rounded-full border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:text-slate-950`
 
 #### 6.3.5 Dark inverted state panel
+
 ```
 <div class="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white">…</div>
 ```
+
 Used in `/create/build` for the "Current build state" sidebar.
 
 #### 6.3.6 Two-column build layout
+
 ```
 <div class="mx-auto grid w-full max-w-6xl gap-8 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_360px]">
   <section>…</section>
@@ -182,61 +192,72 @@ Used in `/create/build` for the "Current build state" sidebar.
 Each item is either "reality is right, update §1–§5" or "vision is right, fix the code." Decide both at the same time.
 
 ### 7.1 Two competing chrome systems
+
 - Root `+layout.svelte`: `bg-background-light`, `--color-primary` blue, `material-symbols-outlined`, `rounded-lg` buttons, "Citum Hub / school" branding. Closer to vision §2 + §4.
 - `CreateFlowHeader.svelte`: pure slate, pill nav, `bg-white/90 backdrop-blur`, "Citum Create" branding, no `--color-primary`, no Material Symbols. Closer to vision §4 "sticky, semi-transparent backdrop" but skips the brand color.
 
-Same product, two skins. **Decision needed:** is `/create` an intentionally distinct "studio" surface (then update vision §4 to say so), or did the new header drift? Recommend unifying on the new (slate + backdrop-blur + pill) treatment, and updating §2 to acknowledge `--color-primary` as a *root-chrome* accent rather than a universal action color.
+Same product, two skins. **Decision needed:** is `/create` an intentionally distinct "studio" surface (then update vision §4 to say so), or did the new header drift? Recommend unifying on the new (slate + backdrop-blur + pill) treatment, and updating §2 to acknowledge `--color-primary` as a _root-chrome_ accent rather than a universal action color.
 
 ### 7.2 ~~Font drift~~ — RESOLVED
+
 Vision §3 has been updated to acknowledge the Lexend (UI) + Merriweather (citations) split rather than a single Newsreader treatment. Reasoning: the split matches the user's mental model (tool vs deliverable), Lexend is purpose-built for reading proficiency (an asset for student users), and adopting Newsreader would be high-effort for mostly aesthetic payoff. Inter was an orphan and has been removed from the layout font link.
 
 ### 7.3 Radius zoo
+
 Six radii in active use, none citing `--radius-*` tokens:
 
-| In code | Where |
-|---------|-------|
-| `rounded-lg` | Root header buttons (matches vision §4) |
-| `rounded-full` | CreateFlowHeader nav, all pill buttons |
-| `rounded-2xl` | Inline preview panels |
-| `rounded-3xl` | Find / Tweak surface cards |
-| `rounded-[2rem]` | Mode-hub cards, Build sections |
-| `rounded-[1.6rem]` | Build inset notices |
-| `rounded-[1.2rem]` | Tweak source preview |
+| In code            | Where                                   |
+| ------------------ | --------------------------------------- |
+| `rounded-lg`       | Root header buttons (matches vision §4) |
+| `rounded-full`     | CreateFlowHeader nav, all pill buttons  |
+| `rounded-2xl`      | Inline preview panels                   |
+| `rounded-3xl`      | Find / Tweak surface cards              |
+| `rounded-[2rem]`   | Mode-hub cards, Build sections          |
+| `rounded-[1.6rem]` | Build inset notices                     |
+| `rounded-[1.2rem]` | Tweak source preview                    |
 
 **Rule going forward** (§8): use `rounded-2xl` for surface cards, `rounded-xl` for inset notices, `rounded-full` for pills, `rounded-lg` for inputs. No bracket values without a token.
 
 ### 7.4 Color tokens defined but unused
+
 `--color-surface-light`, `--color-text-main`, `--color-text-secondary` are dead in component code — `bg-white`, `text-slate-950`, `text-slate-600` are used instead. **Decision needed:** delete the unused tokens, or migrate component code to reference them. Recommend keeping the chrome-level tokens (background, border, text-main, primary) and migrating components to reference them; delete `--color-surface-light` (interchangeable with `bg-white`).
 
 ### 7.5 ~~Orphan Inter~~ — RESOLVED
+
 Inter has been removed from the Google Fonts `<link>` in `+layout.svelte`. See §7.2.
 
 ### 7.6 Mode color coding inconsistent
 
-| Mode | On hub card (in `/create`) | On its own page (eyebrow) |
-|------|----------------------------|---------------------------|
-| Find | `hover:border-primary/40` (blue) | `text-sky-600` |
-| Tweak | `hover:border-amber-400/50` | `text-amber-600` |
-| Build | dark slate, no accent | `text-emerald-600` |
+| Mode  | On hub card (in `/create`)       | On its own page (eyebrow) |
+| ----- | -------------------------------- | ------------------------- |
+| Find  | `hover:border-primary/40` (blue) | `text-sky-600`            |
+| Tweak | `hover:border-amber-400/50`      | `text-amber-600`          |
+| Build | dark slate, no accent            | `text-emerald-600`        |
 
 Pick one set. Recommend: drop `--color-primary` blue for "Find" in favor of `sky` (matches the route's eyebrow), and pick an explicit Build accent (`emerald`, since it's already on the Build page — and update the hub card to hint emerald on hover instead of relying on dark fill alone).
 
 ### 7.7 Container width drift
+
 Vision §5 says `1440px`. Code uses `max-w-[1200px]` (root chrome), `max-w-6xl` (≈1152px) in CreateFlowHeader and Build, `max-w-5xl` in Find / Tweak. Recommend pick `max-w-6xl` for `/create/*` (the flow surface) and `max-w-7xl` (≈1280px) for `/library` and `/style` data views, and update §5 to reflect both. 1440px is too wide for line lengths in copy-heavy mode hubs.
 
 ### 7.8 Two icon systems
+
 `material-symbols-outlined` (root chrome, font request) vs `lucide-svelte` (already a dep). Recommend Lucide everywhere, drop the Material Symbols `<link>`.
 
 ### 7.9 Refine and Customize chrome lives inside the components
-`/create/build/refine` and `/create/build/customize` skip *both* the root header and the create / wizard headers, but the underlying `RefinementPanel` and `VisualCustomizer` components render their own internal chrome — top-left back button, plus a row of Save / Back / Start Over actions at the bottom. So the routes are not trapped, but the internal chrome predates the design system: the back button uses `material-symbols-outlined` (§7.8), the Save button uses `bg-primary` blue rather than the Build mode's emerald (§7.6), and the progress bar is a hardcoded `width: 80%` rather than computed. These are the targets for the dedicated refine/customize refactor PR — too big to bundle into the foundation PR.
+
+`/create/build/refine` and `/create/build/customize` skip _both_ the root header and the create / wizard headers, but the underlying `RefinementPanel` and `VisualCustomizer` components render their own internal chrome — top-left back button, plus a row of Save / Back / Start Over actions at the bottom. So the routes are not trapped, but the internal chrome predates the design system: the back button uses `material-symbols-outlined` (§7.8), the Save button uses `bg-primary` blue rather than the Build mode's emerald (§7.6), and the progress bar is a hardcoded `width: 80%` rather than computed. These are the targets for the dedicated refine/customize refactor PR — too big to bundle into the foundation PR.
 
 ### 7.10 Two stores
+
 `wizardStore` (legacy step-based) and `createFlowStore` (new mode-aware) coexist. `CreateFlowHeader.handleReset()` calls both. `/create/build/refine` and `/create/build/customize` still drive `wizardStore`. Cutover is half-done — see `specs/CREATE_REWRITE_ARCHITECTURE.md` § "Reuse And Deletion."
 
 ### 7.11 Body color drift
+
 `text-slate-600` (most lede paragraphs), `text-slate-700` (preview body), `--color-text-secondary` (`#4c669a`, used only in legacy `.preview-bibliography h4`). Pick one for body copy: recommend `text-slate-600`.
 
 ### 7.12 "Paper" preview metaphor not landed
+
 Vision §4 describes a `shadow-[0_4px_20px_-4px_rgba(0,0,0,0.1)]` paper card with a `bg-gradient-to-b from-gray-50` overlay. Current preview panels are flat `rounded-2xl border border-slate-200 bg-slate-50`. **Decision needed:** ship the paper metaphor as part of the Build / Refine polish pass, or retire it from §4 as a non-goal.
 
 ## 8. Rules Going Forward
