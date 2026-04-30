@@ -19,6 +19,7 @@ bun.lockb
 # SvelteKit
 .svelte-kit
 /client/.svelte-kit
+/client/build
 .env
 .env.*
 !.env.example
