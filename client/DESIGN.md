@@ -35,15 +35,20 @@ The atmosphere feels **grounded and authoritative**, with a high-contrast intera
 
 ## 3. Typography Rules
 
-**Primary Font Family:** **Newsreader** (Serif)
-**Character:** A highly legible, contemporary serif that brings an academic/editorial voice to the entire UI.
+The Hub uses **two typefaces with distinct roles**:
+
+- **UI chrome — Lexend (sans-serif).** Designed for reading proficiency. Friendly to readers across fluency levels (including dyslexic users), which matters for an academic tool that includes student users. All chrome, controls, navigation, headings, and body copy.
+- **Citation output — Merriweather (serif).** The rendered citation preview and bibliography. Serif here preserves the "this is the published output" feel exactly where it has emotional payoff. Reach for this only inside `.live-preview-content` and bibliography rendering.
+
+The split mirrors the user's mental model: sans for *I'm operating a tool*, serif for *I'm reading the deliverable*. Don't introduce a third typeface without retiring one.
 
 ### Hierarchy
 
-- **Page Titles (H1):** Bold weight, 3xl size. Authoritative and editorial.
-- **Section Headers (H2/H3):** Bold weight, xl or lg size. Distinct but integrated.
-- **Body Text:** Text-sm for UI elements, slightly larger (text-lg) for the "paper" citation previews to mimic real document reading.
-- **Labels:** Medium weight, text-xs or text-sm. Often used with uppercase tracking for section labels (e.g., "NOTE EXAMPLES").
+- **Page Titles (H1):** `text-4xl font-black tracking-tight text-slate-950 sm:text-5xl`. Authoritative.
+- **Section Headers (H2/H3):** `text-lg` or `text-2xl`, `font-bold`, `text-slate-950`. Distinct but integrated.
+- **Body Text:** `text-base leading-7 text-slate-600` for ledes; `text-sm` for in-card copy.
+- **Eyebrow Labels:** `text-xs` or `text-sm`, `font-semibold uppercase tracking-[0.2em]`, accent color (mode color or `text-slate-400` on dark surfaces).
+- **Citation preview body:** `text-sm leading-7` inside `.live-preview-content` (Merriweather). Bibliography entries scale up to `text-base` to mimic document reading.
 
 ## 4. Component Stylings
 
@@ -182,8 +187,8 @@ Each item is either "reality is right, update §1–§5" or "vision is right, fi
 
 Same product, two skins. **Decision needed:** is `/create` an intentionally distinct "studio" surface (then update vision §4 to say so), or did the new header drift? Recommend unifying on the new (slate + backdrop-blur + pill) treatment, and updating §2 to acknowledge `--color-primary` as a *root-chrome* accent rather than a universal action color.
 
-### 7.2 Font: vision says Newsreader, code uses Lexend + Merriweather
-Most consequential drift in the file. Vision §3 says "Newsreader (Serif)" for *the entire UI*; code loads Lexend (display+sans), Merriweather (serif for preview), Inter (loaded but unused). **Decision needed:** adopt Newsreader (load it, retire Lexend, update tokens), or update §3 to reflect the Lexend / Merriweather split (UI = Lexend sans-serif; citation output = Merriweather serif). The latter is far less work and arguably right — using a serif for the UI chrome makes scanning slower, and the current split (sans for chrome, serif for citations) preserves the "scholarly" feel where it matters most.
+### 7.2 ~~Font drift~~ — RESOLVED
+Vision §3 has been updated to acknowledge the Lexend (UI) + Merriweather (citations) split rather than a single Newsreader treatment. Reasoning: the split matches the user's mental model (tool vs deliverable), Lexend is purpose-built for reading proficiency (an asset for student users), and adopting Newsreader would be high-effort for mostly aesthetic payoff. Inter was an orphan and has been removed from the layout font link.
 
 ### 7.3 Radius zoo
 Six radii in active use, none citing `--radius-*` tokens:
@@ -203,8 +208,8 @@ Six radii in active use, none citing `--radius-*` tokens:
 ### 7.4 Color tokens defined but unused
 `--color-surface-light`, `--color-text-main`, `--color-text-secondary` are dead in component code — `bg-white`, `text-slate-950`, `text-slate-600` are used instead. **Decision needed:** delete the unused tokens, or migrate component code to reference them. Recommend keeping the chrome-level tokens (background, border, text-main, primary) and migrating components to reference them; delete `--color-surface-light` (interchangeable with `bg-white`).
 
-### 7.5 Font drift: orphan Inter
-Inter is loaded in `+layout.svelte` but not in `@theme` and not used. Drop the `<link>` to save a request, or define `--font-ui-alt` and pick a real use case.
+### 7.5 ~~Orphan Inter~~ — RESOLVED
+Inter has been removed from the Google Fonts `<link>` in `+layout.svelte`. See §7.2.
 
 ### 7.6 Mode color coding inconsistent
 
@@ -222,8 +227,8 @@ Vision §5 says `1440px`. Code uses `max-w-[1200px]` (root chrome), `max-w-6xl` 
 ### 7.8 Two icon systems
 `material-symbols-outlined` (root chrome, font request) vs `lucide-svelte` (already a dep). Recommend Lucide everywhere, drop the Material Symbols `<link>`.
 
-### 7.9 Refine and Customize have no chrome
-`/create/build/refine` and `/create/build/customize` skip *both* the root header and the create / wizard headers. The user has no nav out except browser back. Add a minimal exit affordance ("Done" / breadcrumb) before the screen polish pass — chromeless is fine; trapped is not.
+### 7.9 Refine and Customize chrome lives inside the components
+`/create/build/refine` and `/create/build/customize` skip *both* the root header and the create / wizard headers, but the underlying `RefinementPanel` and `VisualCustomizer` components render their own internal chrome — top-left back button, plus a row of Save / Back / Start Over actions at the bottom. So the routes are not trapped, but the internal chrome predates the design system: the back button uses `material-symbols-outlined` (§7.8), the Save button uses `bg-primary` blue rather than the Build mode's emerald (§7.6), and the progress bar is a hardcoded `width: 80%` rather than computed. These are the targets for the dedicated refine/customize refactor PR — too big to bundle into the foundation PR.
 
 ### 7.10 Two stores
 `wizardStore` (legacy step-based) and `createFlowStore` (new mode-aware) coexist. `CreateFlowHeader.handleReset()` calls both. `/create/build/refine` and `/create/build/customize` still drive `wizardStore`. Cutover is half-done — see `specs/CREATE_REWRITE_ARCHITECTURE.md` § "Reuse And Deletion."
