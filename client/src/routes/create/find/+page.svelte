@@ -15,8 +15,8 @@
 			Start from the closest style instead of building from scratch.
 		</h1>
 		<p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-			Search by style name, discipline, or family. The rewrite keeps discovery as the primary path,
-			with example-based matching landing in a follow-up slice.
+			Search the library by style name, discipline, or family. If something close already exists,
+			using it is faster than building from scratch — and you can always tweak the result.
 		</p>
 	</section>
 
@@ -33,11 +33,17 @@
 				Use humanities, medicine, sciences, or social sciences to narrow to realistic defaults.
 			</p>
 		</div>
-		<div class="rounded-3xl border border-slate-200 bg-white p-6">
-			<h2 class="text-lg font-bold text-slate-950">Search by example</h2>
-			<p class="mt-2 text-sm leading-6 text-slate-600">
-				Reverse-match from a sample citation is planned next. This route establishes the discovery
-				entry now.
+		<div class="rounded-3xl border border-dashed border-slate-200 bg-white/60 p-6">
+			<div class="flex items-center gap-2">
+				<h2 class="text-lg font-bold text-slate-500">Search by example</h2>
+				<span
+					class="rounded-full border border-slate-200 px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500"
+				>
+					Coming soon
+				</span>
+			</div>
+			<p class="mt-2 text-sm leading-6 text-slate-500">
+				Paste a sample citation and find styles that produce something close. Not yet available.
 			</p>
 		</div>
 	</section>

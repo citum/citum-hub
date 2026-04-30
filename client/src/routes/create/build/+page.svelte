@@ -87,11 +87,11 @@
 	<section class="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
 		<p class="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-emerald-600">Build</p>
 		<h1 class="text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-			Build a style by choosing the closest output each round.
+			Build a style by picking the closest output each round.
 		</h1>
 		<p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-			This rewrite uses the intent engine directly instead of routing through the old step wizard.
-			Answer the next question by picking the closest citation output, then refine from there.
+			Each round shows a question and a few candidate citations. Pick the one closest to what you
+			want — the engine narrows in from there. Refine the result on the next screen.
 		</p>
 
 		{#if createFlowStore.sourceStyleKey}
@@ -100,8 +100,7 @@
 				{#if sourceStyle}
 					<h2 class="mt-2 text-lg font-bold text-slate-950">{sourceStyle.title}</h2>
 					<p class="mt-1 text-sm text-slate-600">
-						Using this source as the baseline for the current build fallback while the dedicated
-						tweak flow is still landing.
+						Using this style as the starting point for your build.
 					</p>
 				{:else if sourceError}
 					<p class="mt-2 text-sm text-red-600">{sourceError}</p>
@@ -144,7 +143,7 @@
 
 	<aside class="flex flex-col gap-4">
 		<div class="rounded-[2rem] border border-slate-200 bg-slate-950 p-6 text-white">
-			<p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+			<p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">
 				Current build state
 			</p>
 			<dl class="mt-4 grid gap-4">
@@ -161,13 +160,13 @@
 					</dd>
 				</div>
 				<div>
-					<dt class="text-xs uppercase tracking-[0.2em] text-slate-400">Progress</dt>
+					<dt class="text-xs uppercase tracking-[0.2em] text-slate-400">Status</dt>
 					<dd class="mt-1 text-sm font-medium text-white/90">
 						{hoveredPreview
 							? `Previewing ${hoveredPreview.label}`
 							: createFlowStore.lastDecision?.question
 								? "Choosing the next decision"
-							: "Draft ready"}
+								: "Draft ready"}
 					</dd>
 				</div>
 				<div>
@@ -205,8 +204,7 @@
 					{/each}
 				{:else}
 					<div class="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
-						Your preview will appear here once the engine has enough information to render the
-						current branch.
+						Your preview will appear here once you've made enough decisions to render a citation.
 					</div>
 				{/if}
 			</div>
