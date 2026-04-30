@@ -579,7 +579,7 @@ fn generate_preview_set_internal(
         effective_style.citation = Some(CitationSpec {
             use_preset: Some(TemplatePreset::Apa),
             wrap: if is_author_date_like {
-                Some(citum_schema::template::WrapPunctuation::Parentheses)
+                Some(citum_schema::template::WrapPunctuation::Parentheses.into())
             } else {
                 None
             },
@@ -590,13 +590,13 @@ fn generate_preview_set_internal(
     {
         if citation.wrap.is_none() {
             // Saved author-date styles may omit parenthetical wrapping.
-            citation.wrap = Some(citum_schema::template::WrapPunctuation::Parentheses);
+            citation.wrap = Some(citum_schema::template::WrapPunctuation::Parentheses.into());
         }
 
         if citation.integral.is_none() {
             // Narrative previews should avoid inheriting parenthetical wrapping.
             citation.integral = Some(Box::new(citum_schema::CitationSpec {
-                wrap: Some(citum_schema::template::WrapPunctuation::None),
+                wrap: None,
                 ..Default::default()
             }));
         }
@@ -1276,11 +1276,11 @@ mod tests {
             .expect("annotated preview should render bibliography");
 
         assert!(
-            bibliography.contains(r#"class="csln-author" data-index="0""#),
+            bibliography.contains(r#"class="citum-author" data-index="0""#),
             "annotated bibliography should include the first component index: {bibliography}"
         );
         assert!(
-            bibliography.contains(r#"class="csln-title" data-index="2""#),
+            bibliography.contains(r#"class="citum-title" data-index="2""#),
             "annotated bibliography should preserve sparse template indices: {bibliography}"
         );
     }

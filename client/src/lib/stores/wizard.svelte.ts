@@ -272,7 +272,7 @@ function resolvePreviewSelection(
 
 	return {
 		componentType: getComponentType(component as Record<string, unknown>),
-		cssClass: `csln-${componentCssType}`,
+		cssClass: `citum-${componentCssType}`,
 		astIndex,
 		templatePath: `${templateRoot.path}.${astIndex}`,
 		scope: templateRoot.scope,
