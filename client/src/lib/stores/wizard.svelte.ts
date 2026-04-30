@@ -5,12 +5,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import yaml from "js-yaml";
 import type {
+	AxisChoice,
 	CitationField,
 	StyleFamily,
 	WizardPhase,
+	WizardStep,
 	ComponentSelection,
 	WizardStyleOptions,
 	AxisChoices,
+	PreviewResult,
 } from "$lib/types/wizard";
 import { FIELD_DEFAULTS } from "$lib/types/wizard";
 import {
@@ -24,10 +27,27 @@ import {
 	type TemplateScope,
 } from "$lib/utils/wizard-template";
 import type { PreviewContext } from "$lib/types/decision";
+import {
+	applyStyleUpdatesToYaml,
+	defaultPresetForFamily,
+	getAxisChoiceUpdates,
+	getOptionsFromYaml,
+	intentForPreset,
+	matchPreset,
+	normalizeGeneratedStyleForFamily,
+	type WizardStyleUpdate,
+} from "$lib/utils/wizard-flow";
+import {
+	generateStyleFromIntent,
+	materializeStyle,
+	renderStylePreview,
+	validateStyle,
+} from "$lib/wasm/citum-renderer";
 
 // Reactive state using module-level $state runes
 let phase = $state<WizardPhase>("quick-start");
 let step = $state(1);
+let routeStep = $state<WizardStep>("field");
 let field = $state<CitationField | null>(null);
 let family = $state<StyleFamily | null>(null);
 let axisChoices = $state<Partial<AxisChoices>>({});
@@ -41,12 +61,12 @@ let testLocator = $state<string>("123-125");
 let previewContext = $state<PreviewContext>("default");
 
 // Preview HTML from the server
-let previewHtml = $state<{
-	parenthetical: string | null;
-	narrative: string | null;
-	note: string | null;
-	bibliography: string | null;
-}>({ parenthetical: null, narrative: null, note: null, bibliography: null });
+let previewHtml = $state<PreviewResult>({
+	parenthetical: null,
+	narrative: null,
+	note: null,
+	bibliography: null,
+});
 
 // Undo history
 let history = $state<string[]>([]);
@@ -55,6 +75,7 @@ let historyIndex = $state(-1);
 // Loading / error state
 let isLoading = $state(false);
 let error = $state<string | null>(null);
+let validationError = $state<string | null>(null);
 
 function pushHistory() {
 	if (!styleYaml) return;
@@ -88,6 +109,16 @@ function getTemplateNode(path: string): Record<string, unknown> | null {
 /** Re-serialize a modified style object back to YAML. */
 function serializeStyle(obj: Record<string, unknown>): string {
 	return yaml.dump(obj, { lineWidth: 120, noRefs: true, quotingType: '"' });
+}
+
+function updateStyleMetadataFromYaml() {
+	const parsed = parseStyle();
+	if (parsed && parsed.info && typeof parsed.info === "object") {
+		styleInfo = parsed.info as Record<string, any>;
+		if (styleInfo.title && !styleName) {
+			styleName = String(styleInfo.title);
+		}
+	}
 }
 
 /** Update a specific path in the style YAML.
@@ -262,56 +293,50 @@ function resolvePreviewSelection(
 	componentCssType: string,
 	astIndex: number | null
 ): ComponentSelection | null {
-	if (astIndex === null) return null;
-
 	const templateRoot = getResolvedTemplateRoot();
 	if (!templateRoot) return null;
 
-	const component = templateRoot.template[astIndex];
+	const fallbackIndex =
+		astIndex ??
+		templateRoot.template.findIndex((component) => {
+			if (!component || typeof component !== "object") return false;
+			const componentType = getComponentType(component as Record<string, unknown>);
+			return (
+				componentType === componentCssType ||
+				(componentCssType === "author" && componentType === "author") ||
+				(componentCssType === "issued" && componentType === "issued") ||
+				(componentCssType === "pages" && componentType === "pages") ||
+				(componentCssType === "container-title" && componentType === "container-title")
+			);
+		});
+
+	if (fallbackIndex < 0) return null;
+
+	const component = templateRoot.template[fallbackIndex];
 	if (!component || typeof component !== "object") return null;
 
 	return {
 		componentType: getComponentType(component as Record<string, unknown>),
 		cssClass: `citum-${componentCssType}`,
-		astIndex,
-		templatePath: `${templateRoot.path}.${astIndex}`,
+		astIndex: fallbackIndex,
+		templatePath: `${templateRoot.path}.${fallbackIndex}`,
 		scope: templateRoot.scope,
 	};
 }
 
 /** Get the options block from the style. */
 function getOptions(): WizardStyleOptions | null {
-	const obj = parseStyle();
-	if (!obj) return null;
-	return (obj["options"] as WizardStyleOptions) ?? null;
+	if (!styleYaml) return null;
+	return getOptionsFromYaml(styleYaml);
 }
 
 /** Fetch preview HTML from the server for the current style YAML. */
 async function fetchPreview() {
-	if (!styleYaml) return;
+	if (!styleYaml || !family) return;
 	isLoading = true;
 	error = null;
 	try {
-		// Use "citum" variant of the preview API
-		const res = await fetch("/api/v1/preview", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				citum: styleYaml,
-				test_locator: testLocator || undefined,
-				inject_ast_indices: true,
-				reference_type: activeRefType,
-				preview_context: previewContext,
-			}),
-		});
-		if (!res.ok) throw new Error(`Preview failed: ${res.status}`);
-		const data = await res.json();
-		previewHtml = {
-			parenthetical: data.in_text_parenthetical ?? null,
-			narrative: data.in_text_narrative ?? null,
-			note: data.note ?? null,
-			bibliography: data.bibliography ?? null,
-		};
+		previewHtml = await renderStylePreview(styleYaml, family);
 	} catch (e) {
 		error = e instanceof Error ? e.message : "Preview error";
 	} finally {
@@ -319,8 +344,43 @@ async function fetchPreview() {
 	}
 }
 
+async function previewStyleWithUpdates(updates: WizardStyleUpdate[]): Promise<PreviewResult> {
+	if (!styleYaml || !family) {
+		return { parenthetical: null, narrative: null, note: null, bibliography: null };
+	}
+	const nextYaml = applyStyleUpdatesToYaml(styleYaml, updates);
+	return renderStylePreview(nextYaml, family);
+}
+
+async function previewAxisChoice(
+	axisId: keyof AxisChoices,
+	value: AxisChoice["value"]
+): Promise<PreviewResult> {
+	return previewStyleWithUpdates(getAxisChoiceUpdates(axisId, value));
+}
+
+function applyStyleUpdates(updates: WizardStyleUpdate[]) {
+	if (!styleYaml) return;
+	pushHistory();
+	styleYaml = applyStyleUpdatesToYaml(styleYaml, updates);
+	updateStyleMetadataFromYaml();
+	persist();
+}
+
+async function selectAxisChoice(axisId: keyof AxisChoices, value: AxisChoice["value"]) {
+	axisChoices = { ...axisChoices, [axisId]: value };
+	applyStyleUpdates(getAxisChoiceUpdates(axisId, value));
+	if (family) {
+		const presetMatch = matchPreset(family, axisChoices);
+		presetId = presetMatch?.presetId ?? presetId;
+	}
+	persist();
+	await fetchPreview();
+}
+
 /** Generate base style YAML from intent fields via the server. */
 async function generateFromIntent(intentFields: Record<string, string | boolean | null>) {
+	if (!family) return;
 	isLoading = true;
 	error = null;
 	try {
@@ -337,22 +397,10 @@ async function generateFromIntent(intentFields: Record<string, string | boolean 
 			bib_template: intentFields["bib_template"] ?? null,
 			has_bibliography: intentFields["has_bibliography"] ?? null,
 		};
-		const res = await fetch("/api/v1/generate", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(intentObj),
-		});
-		if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
-		styleYaml = await res.text();
+		styleYaml = normalizeGeneratedStyleForFamily(await generateStyleFromIntent(intentObj), family);
 
 		// Extract metadata (info) from YAML
-		const parsed = parseStyle();
-		if (parsed && parsed.info) {
-			styleInfo = parsed.info as Record<string, any>;
-			if (styleInfo.title && !styleName) {
-				styleName = styleInfo.title;
-			}
-		}
+		updateStyleMetadataFromYaml();
 
 		// Reset history with new base
 		history = [styleYaml];
@@ -363,6 +411,37 @@ async function generateFromIntent(intentFields: Record<string, string | boolean 
 	} finally {
 		isLoading = false;
 	}
+}
+
+async function generateDefaultStyle() {
+	if (!family) return;
+	const preset = defaultPresetForFamily(family);
+	presetId = preset.id;
+	await generateFromIntent(
+		intentForPreset(preset, field) as Record<string, string | boolean | null>
+	);
+}
+
+async function materializeCurrentStyleFromWasm() {
+	if (!styleYaml) return;
+	try {
+		pushHistory();
+		styleYaml = await materializeStyle(styleYaml);
+		updateStyleMetadataFromYaml();
+		persist();
+		await fetchPreview();
+	} catch {
+		materializeCurrentStyle();
+	}
+}
+
+async function validateCurrentStyle() {
+	if (!styleYaml) {
+		validationError = "No style has been generated yet.";
+		return validationError;
+	}
+	validationError = await validateStyle(styleYaml);
+	return validationError;
 }
 
 function undo() {
@@ -384,6 +463,7 @@ function redo() {
 function reset() {
 	phase = "quick-start";
 	step = 1;
+	routeStep = "field";
 	field = null;
 	family = null;
 	axisChoices = {};
@@ -403,6 +483,7 @@ function reset() {
 	history = [];
 	historyIndex = -1;
 	error = null;
+	validationError = null;
 	try {
 		sessionStorage.removeItem("citum-wizard-state");
 	} catch {
@@ -418,6 +499,7 @@ function persist() {
 			JSON.stringify({
 				phase,
 				step,
+				routeStep,
 				field,
 				family,
 				axisChoices,
@@ -441,6 +523,7 @@ function restore(): boolean {
 		const data = JSON.parse(saved);
 		phase = data.phase ?? "quick-start";
 		step = data.step ?? 1;
+		routeStep = data.routeStep ?? "field";
 		field = data.field ?? null;
 		family = data.family ?? null;
 		axisChoices = data.axisChoices ?? {};
@@ -467,6 +550,9 @@ export const wizardStore = {
 	},
 	get step() {
 		return step;
+	},
+	get routeStep() {
+		return routeStep;
 	},
 	get field() {
 		return field;
@@ -510,6 +596,9 @@ export const wizardStore = {
 	get error() {
 		return error;
 	},
+	get validationError() {
+		return validationError;
+	},
 	get canUndo() {
 		return historyIndex > 0;
 	},
@@ -524,6 +613,10 @@ export const wizardStore = {
 	},
 	setStep(s: number) {
 		step = s;
+		persist();
+	},
+	setRouteStep(s: WizardStep) {
+		routeStep = s;
 		persist();
 	},
 	setField(f: CitationField) {
@@ -545,6 +638,7 @@ export const wizardStore = {
 	},
 	setStyleYaml(y: string) {
 		styleYaml = y;
+		updateStyleMetadataFromYaml();
 		persist();
 	},
 	setStyleName(n: string) {
@@ -581,6 +675,13 @@ export const wizardStore = {
 	ensureBibliographyTypeTemplate,
 	resolvePreviewSelection,
 	generateFromIntent,
+	generateDefaultStyle,
+	previewStyleWithUpdates,
+	previewAxisChoice,
+	applyStyleUpdates,
+	selectAxisChoice,
+	materializeCurrentStyleFromWasm,
+	validateCurrentStyle,
 	fetchPreview,
 	undo,
 	redo,

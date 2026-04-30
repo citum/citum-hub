@@ -72,8 +72,9 @@
 			Start from a close match and change only what differs.
 		</h1>
 		<p class="mt-4 max-w-2xl text-base leading-7 text-slate-600">
-			This rewrite keeps tweaks distinct from full creation. The next implementation slice will turn
-			a selected style into a minimal-override workflow instead of a full fork.
+			Tweak is for &ldquo;like APA but with footnotes&rdquo; situations — pick an existing style as
+			the base and override only the parts that need to change. A minimal-overrides workflow lands
+			in the next slice; for now this hands off to the build flow with the source style attached.
 		</p>
 	</section>
 

@@ -11,6 +11,7 @@
 		}
 		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(5);
+		wizardStore.setRouteStep("review");
 	});
 </script>
 

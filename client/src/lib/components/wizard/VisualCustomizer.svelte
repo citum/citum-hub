@@ -1,49 +1,20 @@
 <script lang="ts">
 	import { goto } from "$app/navigation";
 	import { onMount } from "svelte";
+	import { ArrowLeft, FileText, RotateCcw, Save, Undo2, Redo2 } from "lucide-svelte";
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import InteractivePreview from "./InteractivePreview.svelte";
-	import ComponentEditor from "./ComponentEditor.svelte";
 	import RefinementControls from "./RefinementControls.svelte";
-	import PunctuationEditor from "./editors/PunctuationEditor.svelte";
 	import TypeSelector from "./TypeSelector.svelte";
 
-	function goBack() {
-		wizardStore.setPhase("quick-start");
-		goto("/create/build/style");
-	}
-
-	async function downloadStyle() {
-		const yaml = wizardStore.styleYaml;
-		if (!yaml) {
-			alert("No style to download");
-			return;
-		}
-		const blob = new Blob([yaml], { type: "text/plain" });
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement("a");
-		a.href = url;
-		a.download = `${wizardStore.styleName || "style"}.yaml`;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
-	}
-
-	function handleSave() {
-		wizardStore.setPhase("quick-start");
-		wizardStore.setStep(5);
-		goto("/create/build/review");
-	}
-
-	let activeTab = $state("structure");
 	let debounceTimer: number | undefined;
+	let editScope = $state<"all" | "local">("all");
 
 	function debouncedFetchPreview() {
 		clearTimeout(debounceTimer);
 		debounceTimer = window.setTimeout(() => {
-			wizardStore.fetchPreview();
-		}, 300);
+			void wizardStore.fetchPreview();
+		}, 150);
 	}
 
 	function updateOptionField(path: string, value: unknown) {
@@ -52,7 +23,7 @@
 	}
 
 	function updateMonthFormat(month: string) {
-		wizardStore.updateStyleField("options.dates", month);
+		wizardStore.updateStyleField("options.dates.month", month);
 		debouncedFetchPreview();
 	}
 
@@ -66,257 +37,154 @@
 		debouncedFetchPreview();
 	}
 
-	const currentOptions = $derived(wizardStore.getOptions());
+	function goReview() {
+		wizardStore.setPhase("quick-start");
+		wizardStore.setRouteStep("review");
+		goto("/create/build/review");
+	}
 
-	onMount(() => {
+	function goAdvanced() {
+		wizardStore.setPhase("advanced");
+		wizardStore.setRouteStep("advanced");
+		goto("/create/build/advanced");
+	}
+
+	function startOver() {
+		wizardStore.reset();
+		goto("/create/build/field");
+	}
+
+	const currentOptions = $derived(wizardStore.getOptions());
+	const selectedLabel = $derived(
+		wizardStore.selectedComponent?.componentType
+			? wizardStore.selectedComponent.componentType.replace(/-/g, " ")
+			: "Select an output element"
+	);
+
+	onMount(async () => {
+		wizardStore.setPhase("visual-customizer");
+		wizardStore.setRouteStep("customize");
+		if (!wizardStore.styleYaml && wizardStore.family) {
+			await wizardStore.generateDefaultStyle();
+		}
 		if (wizardStore.styleYaml) {
-			void wizardStore.fetchPreview();
-			// Ensure style is expanded before editing (fixes reordering/hiding bugs)
-			wizardStore.materializeCurrentStyle();
+			await wizardStore.materializeCurrentStyleFromWasm();
+			await wizardStore.fetchPreview();
 		}
 	});
 </script>
 
-<div class="min-h-screen w-full bg-[#fafaf9] text-slate-900">
-	<!-- TopAppBar - Overrides layout nav -->
-	<header
-		class="sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b border-slate-200 bg-white px-4 shadow-sm sm:px-6 dark:border-slate-800 dark:bg-slate-900 dark:shadow-none font-headline"
-	>
-		<div class="flex items-center gap-8">
-			<div class="flex items-center gap-6">
-				<a
-					href="/"
-					class="text-xl font-bold tracking-tighter text-primary dark:text-blue-500 hover:opacity-80 transition-opacity"
+<div class="min-h-screen bg-background-light">
+	<header class="sticky top-0 z-40 border-b border-slate-200 bg-white/90 backdrop-blur">
+		<div class="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
+			<div class="flex items-center gap-4">
+				<button
+					onclick={() => goto("/create/build/review")}
+					class="rounded-full p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+					aria-label="Back to review"
 				>
-					Citum Style Wizard
-				</a>
-				<nav class="hidden lg:flex items-center gap-4">
-					<a
-						href="/"
-						class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors duration-200"
-					>
-						Home
-					</a>
-					<a
-						href="/library/browse"
-						class="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 transition-colors duration-200"
-					>
-						Browse
-					</a>
-				</nav>
+					<ArrowLeft class="size-5" />
+				</button>
+				<div>
+					<p class="text-xs font-bold uppercase tracking-[0.18em] text-emerald-700">Step 6 of 7</p>
+					<h1 class="text-lg font-bold text-slate-950">Visual Customizer</h1>
+				</div>
 			</div>
-			<nav class="hidden md:flex items-center gap-6">
+			<div class="flex items-center gap-2">
 				<button
-					onclick={goBack}
-					class="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 text-sm font-medium transition-colors duration-200 hover:bg-slate-50 dark:hover:bg-slate-800 px-3 py-1 rounded"
-					>Quick Start</button
+					onclick={() => wizardStore.undo()}
+					disabled={!wizardStore.canUndo}
+					class="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 transition hover:border-slate-300 disabled:opacity-40"
+					aria-label="Undo"
 				>
+					<Undo2 class="size-4" />
+				</button>
 				<button
-					class="text-primary dark:text-blue-400 border-b-2 border-primary dark:border-blue-400 pb-1 text-sm font-medium transition-colors duration-200 px-3 py-1"
-					>Advanced</button
+					onclick={() => wizardStore.redo()}
+					disabled={!wizardStore.canRedo}
+					class="rounded-lg border border-slate-200 bg-white p-2 text-slate-600 transition hover:border-slate-300 disabled:opacity-40"
+					aria-label="Redo"
 				>
-			</nav>
-		</div>
-		<div class="flex items-center gap-4">
-			<button
-				onclick={handleSave}
-				class="bg-primary text-white px-4 py-2 text-sm font-semibold rounded hover:bg-blue-700 active:opacity-80 active:scale-95 transition-all shadow-sm"
-			>
-				Review & Save
-			</button>
+					<Redo2 class="size-4" />
+				</button>
+				<button
+					onclick={goAdvanced}
+					class="hidden items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 sm:flex"
+				>
+					<FileText class="size-4" />
+					Advanced
+				</button>
+				<button
+					onclick={goReview}
+					class="flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white transition hover:bg-emerald-700"
+				>
+					<Save class="size-4" />
+					Review
+				</button>
+			</div>
 		</div>
 	</header>
 
-	<!-- Main Content Canvas -->
-	<main class="font-body">
-		<div class="grid min-h-[calc(100vh-4rem)] grid-cols-1 lg:grid-cols-[16rem_minmax(0,1fr)]">
-			<aside
-				class="border-b border-slate-200 bg-slate-50 py-4 font-headline lg:border-b-0 lg:border-r dark:border-slate-800 dark:bg-slate-950"
-			>
-				<div class="mt-2 mb-8 px-6">
-					<h2 class="mb-1 text-[10px] font-extrabold uppercase tracking-[0.2em] text-slate-400">
-						Step 4 of 4
-					</h2>
-					<p class="text-xs font-bold text-slate-800 dark:text-slate-300">Style Editor</p>
-				</div>
-
-				<nav class="space-y-1">
+	<main
+		class="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 xl:grid-cols-[minmax(360px,0.85fr)_minmax(0,1.15fr)]"
+	>
+		<section class="space-y-4">
+			<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+				<p class="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Editing</p>
+				<h2 class="mt-2 text-xl font-bold capitalize text-slate-950">{selectedLabel}</h2>
+				<p class="mt-2 text-sm leading-6 text-slate-600">
+					Click an element in the preview. Use the controls below to change the style, and choose
+					whether edits apply everywhere or only to the active reference type.
+				</p>
+				<div class="mt-4 grid grid-cols-2 gap-2 rounded-xl bg-slate-100 p-1">
 					<button
-						onclick={() => (activeTab = "structure")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'structure'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
+						onclick={() => (editScope = "all")}
+						class={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+							editScope === "all" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"
+						}`}
 					>
-						<span class="material-symbols-outlined text-lg">schema</span> Structure
+						All types
 					</button>
 					<button
-						onclick={() => (activeTab = "punctuation")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'punctuation'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
+						onclick={() => (editScope = "local")}
+						class={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+							editScope === "local" ? "bg-white text-slate-950 shadow-sm" : "text-slate-500"
+						}`}
 					>
-						<span class="material-symbols-outlined text-lg">format_quote</span> Punctuation
-					</button>
-					<button
-						onclick={() => (activeTab = "authors")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'authors'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">group</span> Authors
-					</button>
-					<button
-						onclick={() => (activeTab = "dates")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'dates'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">event</span> Dates
-					</button>
-					<button
-						onclick={() => (activeTab = "titles")}
-						class="w-full flex items-center gap-3 px-6 py-3 text-xs uppercase tracking-widest font-bold transition-colors {activeTab ===
-						'titles'
-							? 'border-r-4 border-primary bg-blue-50 text-primary dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300'
-							: 'text-slate-500 hover:bg-slate-100'}"
-					>
-						<span class="material-symbols-outlined text-lg">title</span> Titles
-					</button>
-				</nav>
-
-				<div class="mt-8 border-t border-slate-200 px-6 pt-4 dark:border-slate-800">
-					<button
-						onclick={downloadStyle}
-						class="flex w-full items-center justify-center gap-2 rounded bg-slate-800 py-2.5 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-slate-900"
-					>
-						<span class="material-symbols-outlined text-sm">download</span> Export Style
-					</button>
-					<button
-						onclick={goBack}
-						class="mt-4 flex w-full items-center justify-center gap-2 text-[10px] font-bold text-slate-400 transition-colors hover:text-slate-600"
-					>
-						<span class="material-symbols-outlined text-sm">arrow_back</span> BACK TO START
+						This type
 					</button>
 				</div>
-			</aside>
-
-			<div class="grid min-h-0 grid-cols-1 xl:grid-cols-[45%_55%]">
-				<!-- Left Section: Component Editor (45%) -->
-				<section class="border-r border-slate-200 bg-stone-50/30 p-6 sm:p-8">
-					<div class="max-w-md mx-auto w-full">
-						<header class="mb-8">
-							<div
-								class="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2"
-							>
-								<span
-									class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700"
-								>
-									{activeTab}
-								</span>
-								<span class="material-symbols-outlined text-[10px]">arrow_forward</span>
-								<span
-									class="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-900/30 text-primary dark:text-blue-400 border border-blue-100 dark:border-blue-800"
-								>
-									{wizardStore.activeRefType.replace("-", " ")}
-								</span>
-							</div>
-
-							<h1 class="text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
-								{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Editor
-							</h1>
-							<p class="text-sm text-slate-500 mt-2 leading-relaxed">
-								{#if activeTab === "structure"}
-									Arrange fields and groups to define the citation layout for <span
-										class="font-semibold">{wizardStore.activeRefType}</span
-									>.
-								{:else if activeTab === "punctuation"}
-									Set rule-based punctuation like prefixes, suffixes, and quote logic.
-								{:else}
-									Refine global settings for <span class="font-semibold">{activeTab}</span> across all
-									types.
-								{/if}
-							</p>
-						</header>
-
-						<div class="mb-6">
-							<TypeSelector />
-						</div>
-
-						<!-- Editor Controls -->
-						<div class="w-full">
-							{#if activeTab === "structure"}
-								<ComponentEditor />
-							{:else if activeTab === "punctuation"}
-								<PunctuationEditor />
-							{:else}
-								<RefinementControls
-									{activeTab}
-									{currentOptions}
-									onUpdateOption={updateOptionField}
-									onUpdateDates={updateMonthFormat}
-									onUpdatePageRange={updatePageRangeFormat}
-									onUpdateLocatorLabel={updateLocatorLabel}
-								/>
-							{/if}
-						</div>
-
-						<!-- Undo/Redo Actions -->
-						<div class="flex gap-2 mt-6">
-							<button
-								disabled={!wizardStore.canUndo}
-								onclick={() => wizardStore.undo()}
-								class="flex-1 rounded border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors flex justify-center items-center"
-							>
-								<span class="material-symbols-outlined inline mr-1 text-base">undo</span> Undo
-							</button>
-							<button
-								disabled={!wizardStore.canRedo}
-								onclick={() => wizardStore.redo()}
-								class="flex-1 rounded border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 transition-colors flex justify-center items-center"
-							>
-								<span class="material-symbols-outlined inline mr-1 text-base">redo</span> Redo
-							</button>
-						</div>
-					</div>
-				</section>
-
-				<!-- Right Section: Live Preview (55%) -->
-				<section class="flex flex-col items-center bg-stone-100 p-8 lg:p-12">
-					<div class="w-full max-w-2xl">
-						<div class="flex items-center justify-between mb-4 w-full px-2">
-							<span class="text-xs font-bold uppercase tracking-widest text-slate-400"
-								>Live Preview</span
-							>
-						</div>
-
-						<!-- Preview Document Surface -->
-						<div
-							class="bg-white shadow-lg rounded-lg p-10 lg:p-16 min-h-[500px] border border-stone-200 live-preview-content"
-						>
-							<div class="border-b border-stone-100 pb-6 mb-8 text-center">
-								<h4
-									class="text-stone-400 text-xs font-bold tracking-widest uppercase mb-2 font-headline"
-								>
-									Style Preview
-								</h4>
-								<div class="h-0.5 w-8 bg-primary mx-auto"></div>
-							</div>
-
-							<InteractivePreview />
-						</div>
-					</div>
-				</section>
 			</div>
-		</div>
+
+			<div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+				<TypeSelector />
+			</div>
+
+			<RefinementControls
+				{currentOptions}
+				activeTab={wizardStore.selectedComponent?.componentType === "issued" ? "dates" : undefined}
+				onUpdateOption={updateOptionField}
+				onUpdateDates={updateMonthFormat}
+				onUpdatePageRange={updatePageRangeFormat}
+				onUpdateLocatorLabel={updateLocatorLabel}
+			/>
+
+			<button
+				onclick={startOver}
+				class="flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-600 transition hover:border-slate-300 hover:text-slate-950"
+			>
+				<RotateCcw class="size-4" />
+				Start Over
+			</button>
+		</section>
+
+		<section class="min-h-[620px] rounded-2xl border border-slate-200 bg-slate-100 p-5 shadow-sm">
+			<div class="mx-auto max-w-3xl">
+				<p class="mb-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+					Interactive Preview
+				</p>
+				<InteractivePreview />
+			</div>
+		</section>
 	</main>
 </div>
-
-<style>
-	:global(.live-preview-content) {
-		font-family: var(--font-serif);
-	}
-</style>
