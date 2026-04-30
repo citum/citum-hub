@@ -6,6 +6,7 @@
 	onMount(() => {
 		wizardStore.setPhase("quick-start");
 		wizardStore.setStep(1);
+		wizardStore.setRouteStep("field");
 	});
 </script>
 

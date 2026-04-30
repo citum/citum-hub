@@ -3,24 +3,15 @@
 	import { wizardStore } from "$lib/stores/wizard.svelte";
 	import { FAMILY_OPTIONS, FIELD_DEFAULTS } from "$lib/types/wizard";
 	import type { StyleFamily } from "$lib/types/wizard";
+	import { ArrowLeft, ArrowRight, Check, MessageSquareQuote } from "lucide-svelte";
 
 	async function selectFamily(familyId: StyleFamily) {
 		wizardStore.setFamily(familyId);
 		wizardStore.setStep(3);
+		wizardStore.setRouteStep("style");
 
 		// Generate base style from family/preset
-		const presetId =
-			familyId === "author-date" ? "apa" : familyId === "numeric" ? "vancouver" : "chicago-note";
-		wizardStore.setPresetId(presetId);
-		await wizardStore.generateFromIntent({
-			class:
-				familyId === "author-date"
-					? "author_date"
-					: familyId === "numeric"
-						? "numeric"
-						: "footnote",
-			from_preset: presetId,
-		});
+		await wizardStore.generateDefaultStyle();
 
 		await goto("/create/build/style");
 	}
@@ -37,13 +28,13 @@
 			onclick={() => history.back()}
 			class="absolute top-4 sm:top-8 left-4 sm:left-8 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center justify-center p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800"
 		>
-			<span class="material-symbols-outlined">arrow_back</span>
+			<ArrowLeft class="size-5" />
 		</button>
-		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 2 of 5</p>
+		<p class="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2 sm:mb-3">Step 2 of 7</p>
 		<div class="h-1.5 w-full bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
 			<div
-				class="h-full bg-primary rounded-full transition-all duration-500"
-				style="width: 40%"
+				class="h-full bg-emerald-600 rounded-full transition-all duration-500"
+				style="width: 28.5714%"
 			></div>
 		</div>
 		<h2 class="text-2xl sm:text-3xl font-bold mt-6 sm:mt-8 text-slate-900 dark:text-white">
@@ -61,29 +52,27 @@
 			<button
 				onclick={() => selectFamily(family.id)}
 				class="group relative flex flex-col p-6 sm:p-8 bg-white dark:bg-slate-800 border-2 rounded-xl text-left transition-all hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent {isRecommended
-					? 'border-primary dark:border-primary shadow-[0_0_15px_rgba(19,91,236,0.1)]'
-					: 'border-slate-200 dark:border-slate-700 hover:border-primary/50 dark:hover:border-primary/50'}"
+					? 'border-emerald-500 dark:border-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.12)]'
+					: 'border-slate-200 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500'}"
 			>
 				{#if isRecommended}
 					<div
-						class="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap"
+						class="absolute -top-3 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center gap-1 shadow-sm whitespace-nowrap"
 					>
-						<span class="material-symbols-outlined text-[14px]">star</span>
+						<Check class="size-3.5" />
 						Recommended format
 					</div>
 				{/if}
 
 				<div class="w-full flex justify-between items-start mb-4">
 					<h3
-						class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors"
+						class="text-xl font-bold text-slate-900 dark:text-white group-hover:text-emerald-700 transition-colors"
 					>
 						{family.label}
 					</h3>
-					<span
-						class="material-symbols-outlined text-slate-300 dark:text-slate-600 group-hover:text-primary transition-colors"
-					>
-						arrow_forward
-					</span>
+					<ArrowRight
+						class="size-5 text-slate-300 transition-colors group-hover:text-emerald-700"
+					/>
 				</div>
 
 				<p class="text-sm text-slate-500 dark:text-slate-400 mb-6 flex-grow">
@@ -93,6 +82,7 @@
 				<div
 					class="w-full bg-slate-50 dark:bg-slate-900 p-4 rounded-lg border border-slate-100 dark:border-slate-700"
 				>
+					<MessageSquareQuote class="mb-3 size-4 text-slate-400" />
 					<p class="font-serif text-[15px] leading-relaxed text-slate-700 dark:text-slate-300">
 						{family.exampleText}
 					</p>
@@ -108,31 +98,16 @@
 				const defaultFamily =
 					wizardStore.family ??
 					(wizardStore.field ? FIELD_DEFAULTS[wizardStore.field] : "author-date");
-				const presetId =
-					defaultFamily === "author-date"
-						? "apa"
-						: defaultFamily === "numeric"
-							? "vancouver"
-							: "chicago-note";
 
 				wizardStore.setPhase("visual-customizer");
 				wizardStore.setFamily(defaultFamily);
-				wizardStore.setPresetId(presetId);
+				wizardStore.setRouteStep("customize");
 
-				await wizardStore.generateFromIntent({
-					class:
-						defaultFamily === "author-date"
-							? "author_date"
-							: defaultFamily === "numeric"
-								? "numeric"
-								: "footnote",
-					from_preset: presetId,
-				});
+				await wizardStore.generateDefaultStyle();
 				goto("/create/build/customize");
 			}}
-			class="text-sm font-medium text-slate-500 hover:text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
+			class="text-sm font-medium text-slate-500 hover:text-emerald-700 transition-colors flex items-center justify-center gap-2 mx-auto"
 		>
-			<span class="material-symbols-outlined text-lg">settings_suggest</span>
 			I want to customize this further
 		</button>
 	</div>

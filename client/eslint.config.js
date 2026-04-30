@@ -24,6 +24,14 @@ export default tseslint.config(
 		},
 	},
 	{
-		ignores: ["build/", ".svelte-kit/", "dist/", "node_modules/", "src/api/wasm-bridge/"],
+		ignores: [
+			"build/",
+			".svelte-kit/",
+			"dist/",
+			"node_modules/",
+			"src/api/wasm-bridge/",
+			"src/lib/wasm/pkg/",
+			"temp_app/dist/",
+		],
 	}
 );

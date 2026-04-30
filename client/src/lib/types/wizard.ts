@@ -12,6 +12,15 @@ export type CitationField =
 
 export type WizardPhase = "quick-start" | "visual-customizer" | "advanced";
 
+export type WizardStep =
+	| "field"
+	| "family"
+	| "style"
+	| "refine"
+	| "review"
+	| "customize"
+	| "advanced";
+
 /** Maps fields to their default style families. */
 export const FIELD_DEFAULTS: Record<CitationField, StyleFamily> = {
 	sciences: "numeric",
@@ -163,6 +172,58 @@ export interface AxisChoices {
 	bookEmphasis?: "italic" | "plain";
 	repeatCitation?: "ibid" | "short-title" | "full";
 	hasBibliography?: boolean;
+}
+
+export interface AxisChoice {
+	value: string | number | boolean | null;
+	label: string;
+	previewHtml?: string | null;
+}
+
+export interface AxisDefinition {
+	id: keyof AxisChoices;
+	question: string;
+	choices: AxisChoice[];
+}
+
+export interface PresetAxisSignature {
+	presetId: string;
+	family: StyleFamily;
+	choices: Partial<AxisChoices>;
+}
+
+export interface PreviewCitation {
+	items: Array<{ id: string; locator?: { label: string; value: string } }>;
+	mode: "integral" | "non-integral";
+}
+
+export interface PreviewReferenceSet {
+	id: string;
+	references: Record<string, unknown>;
+	citations: {
+		parenthetical: PreviewCitation;
+		narrative: PreviewCitation;
+	};
+}
+
+export interface PreviewResult {
+	parenthetical: string | null;
+	narrative: string | null;
+	note: string | null;
+	bibliography: string | null;
+}
+
+export interface WizardSession {
+	version: 1;
+	phase: WizardPhase;
+	step: WizardStep;
+	field: CitationField | null;
+	family: StyleFamily | null;
+	axisChoices: Partial<AxisChoices>;
+	presetId: string | null;
+	styleYaml: string;
+	styleName: string;
+	activeRefType: string;
 }
 
 export interface PresetInfo {
