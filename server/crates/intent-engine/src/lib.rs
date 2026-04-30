@@ -721,11 +721,11 @@ impl StyleIntent {
 
             if matches!(effective_class, Some(CitationClass::AuthorDate) | Some(CitationClass::Label)) {
                 // For author-date/label styles, we want parenthetical citations to be wrapped in parentheses.
-                citation_spec.wrap = Some(citum_schema::template::WrapPunctuation::Parentheses);
+                citation_spec.wrap = Some(citum_schema::template::WrapPunctuation::Parentheses.into());
 
                 // Narrative citations should NOT have a global wrap (they have Author (Date) structure).
                 citation_spec.integral = Some(Box::new(citum_schema::CitationSpec {
-                    wrap: Some(citum_schema::template::WrapPunctuation::None),
+                    wrap: None,
                     ..Default::default()
                 }));
             }

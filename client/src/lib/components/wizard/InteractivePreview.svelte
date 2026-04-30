@@ -22,17 +22,17 @@
 		const classes = Array.from(el.classList);
 		const cslnClass = classes.find(
 			(c) =>
-				c.startsWith("csln-") &&
-				c !== "csln-entry" &&
-				c !== "csln-bibliography" &&
-				c !== "csln-citation"
+				c.startsWith("citum-") &&
+				c !== "citum-entry" &&
+				c !== "citum-bibliography" &&
+				c !== "citum-citation"
 		);
 		if (!cslnClass) return null;
 
 		const indexStr = el.getAttribute("data-index");
 		const index = indexStr ? parseInt(indexStr) : null;
 
-		const type = cslnClass.replace("csln-", "");
+		const type = cslnClass.replace("citum-", "");
 		const labels: Record<string, string> = {
 			author: "Author",
 			editor: "Editor",
@@ -55,12 +55,12 @@
 
 	function handleInteraction(e: MouseEvent | KeyboardEvent) {
 		const target = e.target as HTMLElement;
-		const cslnEl = target.closest('[class*="csln-"]') as HTMLElement;
+		const cslnEl = target.closest('[class*="citum-"]') as HTMLElement;
 
 		if (
 			!cslnEl ||
-			cslnEl.classList.contains("csln-entry") ||
-			cslnEl.classList.contains("csln-bibliography")
+			cslnEl.classList.contains("citum-entry") ||
+			cslnEl.classList.contains("citum-bibliography")
 		) {
 			if (e.type === "mousemove") tooltipInfo = null;
 			return;
@@ -89,12 +89,12 @@
 
 		// Clear all selections
 		containerRef
-			.querySelectorAll(".csln-selected")
-			.forEach((el) => el.classList.remove("csln-selected"));
+			.querySelectorAll(".citum-selected")
+			.forEach((el) => el.classList.remove("citum-selected"));
 
 		if (selected?.astIndex !== null && selected?.astIndex !== undefined) {
 			containerRef.querySelectorAll(`[data-index="${selected.astIndex}"]`).forEach((el) => {
-				el.classList.add("csln-selected");
+				el.classList.add("citum-selected");
 			});
 		}
 	});
@@ -108,10 +108,10 @@
 				wizardStore.previewHtml.note ||
 				wizardStore.previewHtml.bibliography)
 		) {
-			const elements = containerRef.querySelectorAll('[class^="csln-"]');
+			const elements = containerRef.querySelectorAll('[class^="citum-"]');
 			elements.forEach((el) => {
-				if (!el.classList.contains("csln-entry") && !el.classList.contains("csln-bibliography")) {
-					el.classList.add("csln-interactive");
+				if (!el.classList.contains("citum-entry") && !el.classList.contains("citum-bibliography")) {
+					el.classList.add("citum-interactive");
 				}
 			});
 		}
@@ -218,19 +218,19 @@
 </div>
 
 <style>
-	:global(.csln-interactive) {
+	:global(.citum-interactive) {
 		cursor: pointer;
 		border-radius: 2px;
 		transition: all 0.15s ease;
 	}
 
-	:global(.csln-interactive:hover) {
+	:global(.citum-interactive:hover) {
 		outline: 2px solid rgba(19, 91, 236, 0.3);
 		outline-offset: 1px;
 		background: rgba(19, 91, 236, 0.05);
 	}
 
-	:global(.csln-selected) {
+	:global(.citum-selected) {
 		outline: 3px solid #135bec;
 		outline-offset: 2px;
 		background: rgba(19, 91, 236, 0.15);
@@ -238,30 +238,30 @@
 	}
 
 	/* Type-specific hover colors in preview */
-	:global(.csln-author:hover),
-	:global(.csln-editor:hover),
-	:global(.csln-translator:hover) {
+	:global(.citum-author:hover),
+	:global(.citum-editor:hover),
+	:global(.citum-translator:hover) {
 		background: rgba(16, 185, 129, 0.15);
 		border-radius: 4px;
 	}
-	:global(.csln-issued:hover),
-	:global(.csln-accessed:hover) {
+	:global(.citum-issued:hover),
+	:global(.citum-accessed:hover) {
 		background: rgba(249, 115, 22, 0.15);
 		border-radius: 4px;
 	}
-	:global(.csln-title:hover),
-	:global(.csln-container-title:hover) {
+	:global(.citum-title:hover),
+	:global(.citum-container-title:hover) {
 		background: rgba(168, 85, 247, 0.15);
 		border-radius: 4px;
 	}
-	:global(.csln-volume:hover),
-	:global(.csln-issue:hover),
-	:global(.csln-pages:hover) {
+	:global(.citum-volume:hover),
+	:global(.citum-issue:hover),
+	:global(.citum-pages:hover) {
 		background: rgba(99, 102, 241, 0.15);
 		border-radius: 4px;
 	}
-	:global(.csln-doi:hover),
-	:global(.csln-url:hover) {
+	:global(.citum-doi:hover),
+	:global(.citum-url:hover) {
 		background: rgba(14, 165, 233, 0.15);
 		border-radius: 4px;
 	}

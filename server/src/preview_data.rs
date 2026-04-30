@@ -13,47 +13,28 @@ use citum_engine::{Bibliography, Reference};
 use citum_schema::reference::{
     types::{
         Collection, CollectionComponent, CollectionType, Monograph, MonographComponentType,
-        MonographType, NumOrStr, Parent, Serial, SerialComponent, SerialComponentType, SerialType,
-        Title,
+        MonographType, NumOrStr, Serial, SerialComponent, SerialComponentType, SerialType, Title,
     },
-    Contributor, ContributorList, EdtfString, MultilingualString, SimpleName, StructuredName,
+    Contributor, ContributorList, EdtfString, InputReference, MultilingualString, Publisher,
+    SimpleName, StructuredName, WorkRelation,
 };
 use url::Url;
 
 // ── factories ──────────────────────────────────────────────────────────
+//
+// All five reference structs derive Default in the upgraded schema, so the
+// factories only set the fields the caller cares about and let everything
+// else default. Dropped fields (report_number, collection_number,
+// original_*, container_title, recipient, interviewer, guest) are no
+// longer in the schema; the new container/numbering shorthand fields are
+// reachable via Default and can be set on the returned struct if needed.
 
 fn empty_monograph(id: &str, r#type: MonographType, title: Title) -> Monograph {
     Monograph {
-        id: Some(id.to_string()),
+        id: Some(id.into()),
         r#type,
         title: Some(title),
-        author: None,
-        editor: None,
-        translator: None,
-        issued: EdtfString::default(),
-        publisher: None,
-        url: None,
-        accessed: None,
-        language: None,
-        field_languages: Default::default(),
-        note: None,
-        isbn: None,
-        doi: None,
-        edition: None,
-        report_number: None,
-        collection_number: None,
-        genre: None,
-        medium: None,
-        keywords: None,
-        original_date: None,
-        original_title: None,
-        ads_bibcode: None,
-        archive: None,
-        archive_location: None,
-        container_title: None,
-        recipient: None,
-        interviewer: None,
-        guest: None,
+        ..Default::default()
     }
 }
 
@@ -61,10 +42,7 @@ fn empty_serial(title: Title, r#type: SerialType) -> Serial {
     Serial {
         r#type,
         title: Some(title),
-        short_title: None,
-        editor: None,
-        publisher: None,
-        issn: None,
+        ..Default::default()
     }
 }
 
@@ -72,50 +50,22 @@ fn empty_serial_component(
     id: &str,
     r#type: SerialComponentType,
     title: Option<Title>,
-    parent: Parent<Serial>,
+    container: WorkRelation,
 ) -> SerialComponent {
     SerialComponent {
-        id: Some(id.to_string()),
+        id: Some(id.into()),
         r#type,
         title,
-        author: None,
-        translator: None,
-        issued: EdtfString::default(),
-        parent,
-        url: None,
-        accessed: None,
-        language: None,
-        field_languages: Default::default(),
-        note: None,
-        doi: None,
-        pages: None,
-        volume: None,
-        issue: None,
-        genre: None,
-        medium: None,
-        keywords: None,
-        ads_bibcode: None,
+        container: Some(container),
+        ..Default::default()
     }
 }
 
 fn empty_collection(r#type: CollectionType, title: Option<Title>) -> Collection {
     Collection {
-        id: None,
         r#type,
         title,
-        short_title: None,
-        editor: None,
-        translator: None,
-        issued: EdtfString::default(),
-        publisher: None,
-        collection_number: None,
-        url: None,
-        accessed: None,
-        language: None,
-        field_languages: Default::default(),
-        note: None,
-        isbn: None,
-        keywords: None,
+        ..Default::default()
     }
 }
 
@@ -123,26 +73,14 @@ fn empty_collection_component(
     id: &str,
     r#type: MonographComponentType,
     title: Option<Title>,
-    parent: Parent<Collection>,
+    container: WorkRelation,
 ) -> CollectionComponent {
     CollectionComponent {
-        id: Some(id.to_string()),
+        id: Some(id.into()),
         r#type,
         title,
-        author: None,
-        translator: None,
-        issued: EdtfString::default(),
-        parent,
-        pages: None,
-        url: None,
-        accessed: None,
-        language: None,
-        field_languages: Default::default(),
-        note: None,
-        doi: None,
-        genre: None,
-        medium: None,
-        keywords: None,
+        container: Some(container),
+        ..Default::default()
     }
 }
 
@@ -161,6 +99,19 @@ fn org(org_name: &str) -> Contributor {
         name: MultilingualString::Simple(org_name.to_string()),
         location: None,
     })
+}
+
+/// Convert an org-style Contributor to a Publisher. `Publisher` became a
+/// distinct type in citum-schema 0.20+; the fixtures still author publishers
+/// via `org()` for ergonomic parity with author/editor.
+fn to_publisher(c: Option<Contributor>) -> Option<Publisher> {
+    match c? {
+        Contributor::SimpleName(simple) => Some(Publisher {
+            name: simple.name,
+            place: None,
+        }),
+        _ => None,
+    }
 }
 
 fn names(list: &[(&str, &str)]) -> Contributor {
@@ -187,7 +138,7 @@ fn book(
     let mut monograph = empty_monograph(id, MonographType::Book, title(book_title));
     monograph.author = Some(author);
     monograph.issued = edtf(year);
-    monograph.publisher = publisher;
+    monograph.publisher = to_publisher(publisher);
 
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
@@ -204,20 +155,21 @@ fn article(
     pages: Option<&str>,
     doi: Option<&str>,
 ) -> (String, Reference) {
-    let parent = Parent::Embedded(empty_serial(title(journal), SerialType::AcademicJournal));
+    let serial = empty_serial(title(journal), SerialType::AcademicJournal);
+    let container = WorkRelation::Embedded(Box::new(InputReference::Serial(Box::new(serial))));
     let mut component = empty_serial_component(
         id,
         SerialComponentType::Article,
         Some(title(art_title)),
-        parent,
+        container,
     );
 
     component.author = Some(author);
     component.issued = edtf(year);
     component.doi = doi.map(|d| d.to_string());
     component.pages = pages.map(|p| p.to_string());
-    component.volume = volume.map(|v| NumOrStr::Str(v.to_string()));
-    component.issue = issue.map(|i| NumOrStr::Str(i.to_string()));
+    component.volume = volume.map(|v| v.to_string());
+    component.issue = issue.map(|i| i.to_string());
 
     (
         id.to_string(),
@@ -239,14 +191,14 @@ fn chapter(
     let mut coll = empty_collection(CollectionType::EditedBook, Some(title(coll_title)));
     coll.editor = editors;
     coll.issued = edtf(year);
-    coll.publisher = publisher;
+    coll.publisher = to_publisher(publisher);
 
-    let parent = Parent::Embedded(coll);
+    let container = WorkRelation::Embedded(Box::new(InputReference::Collection(Box::new(coll))));
     let mut component = empty_collection_component(
         id,
         MonographComponentType::Chapter,
         Some(title(ch_title)),
-        parent,
+        container,
     );
 
     component.author = Some(author);
@@ -269,7 +221,7 @@ fn report(
     let mut monograph = empty_monograph(id, MonographType::Report, title(report_title));
     monograph.author = Some(author);
     monograph.issued = edtf(year);
-    monograph.publisher = publisher;
+    monograph.publisher = to_publisher(publisher);
 
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
@@ -284,7 +236,7 @@ fn thesis(
     let mut monograph = empty_monograph(id, MonographType::Thesis, title(thesis_title));
     monograph.author = Some(author);
     monograph.issued = edtf(year);
-    monograph.publisher = publisher;
+    monograph.publisher = to_publisher(publisher);
 
     (id.to_string(), Reference::Monograph(Box::new(monograph)))
 }
@@ -324,7 +276,8 @@ pub fn humanities_refs() -> Bibliography {
     // Set translator and original-date on the inner Monograph
     if let Reference::Monograph(ref mut m) = r {
         m.translator = Some(name("Sheridan", "Alan"));
-        m.original_date = Some(edtf("1975"));
+        // original_date dropped in citum-schema 0.20+; original-publication-year
+        // is now expressed via container WorkRelation, deferred until needed.
     }
     bib.insert(id, r);
 

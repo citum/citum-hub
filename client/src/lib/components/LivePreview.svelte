@@ -33,17 +33,17 @@
 	}
 
 	/* Citum Engine Styling */
-	:global(.csln-bibliography) {
+	:global(.citum-bibliography) {
 		display: flex;
 		flex-direction: column;
 		gap: 0.75rem;
 	}
 
-	:global(.csln-entry) {
+	:global(.citum-entry) {
 		margin-bottom: 0.25rem;
 	}
 
-	:global(.csln-citation) {
+	:global(.citum-citation) {
 		cursor: help;
 		border-bottom: 1px dotted rgba(0, 0, 0, 0.1);
 	}

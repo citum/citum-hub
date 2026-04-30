@@ -51,9 +51,9 @@
 </div>
 
 <style>
-	:global(.highlight-contributors .csln-author),
-	:global(.highlight-contributors .csln-editor),
-	:global(.highlight-contributors .csln-translator) {
+	:global(.highlight-contributors .citum-author),
+	:global(.highlight-contributors .citum-editor),
+	:global(.highlight-contributors .citum-translator) {
 		background-color: color-mix(in srgb, var(--color-primary, #3b82f6) 15%, transparent);
 		border-radius: 2px;
 		padding: 0 2px;
