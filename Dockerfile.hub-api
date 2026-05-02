@@ -24,8 +24,13 @@ COPY server/ ./server/
 # Compile WASM bridge (nodejs target)
 RUN cd server/crates/wasm-bridge && wasm-pack build --target nodejs --release
 
-# Clone citum-core for styles and registry
-RUN git clone https://github.com/citum/citum-core.git /app/citum-core
+# Fetch citum-core for styles and registry
+# Cache-busting: ADD from a remote URL checks for changes (ETag/Last-Modified)
+# Using the tarball archive avoids GitHub REST API rate limits and is faster than a full clone.
+ADD https://github.com/citum/citum-core/archive/refs/heads/main.tar.gz /tmp/citum-core.tar.gz
+RUN mkdir -p /app/citum-core && \
+    tar -xzf /tmp/citum-core.tar.gz -C /app/citum-core --strip-components=1 && \
+    rm /tmp/citum-core.tar.gz
 
 # Copy client source and install deps
 COPY client/ ./client/
