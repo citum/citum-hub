@@ -3,8 +3,10 @@
 	import { page } from "$app/stores";
 	import favicon from "$lib/assets/favicon.svg";
 	import { auth } from "$lib/stores/auth";
+	import { env } from "$env/dynamic/public";
 
 	let { children } = $props();
+	const commitHash = env.PUBLIC_COMMIT_HASH;
 	const isCustomizerRoute = $derived($page.url.pathname.startsWith("/create"));
 
 	function handleLogin() {
@@ -125,6 +127,11 @@
 				<p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
 					© 2024 Citum Hub. All rights reserved.
 				</p>
+				{#if commitHash}
+					<p class="mt-2 text-[9px] font-mono text-slate-300">
+						Build: {commitHash.slice(0, 7)}
+					</p>
+				{/if}
 			</div>
 		</footer>
 	{/if}
