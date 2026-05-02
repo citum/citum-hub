@@ -2,6 +2,7 @@ import { browser } from "$app/environment";
 import type { PreviewResult, StyleFamily } from "$lib/types/wizard";
 import { PREVIEW_REFERENCE_SETS } from "$lib/data/preview-fixtures";
 import { normalizeCitationPreviewHtml } from "$lib/utils/preview-output";
+import yaml from "js-yaml";
 
 type WasmBridge = typeof import("./pkg/wasm_bridge");
 
@@ -12,6 +13,16 @@ interface PreviewRenderOptions {
 	referenceType?: string;
 	previewContext?: string;
 	injectAstIndices?: boolean;
+}
+
+function styleHasBibliography(styleYaml: string): boolean {
+	try {
+		const parsed = yaml.load(styleYaml);
+		if (!parsed || typeof parsed !== "object") return true;
+		return (parsed as Record<string, unknown>).bibliography !== null;
+	} catch {
+		return true;
+	}
 }
 
 async function loadBridge(): Promise<WasmBridge> {
@@ -131,11 +142,15 @@ export async function renderStylePreview(
 		const bibliography = bridge.renderBibliography(styleYaml, refs);
 
 		if (family === "note") {
+			const note =
+				narrative && narrative !== parenthetical
+					? `${parenthetical}<br>${narrative}`
+					: parenthetical;
 			return {
 				parenthetical: null,
 				narrative: null,
-				note: parenthetical,
-				bibliography,
+				note,
+				bibliography: styleHasBibliography(styleYaml) ? bibliography : null,
 			};
 		}
 
@@ -143,7 +158,7 @@ export async function renderStylePreview(
 			parenthetical,
 			narrative,
 			note: null,
-			bibliography,
+			bibliography: styleHasBibliography(styleYaml) ? bibliography : null,
 		};
 	} catch {
 		return renderViaServer(styleYaml, family, options);

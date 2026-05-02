@@ -29,12 +29,17 @@ import {
 import type { PreviewContext } from "$lib/types/decision";
 import {
 	applyStyleUpdatesToYaml,
+	applyWizardSessionToYaml,
 	defaultPresetForFamily,
 	getAxisChoiceUpdates,
 	getOptionsFromYaml,
+	getStyleId,
+	getStyleTitle,
 	intentForPreset,
 	matchPreset,
 	normalizeGeneratedStyleForFamily,
+	slugifyStyleId,
+	suggestStyleName,
 	type WizardStyleUpdate,
 } from "$lib/utils/wizard-flow";
 import {
@@ -54,6 +59,7 @@ let axisChoices = $state<Partial<AxisChoices>>({});
 let presetId = $state<string | null>(null);
 let styleYaml = $state("");
 let styleName = $state("");
+let styleId = $state("");
 let styleInfo = $state<Record<string, any> | null>(null);
 let selectedComponent = $state<ComponentSelection | null>(null);
 let activeRefType = $state("article-journal");
@@ -118,7 +124,51 @@ function updateStyleMetadataFromYaml() {
 		if (styleInfo.title && !styleName) {
 			styleName = String(styleInfo.title);
 		}
+		if (styleInfo.id && !styleId) {
+			styleId = String(styleInfo.id);
+		}
 	}
+}
+
+function ensureUsableStyleMetadata() {
+	if (!styleYaml) return;
+
+	const yamlTitle = getStyleTitle(styleYaml);
+	const yamlId = getStyleId(styleYaml);
+	const genericTitle =
+		!yamlTitle || ["Custom Style", "My Custom Style", "Untitled Style"].includes(yamlTitle);
+	const genericId =
+		!yamlId || ["custom-style", "my-custom-style", "untitled-style"].includes(yamlId);
+	const nextName =
+		styleName.trim() ||
+		(genericTitle ? suggestStyleName({ field, family, presetId }) : yamlTitle) ||
+		"Custom citation style";
+	const nextId = styleId.trim() || (genericId ? slugifyStyleId(nextName) : yamlId);
+
+	styleName = nextName;
+	styleId = slugifyStyleId(nextId || nextName);
+	styleYaml = applyWizardSessionToYaml(styleYaml, {
+		name: styleName,
+		id: styleId,
+		field,
+		family,
+		axisChoices,
+		presetId,
+	});
+	updateStyleMetadataFromYaml();
+}
+
+function writeWizardSessionToYaml() {
+	if (!styleYaml) return;
+	styleYaml = applyWizardSessionToYaml(styleYaml, {
+		name: styleName,
+		id: styleId || slugifyStyleId(styleName),
+		field,
+		family,
+		axisChoices,
+		presetId,
+	});
+	updateStyleMetadataFromYaml();
 }
 
 /** Update a specific path in the style YAML.
@@ -414,9 +464,7 @@ async function generateFromIntent(intentFields: Record<string, string | boolean 
 			has_bibliography: intentFields["has_bibliography"] ?? null,
 		};
 		styleYaml = normalizeGeneratedStyleForFamily(await generateStyleFromIntent(intentObj), family);
-
-		// Extract metadata (info) from YAML
-		updateStyleMetadataFromYaml();
+		ensureUsableStyleMetadata();
 
 		// Reset history with new base
 		history = [styleYaml];
@@ -486,6 +534,7 @@ function reset() {
 	presetId = null;
 	styleYaml = "";
 	styleName = "";
+	styleId = "";
 	styleInfo = null;
 	selectedComponent = null;
 	activeRefType = "article-journal";
@@ -522,6 +571,7 @@ function persist() {
 				presetId,
 				styleYaml,
 				styleName,
+				styleId,
 				styleInfo,
 				activeRefType,
 			})
@@ -546,10 +596,12 @@ function restore(): boolean {
 		presetId = data.presetId ?? null;
 		styleYaml = data.styleYaml ?? "";
 		styleName = data.styleName ?? "";
+		styleId = data.styleId ?? "";
 		styleInfo = data.styleInfo ?? null;
 		activeRefType = data.activeRefType ?? "article-journal";
 		previewContext = "default";
 		if (styleYaml) {
+			ensureUsableStyleMetadata();
 			history = [styleYaml];
 			historyIndex = 0;
 		}
@@ -587,6 +639,9 @@ export const wizardStore = {
 	},
 	get styleName() {
 		return styleName;
+	},
+	get styleId() {
+		return styleId;
 	},
 	get styleInfo() {
 		return styleInfo;
@@ -658,7 +713,28 @@ export const wizardStore = {
 		persist();
 	},
 	setStyleName(n: string) {
-		styleName = n;
+		styleName = n.slice(0, 100);
+		if (!styleId || styleId === slugifyStyleId(getStyleTitle(styleYaml) ?? "")) {
+			styleId = slugifyStyleId(styleName);
+		}
+		if (styleYaml) {
+			writeWizardSessionToYaml();
+		}
+		persist();
+	},
+	setStyleId(id: string) {
+		styleId = slugifyStyleId(id);
+		if (styleYaml) {
+			writeWizardSessionToYaml();
+		}
+		persist();
+	},
+	setStyleMetadata(name: string, id: string) {
+		styleName = name.slice(0, 100);
+		styleId = slugifyStyleId(id);
+		if (styleYaml) {
+			writeWizardSessionToYaml();
+		}
 		persist();
 	},
 	setSelectedComponent(c: ComponentSelection | null) {

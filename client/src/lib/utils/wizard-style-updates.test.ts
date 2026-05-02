@@ -34,14 +34,22 @@ describe("wizard-style-updates", () => {
 		]);
 	});
 
-	test("maps numeric citation wrappers onto the generated citation template", () => {
+	test("maps numeric citation wrappers onto generated citation templates", () => {
 		expect(getCitationNumberUpdates("paren")).toEqual([
 			{ path: "citation.template.0.wrap", value: "parentheses" },
 			{ path: "citation.template.0.suffix", value: undefined },
+			{ path: "citation.non-integral.template.0.wrap", value: "parentheses" },
+			{ path: "citation.non-integral.template.0.suffix", value: undefined },
+			{ path: "citation.integral.template.1.wrap", value: "parentheses" },
+			{ path: "citation.integral.template.1.suffix", value: undefined },
 		]);
 		expect(getCitationNumberUpdates("period")).toEqual([
 			{ path: "citation.template.0.wrap", value: "none" },
 			{ path: "citation.template.0.suffix", value: "." },
+			{ path: "citation.non-integral.template.0.wrap", value: "none" },
+			{ path: "citation.non-integral.template.0.suffix", value: "." },
+			{ path: "citation.integral.template.1.wrap", value: "none" },
+			{ path: "citation.integral.template.1.suffix", value: "." },
 		]);
 	});
 });

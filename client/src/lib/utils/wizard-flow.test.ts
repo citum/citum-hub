@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
 	AXES_BY_FAMILY,
+	applyWizardSessionToYaml,
 	applyStyleUpdatesToYaml,
 	buildWizardMetadata,
 	getAxisChoiceUpdates,
@@ -10,6 +11,8 @@ import {
 	isExactPresetMatch,
 	matchPreset,
 	normalizeGeneratedStyleForFamily,
+	slugifyStyleId,
+	validateStyleMetadata,
 } from "./wizard-flow";
 
 describe("wizard-flow helpers", () => {
@@ -29,6 +32,10 @@ describe("wizard-flow helpers", () => {
 		expect(getAxisChoiceUpdates("numberBracket", "period")).toEqual([
 			{ path: "citation.template.0.wrap", value: "none" },
 			{ path: "citation.template.0.suffix", value: "." },
+			{ path: "citation.non-integral.template.0.wrap", value: "none" },
+			{ path: "citation.non-integral.template.0.suffix", value: "." },
+			{ path: "citation.integral.template.1.wrap", value: "none" },
+			{ path: "citation.integral.template.1.suffix", value: "." },
 		]);
 
 		expect(getAxisChoiceUpdates("citationLocation", "endnote")).toEqual([
@@ -90,7 +97,25 @@ describe("wizard-flow helpers", () => {
 			"<p>Smith, J. A. Title.</p>"
 		);
 		expect(getPreviewHtmlForAxis("numeric", "numberBracket", preview)).toBe("(Smith 2024)");
+		expect(getPreviewHtmlForAxis("note", "bookEmphasis", preview)).toBe("1. Smith, Title.");
+		expect(getPreviewHtmlForAxis("note", "hasBibliography", preview)).toBe(
+			"<p>Smith, J. A. Title.</p>"
+		);
 		expect(getPreviewHtmlForAxis("note", "footnoteNameForm", preview)).toBe("1. Smith, Title.");
+	});
+
+	test("normalizes processing for every family", () => {
+		const input = `version: ''\noptions:\n  processing: author-date\ncitation:\n  use-preset: apa\nbibliography:\n  use-preset: apa\n`;
+
+		expect(normalizeGeneratedStyleForFamily(input, "author-date")).toContain(
+			"processing: author-date"
+		);
+		expect(normalizeGeneratedStyleForFamily(input, "author-date")).toContain("version: 0.39.1");
+		expect(normalizeGeneratedStyleForFamily(input, "author-date")).toContain("integral:");
+		expect(normalizeGeneratedStyleForFamily(input, "numeric")).toContain("processing: numeric");
+		expect(normalizeGeneratedStyleForFamily(input, "numeric")).toContain("number: citation-number");
+		expect(normalizeGeneratedStyleForFamily(input, "note")).toContain("processing: note");
+		expect(normalizeGeneratedStyleForFamily(input, "note")).toContain("non-integral:");
 	});
 
 	test("normalizes generated note styles away from author-date-like citations", () => {
@@ -100,8 +125,36 @@ describe("wizard-flow helpers", () => {
 		expect(output).toContain("quote: true");
 		expect(output).toContain("title: parent-serial");
 		expect(output).toContain("variable: locator");
+		expect(output).toContain("integral:");
 		expect(output).toContain("use-preset: chicago-author-date");
+		expect(output).not.toContain("no. ");
 		expect(output).not.toContain("form: short");
+	});
+
+	test("validates and writes style metadata into exported YAML", () => {
+		expect(slugifyStyleId("My Department Style!")).toBe("my-department-style");
+		expect(validateStyleMetadata("Custom Style", "custom-style").nameError).toBeTruthy();
+		expect(validateStyleMetadata("Department Style", "Department Style").idError).toBeTruthy();
+		expect(validateStyleMetadata("Department Style", "department-style")).toEqual({
+			nameError: null,
+			idError: null,
+		});
+
+		const output = applyWizardSessionToYaml(`version: ''\ninfo:\n  title: Custom Style\n`, {
+			name: "Department Style",
+			id: "department-style",
+			field: "humanities",
+			family: "note",
+			axisChoices: { citationLocation: "footnote" },
+			presetId: "chicago-notes",
+		});
+
+		expect(output).toContain("title: Department Style");
+		expect(output).toContain("version: 0.39.1");
+		expect(output).toContain("id: department-style");
+		expect(output).toContain("wizard_v2:");
+		expect(output).toContain("citation_location: footnote");
+		expect(output).toContain("citationLocation: footnote");
 	});
 
 	test("stores v2 metadata under the existing intent payload", () => {
@@ -119,6 +172,7 @@ describe("wizard-flow helpers", () => {
 				family: "note",
 				axis_choices: { hasBibliography: true },
 				preset_id: "chicago-notes",
+				citation_location: "footnote",
 			},
 		});
 	});
