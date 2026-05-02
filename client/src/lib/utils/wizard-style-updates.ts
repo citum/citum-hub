@@ -28,5 +28,15 @@ export function getCitationNumberUpdates(
 	return [
 		{ path: "citation.template.0.wrap", value: wrap },
 		{ path: "citation.template.0.suffix", value: style === "period" ? "." : undefined },
+		{ path: "citation.non-integral.template.0.wrap", value: wrap },
+		{
+			path: "citation.non-integral.template.0.suffix",
+			value: style === "period" ? "." : undefined,
+		},
+		{ path: "citation.integral.template.1.wrap", value: wrap },
+		{
+			path: "citation.integral.template.1.suffix",
+			value: style === "period" ? "." : undefined,
+		},
 	];
 }

@@ -292,6 +292,17 @@ function createEmptyPreviewSet(): PreviewSet {
 	};
 }
 
+function styleHasBibliography(styleYaml: string | undefined): boolean {
+	if (!styleYaml) return true;
+	try {
+		const parsed = yaml.load(styleYaml);
+		if (!parsed || typeof parsed !== "object") return true;
+		return (parsed as Record<string, unknown>).bibliography !== null;
+	} catch {
+		return true;
+	}
+}
+
 function injectLocatorIntoCitation(
 	citation: FixtureCitation,
 	testLocator: string
@@ -352,13 +363,18 @@ async function renderPreviewSet(params: {
 		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
 
 		if (isNotePreview) {
-			previewSet.note = previewNonIntegral;
+			previewSet.note =
+				previewIntegral && previewIntegral !== previewNonIntegral
+					? `${previewNonIntegral}<br>${previewIntegral}`
+					: previewNonIntegral;
 		} else {
 			previewSet.in_text_parenthetical = previewNonIntegral;
 			previewSet.in_text_narrative = previewIntegral;
 		}
 
-		previewSet.bibliography = render_bibliography(previewStyleYaml, refsStr);
+		previewSet.bibliography = styleHasBibliography(previewStyleYaml)
+			? render_bibliography(previewStyleYaml, refsStr)
+			: null;
 		return previewSet;
 	}
 
@@ -380,14 +396,19 @@ async function renderPreviewSet(params: {
 		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
 
 		if (isNotePreview) {
-			previewSet.note = previewNonIntegral;
+			previewSet.note =
+				previewIntegral && previewIntegral !== previewNonIntegral
+					? `${previewNonIntegral}<br>${previewIntegral}`
+					: previewNonIntegral;
 		} else {
 			previewSet.in_text_parenthetical = previewNonIntegral;
 			previewSet.in_text_narrative = previewIntegral;
 		}
 
 		const generatedStyle = generate_style(intentStr);
-		previewSet.bibliography = render_bibliography(generatedStyle, refsStr);
+		previewSet.bibliography = styleHasBibliography(generatedStyle)
+			? render_bibliography(generatedStyle, refsStr)
+			: null;
 	}
 
 	return previewSet;

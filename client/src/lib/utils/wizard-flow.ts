@@ -28,10 +28,57 @@ const CHICAGO_NOTE_CITATION_TEMPLATE = [
 	{ title: "primary", quote: true },
 	{ title: "parent-serial", emph: true },
 	{ number: "volume" },
-	{ number: "issue", prefix: "no. " },
+	{ number: "issue" },
 	{ date: "issued", form: "year" },
 	{ variable: "locator" },
 ];
+
+const AUTHOR_DATE_NON_INTEGRAL_SPEC = {
+	wrap: "parentheses",
+	delimiter: ", ",
+	template: [
+		{ contributor: "author", form: "short" },
+		{ date: "issued", form: "year" },
+		{ variable: "locator" },
+	],
+};
+
+const AUTHOR_DATE_INTEGRAL_SPEC = {
+	delimiter: " ",
+	template: [
+		{ contributor: "author", form: "short" },
+		{
+			items: [{ date: "issued", form: "year" }, { variable: "locator" }],
+			delimiter: ", ",
+			wrap: "parentheses",
+		},
+	],
+};
+
+const NUMERIC_NON_INTEGRAL_SPEC = {
+	template: [{ number: "citation-number" }, { variable: "locator" }],
+};
+
+const NUMERIC_INTEGRAL_SPEC = {
+	delimiter: " ",
+	template: [
+		{
+			contributor: "author",
+			form: "short",
+			shorten: { min: 3, "use-first": 1, "and-others": "et-al" },
+			and: "text",
+		},
+		{ number: "citation-number" },
+	],
+};
+
+const CITUM_STYLE_SCHEMA_VERSION = "0.39.1";
+const GENERIC_STYLE_NAMES = new Set(["custom style", "my custom style", "untitled style"]);
+
+export interface StyleMetadataValidation {
+	nameError: string | null;
+	idError: string | null;
+}
 
 export const WIZARD_STEP_LABELS: Record<WizardStep, string> = {
 	field: "Field",
@@ -383,22 +430,32 @@ export function applyStyleUpdatesToYaml(styleYaml: string, updates: WizardStyleU
 }
 
 export function normalizeGeneratedStyleForFamily(styleYaml: string, family: StyleFamily): string {
-	if (family !== "note") return styleYaml;
-
 	const parsed = yaml.load(styleYaml);
 	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return styleYaml;
 
 	const style = parsed as Record<string, unknown>;
+	style.version = CITUM_STYLE_SCHEMA_VERSION;
 	const options = ((style.options as Record<string, unknown> | undefined) ??= {});
-	options.processing = "note";
+	options.processing =
+		family === "numeric" ? "numeric" : family === "note" ? "note" : "author-date";
 
 	const citation = ((style.citation as Record<string, unknown> | undefined) ??= {});
-	citation.template = structuredClone(CHICAGO_NOTE_CITATION_TEMPLATE);
-	delete citation["use-preset"];
+	if (family === "author-date") {
+		citation["non-integral"] ??= structuredClone(AUTHOR_DATE_NON_INTEGRAL_SPEC);
+		citation.integral ??= structuredClone(AUTHOR_DATE_INTEGRAL_SPEC);
+	} else if (family === "numeric") {
+		citation["non-integral"] ??= structuredClone(NUMERIC_NON_INTEGRAL_SPEC);
+		citation.integral ??= structuredClone(NUMERIC_INTEGRAL_SPEC);
+	} else {
+		citation.template = structuredClone(CHICAGO_NOTE_CITATION_TEMPLATE);
+		citation["non-integral"] ??= { template: structuredClone(CHICAGO_NOTE_CITATION_TEMPLATE) };
+		citation.integral ??= { template: structuredClone(CHICAGO_NOTE_CITATION_TEMPLATE) };
+		delete citation["use-preset"];
 
-	const bibliography = ((style.bibliography as Record<string, unknown> | undefined) ??= {});
-	if (bibliography["use-preset"] === "apa") {
-		bibliography["use-preset"] = "chicago-author-date";
+		const bibliography = ((style.bibliography as Record<string, unknown> | undefined) ??= {});
+		if (bibliography["use-preset"] === "apa") {
+			bibliography["use-preset"] = "chicago-author-date";
+		}
 	}
 
 	return yaml.dump(style, { lineWidth: 120, noRefs: true, quotingType: '"' });
@@ -461,6 +518,13 @@ export function getPreviewHtmlForAxis(
 		bibliography: string | null;
 	}
 ): string {
+	if (family === "note") {
+		if (axisId === "hasBibliography") {
+			return preview.bibliography ?? preview.note ?? "";
+		}
+		return preview.note ?? "";
+	}
+
 	switch (axisId) {
 		case "nameForm":
 		case "articleTitleEmphasis":
@@ -486,6 +550,9 @@ export function buildWizardMetadata(params: {
 	axisChoices: Partial<AxisChoices>;
 	presetId: string | null;
 }) {
+	const citationLocation =
+		params.family === "note" ? (params.axisChoices.citationLocation ?? "footnote") : undefined;
+
 	return {
 		wizard_v2: {
 			version: 1,
@@ -493,8 +560,85 @@ export function buildWizardMetadata(params: {
 			family: params.family,
 			axis_choices: params.axisChoices,
 			preset_id: params.presetId,
+			...(citationLocation ? { citation_location: citationLocation } : {}),
 		},
 	};
+}
+
+export function slugifyStyleId(value: string): string {
+	return value
+		.trim()
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, "-")
+		.replace(/^-+|-+$/g, "")
+		.slice(0, 80);
+}
+
+export function suggestStyleName(params: {
+	field: CitationField | null;
+	family: StyleFamily | null;
+	presetId: string | null;
+}): string {
+	if (params.presetId) return `${params.presetId.replace(/-/g, " ")} style`;
+	if (params.field && params.family) {
+		return `${params.field.replace(/-/g, " ")} ${params.family.replace(/-/g, " ")} style`;
+	}
+	if (params.family) return `${params.family.replace(/-/g, " ")} style`;
+	return "";
+}
+
+export function validateStyleMetadata(name: string, id: string): StyleMetadataValidation {
+	const trimmedName = name.trim();
+	const trimmedId = id.trim();
+	const genericName = GENERIC_STYLE_NAMES.has(trimmedName.toLowerCase());
+
+	return {
+		nameError: !trimmedName
+			? "Name your style before continuing."
+			: trimmedName.length > 100
+				? "Style names must be 100 characters or fewer."
+				: genericName
+					? "Choose a more specific style name."
+					: null,
+		idError: !trimmedId
+			? "Style id is required."
+			: trimmedId.length > 80
+				? "Style ids must be 80 characters or fewer."
+				: slugifyStyleId(trimmedId) !== trimmedId
+					? "Use lowercase letters, numbers, and hyphens only."
+					: null,
+	};
+}
+
+export function applyWizardSessionToYaml(
+	styleYaml: string,
+	params: {
+		name: string;
+		id: string;
+		field: CitationField | null;
+		family: StyleFamily | null;
+		axisChoices: Partial<AxisChoices>;
+		presetId: string | null;
+	}
+): string {
+	const parsed = yaml.load(styleYaml);
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return styleYaml;
+
+	const style = parsed as Record<string, unknown>;
+	style.version = CITUM_STYLE_SCHEMA_VERSION;
+	const info = ((style.info as Record<string, unknown> | undefined) ??= {});
+	info.title = params.name.trim();
+	info.id = slugifyStyleId(params.id);
+
+	const custom = ((style.custom as Record<string, unknown> | undefined) ??= {});
+	custom.wizard_v2 = buildWizardMetadata({
+		field: params.field,
+		family: params.family,
+		axisChoices: params.axisChoices,
+		presetId: params.presetId,
+	}).wizard_v2;
+
+	return yaml.dump(style, { lineWidth: 120, noRefs: true, quotingType: '"' });
 }
 
 export function getStyleTitle(styleYaml: string): string | null {
@@ -502,4 +646,11 @@ export function getStyleTitle(styleYaml: string): string | null {
 	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
 	const title = getValueAtPath(parsed as Record<string, unknown>, "info.title");
 	return typeof title === "string" ? title : null;
+}
+
+export function getStyleId(styleYaml: string): string | null {
+	const parsed = yaml.load(styleYaml);
+	if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) return null;
+	const id = getValueAtPath(parsed as Record<string, unknown>, "info.id");
+	return typeof id === "string" ? id : null;
 }
