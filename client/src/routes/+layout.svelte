@@ -49,24 +49,13 @@
 			</a>
 			<div class="hidden md:flex flex-1 justify-end gap-8">
 				<nav class="flex items-center gap-9">
-					<a
-						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-						href="/library/browse">Browse</a
-					>
-					<a
-						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-						href="/create">Style Builder</a
-					>
-					{#if $auth.user}
-						<a
-							class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-							href="/library">My Library</a
-						>
-					{/if}
-					<a
-						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-						href="/">Docs</a
-					>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://citum.org">Home</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://citum.org/news/">News</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://docs.citum.org">Docs</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://hub.citum.org">Hub</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://citum.org/demo/">Demo</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/library/browse">Browse</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="/create">Style Builder</a>
 				</nav>
 				<div class="flex gap-2">
 					{#if $auth.user}
