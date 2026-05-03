@@ -51,6 +51,22 @@
 				<nav class="flex items-center gap-9">
 					<a
 						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+						href="https://citum.org">Home</a
+					>
+					<a
+						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+						href="https://docs.citum.org">Docs</a
+					>
+					<a
+						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+						href="https://citum.org/news">News</a
+					>
+					<a
+						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
+						href="https://citum.org/demo">Demo</a
+					>
+					<a
+						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
 						href="/library/browse">Browse</a
 					>
 					<a
@@ -63,10 +79,6 @@
 							href="/library">My Library</a
 						>
 					{/if}
-					<a
-						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-						href="/">Docs</a
-					>
 				</nav>
 				<div class="flex gap-2">
 					{#if $auth.user}
@@ -109,17 +121,24 @@
 						An open-source initiative to modernize academic referencing.
 					</p>
 				</div>
-				<div class="grid grid-cols-2 sm:grid-cols-3 gap-12">
+				<div class="grid grid-cols-2 sm:grid-cols-4 gap-12">
 					<div class="flex flex-col gap-4">
 						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4>
 						<a class="text-sm text-slate-500 hover:text-primary" href="/library/browse">Browse</a>
 						<a class="text-sm text-slate-500 hover:text-primary" href="/create">Style Builder</a>
-						<a class="text-sm text-slate-500 hover:text-primary" href="/">API</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org/reports">Reports</a>
 					</div>
 					<div class="flex flex-col gap-4">
-						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Help</h4>
-						<a class="text-sm text-slate-500 hover:text-primary" href="/">Docs</a>
-						<a class="text-sm text-slate-500 hover:text-primary" href="/">Forum</a>
+						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Resources</h4>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org">Docs</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org/examples">Examples</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org/style-guide">Style Guide</a>
+					</div>
+					<div class="flex flex-col gap-4">
+						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Project</h4>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://citum.org/news">News</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://citum.org/demo">Demo</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://github.com/citum">GitHub</a>
 					</div>
 				</div>
 			</div>
