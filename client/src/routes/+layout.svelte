@@ -39,7 +39,7 @@
 		<header
 			class="sticky top-0 z-50 flex items-center justify-between whitespace-nowrap border-b border-solid border-slate-200 bg-white px-4 py-3 lg:px-10"
 		>
-			<a href="/" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
+			<a href="https://docs.citum.org" class="flex items-center gap-4 hover:opacity-80 transition-opacity">
 				<div class="size-8 text-primary flex items-center justify-center">
 					<span class="material-symbols-outlined text-3xl">school</span>
 				</div>
@@ -49,6 +49,8 @@
 			</a>
 			<div class="hidden md:flex flex-1 justify-end gap-8">
 				<nav class="flex items-center gap-9">
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://citum.org">Home</a>
+					<a class="text-sm font-medium text-slate-600 hover:text-primary transition-colors" href="https://citum.org/news/">News</a>
 					<a
 						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
 						href="/library/browse">Browse</a
@@ -65,7 +67,7 @@
 					{/if}
 					<a
 						class="text-sm font-medium text-slate-600 hover:text-primary transition-colors"
-						href="/">Docs</a
+						href="https://docs.citum.org">Docs</a
 					>
 				</nav>
 				<div class="flex gap-2">
@@ -114,12 +116,12 @@
 						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Platform</h4>
 						<a class="text-sm text-slate-500 hover:text-primary" href="/library/browse">Browse</a>
 						<a class="text-sm text-slate-500 hover:text-primary" href="/create">Style Builder</a>
-						<a class="text-sm text-slate-500 hover:text-primary" href="/">API</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org">API</a>
 					</div>
 					<div class="flex flex-col gap-4">
 						<h4 class="text-xs font-black text-slate-900 uppercase tracking-widest">Help</h4>
-						<a class="text-sm text-slate-500 hover:text-primary" href="/">Docs</a>
-						<a class="text-sm text-slate-500 hover:text-primary" href="/">Forum</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org">Docs</a>
+						<a class="text-sm text-slate-500 hover:text-primary" href="https://docs.citum.org">Forum</a>
 					</div>
 				</div>
 			</div>
