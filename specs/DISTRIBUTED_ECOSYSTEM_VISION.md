@@ -1,129 +1,120 @@
-# Citum Distributed Ecosystem: Protocol & Registry Specification
+# Citum: The Citation Infrastructure for Integrators
 
 ## 1. Introduction
-This document defines the architecture for a federated citation-style ecosystem. It moves beyond the monolithic repository model of CSL while avoiding the pitfalls of centralized SaaS silos. The architecture prioritizes **reproducibility**, **cryptographic trust**, and **deterministic resolution**.
+Citum is the style registry and rendering backend that reference managers and
+writing tools embed instead of maintaining their own style-processing stack.
+While the underlying engine supports decentralized resolution, the Hub's primary
+mission is to provide a dependable, "Stripe-like" infrastructure for citation
+styles.
 
-## 2. Identity and Addressing Layer
-To balance human usability with technical immutability, Citum employs a three-tier identity model.
+Our goal is to make Citum the default backend for citation-capable software by
+prioritizing **dependable resolution**, **version safety**, and **predictable
+rendering**.
 
-| Layer | Form | Primary Purpose | Governance |
-| :--- | :--- | :--- | :--- |
-| **Human-Friendly Name** | `citum:hub/apa@v7` | Discovery, authoring, and documentation. | Registry Namespace |
-| **Locator (URL)** | `https://registry.example.edu/apa.yaml` | Network retrieval and physical hosting. | DNS / Web PKI |
-| **Content ID (CID)** | `sha256:8a3f...` | Exact rendering and cache integrity. | Cryptographic Hash |
+## 2. Product Positioning: Infrastructure over Platform
+Citum is not just a repository; it is a critical piece of infrastructure for
+integrators. We solve the "CSL problem"—brittle XML, fragmented repositories,
+and inconsistent rendering—by offering a modern, Rust-backed stack.
 
-### 2.1 The Citum URI
-All styles MUST be addressable via a Citum URI:
-`citum:[<registry-alias>/]<namespace>/<style-name>[@<version-spec>]`
+- **Primary User**: Maintainers of reference managers (Zotero, Mendeley), 
+  writing tools (Overleaf, Obsidian), and LLM-assisted editor integrations.
+- **Killer Value**: Version pinning, 100% rendering parity between local/remote,
+  and a high-signal YAML schema that AI assistants can actually understand.
 
-*   **Registry Alias:** A local shorthand for a remote registry URL (e.g., `hub` defaults to `https://hub.citum.org`).
-*   **Version Spec:** Can be a SemVer range (e.g., `^1.2.0`), a tag (e.g., `latest`), or a specific CID.
+## 3. Scope and Phasing: The Road to Dependability
 
-## 3. Deterministic Resolution Model
-The resolution engine MUST ensure that a style graph resolved today produces the same output in the future, regardless of upstream changes.
+### Phase 1: Canonical Infrastructure (v1)
+- **Goal**: Be the most dependable way to fetch and render a style.
+- **Focus**: A canonical public style registry with IDs, metadata, and 
+  immutable versions.
+- **Components**: 
+  - **The CSL Bridge**: A compatibility layer to ensure zero-friction 
+    migration for existing CSL-based tools.
+  - **Dual-Surface Engine**: A rendering API and an embeddable library 
+    (Rust/WASM) that behave identically.
 
-### 3.1 The Resolution Algorithm
-When a client encounters an `extends` directive, it MUST follow this precedence:
-1.  **Local Override:** Filesystem paths relative to the current style.
-2.  **Lockfile:** If a `citum.lock` exists, the engine MUST use the CID recorded there.
-3.  **Registry Resolution:** 
-    *   Fetch the registry manifest.
-    *   Resolve the version spec to a specific CID.
-    *   Verify the CID against the downloaded artifact.
+### Phase 2: Quality & Provenance (v2)
+- **Goal**: Establish the Hub as the trusted source for scholarly output.
+- **Focus**: Formal review workflows, style provenance (signed releases), and 
+  organizational collections (e.g., official publisher-approved variants).
 
-### 3.2 Lockfiles
-For production rendering, implementations SHOULD generate a `citum.lock` file. This manifest maps all transitive dependencies in the `extends` chain to their specific CIDs.
+### Phase 3: Ecosystem Expansion (v3)
+- **Goal**: Long-term resilience through federation.
+- **Focus**: Multi-hub synchronization and discovery, but only after a 
+  critical mass of clients depend on the v1/v2 infrastructure model.
 
-```yaml
-# Example citum.lock
-dependencies:
-  "citum:hub/apa@v7":
-    cid: "sha256:e3b0c442..."
-    source: "https://hub.citum.org/api/v1/styles/apa/v7.2.1.yaml"
-    integrity: "sha384-..."
-  "citum:univ/internal-base":
-    cid: "sha256:bc892a..."
-    source: "https://registry.univ.edu/base.yaml"
-```
+## 4. API & Integration Surface
+Integrators require a "boring," predictable API. Citum provides two identical
+surfaces: a hosted REST API and an embeddable local engine.
+| Need | Capability |
+| :--- | :--- |
+| **Find** | Search by name, alias, jurisdiction, or publisher. |
+| **Pin** | Resolve a stable ID to an exact, immutable CIDv1. |
+| **Update** | Separate "latest compatible" (semver) from "exact pins". |
+| **Render** | Identical output between local library call and hosted API. |
+| **Trust** | Access machine-readable changelogs and provenance badges. |
 
-## 4. Trust and Security Model
-Federation requires explicit trust anchors to prevent dependency confusion and malicious style injection.
+## 5. Migration: The CSL Compatibility Bridge
+The biggest risk to adoption is the inertia of the existing CSL ecosystem. To
+mitigate this, Citum will provide:
+- **Style Ingestion**: Automated tools to "Citum-ify" existing CSL 1.0.1 
+  styles into base parents and child variants.
+- **Fallback Logic**: Resolvers that can consume legacy identifiers while 
+  pointing to modern, version-pinned Citum equivalents.
 
-### 4.1 Registry Signing
-Every registry MUST publish a signed `metadata.json` at its root.
-*   **Public Key:** The registry's Ed25519 public key.
-*   **Manifest:** A list of available styles and their current CIDs, signed by the registry key.
+## 6. AI-Driven Authoring: The Demise of the Wizard
+### 6.1 Do we need a GUI wizard? No.
+By using a clean, semantic YAML schema, we make style authoring a first-class
+citizen for LLM assistants. This approach allows the Citum registry to scale
+rapidly without the overhead of maintaining complex visual builders.
 
-### 4.2 Trust Policy
-Clients MUST maintain a local trust policy. 
-*   **Explicit Trust:** Users must manually approve a new registry before its styles are executed.
-*   **The Hub Anchor:** Citum Hub is the default, pre-trusted anchor for the `hub/` namespace.
-*   **Cross-Registry Inheritance:** A style from `Registry A` MAY extend a style from `Registry B` only if the client's trust policy permits `Registry B`.
+### 6.2 The Pro Path: Citum Authoring Skill
+To facilitate authoring outside of the `citum-core` development context, Citum
+will provide a portable **Agent Skill**. This machine-readable specification can
+be loaded into AI assistants (Cursor, Gemini, Claude, ChatGPT) to provide:
+- **Schema Enforcement**: Instant knowledge of Citum's YAML structure.
+- **Validation Workflows**: Instructions for the agent to use the Citum CLI for
+  real-time syntax and logic checking.
+- **Best Practices**: Context on modular style composition and parent-style
+  inheritance patterns.
 
-## 5. Parent Drift and Immutability
-"Parent Drift" occurs when a floating reference (e.g., `@v7`) points to a new CID.
+### 6.3 The Accessible Path: Hosted Style Generator
+For users who do not use AI-integrated IDEs or local CLI tools (e.g., librarians,
+journal editors), the Citum Hub will provide a simplified, web-based **Style
+Generator**. This is a thin frontend wrapped around an LLM API, pre-loaded with
+the Citum schema and authoring context.
 
-*   **Authoring Phase:** Clients SHOULD allow floating references and periodically check for updates.
-*   **Rendering Phase:** Clients MUST freeze the graph. If a parent has changed since the last lock, the client SHOULD warn the user but default to the locked CID.
-*   **Breaking Changes:** Registries SHOULD use SemVer. Major version bumps in a parent SHOULD trigger a hard failure or require explicit user migration.
+Users can interact with the generator by:
+- Answering guiding questions about the style's requirements.
+- Pasting text from a journal's author guidelines.
+- Providing example citation and bibliography output.
 
-## 6. The Role of Citum Hub
-To prevent "centralization in practice," the Hub's roles are strictly defined:
-1.  **Host:** Provides a default storage layer for open-source styles.
-2.  **Index/Aggregator:** Mirrors and indexes metadata from trusted institutional registries.
-3.  **Trust Authority:** Validates that styles in the `hub/` namespace meet community standards.
-4.  **Mirroring:** Provides a high-availability CDN for federated styles that opt-in to mirroring.
+The generator then produces the Citum YAML, which the user can download and test
+immediately.
 
-## 7. Governance and Moderation
-*   **Namespace Ownership:** Registries govern their own internal namespaces. The Hub manages the global `hub/` namespace via a community-led PR process.
-*   **Moderation:** The Hub indexer MAY de-list registries that host malware or violate terms of service, though the styles remain accessible via direct URL for those who trust the registry.
+### 6.4 Local-First Workflow: Creation and Storage
+Style authoring is a local-first, iterative process:
+- **Creation**: A user prompts an AI assistant, uses the Hosted Style Generator,
+  or writes YAML directly.
+- **Storage**: New styles are saved to the user's local machine—either within
+  a specific project directory or the global user style store (e.g.,
+  `~/.local/share/citum/styles/`).
+- **Testing**: The user employs the Citum CLI (`citum render`) to verify the
+  style against local bibliographic data. This provides a tight feedback loop
+  independent of any network registry.
 
-## 8. Operational Model
-### 8.1 Caching and Offline Behavior
-Clients MUST implement a content-addressable cache. Once a style and its parents are resolved to CIDs and downloaded, the client MUST be capable of rendering without network access.
+### 6.5 Distribution Pathways
+Once verified locally, a style follows one of two paths:
+- **Hub Submission**: For broadly applicable styles, authors submit a Pull
+  Request to the Hub's canonical community registry.
+- **Self-Publishing**: Organizations can simply serve their local YAML files
+  via a static host (GitHub Pages, Netlify) and publish a `citum-registry.yaml`
+  index, allowing users to add them as a trusted registry.
 
-### 8.2 Performance
-Transitive inheritance graphs SHOULD be flattened at "publish time" by the registry into a resolution-optimized manifest to minimize network round-trips for clients.
-
-## 9. Decision Log (ADR)
-### 9.1 ADR-001: CID over URL for Identity
-*   **Decision:** Use Content IDs (CIDs) as the primary key for rendering.
-*   **Rationale:** URL-based identity is brittle. Domains expire; servers go down. CID ensures that if the bytes are found anywhere (local cache, IPFS, mirror), the style is valid.
-
-### 9.2 ADR-002: Explicit Registry Aliasing
-*   **Decision:** Require `citum:hub/...` or `citum:registry-alias/...` rather than raw URLs in style files.
-*   **Rationale:** Decouples the style definition from the physical hosting location. Allows institutions to move their registry without rewriting every style file.
-
----
-
-# Major Changes Made
-1.  **Cryptographic Identity:** Shifted from "Human names" to a multi-layered identity model where CIDs govern reproducibility.
-2.  **Lockfile Requirement:** Added a mandatory (for production) lockfile concept to solve the "Parent Drift" problem definitively.
-3.  **Explicit Trust Model:** Introduced Ed25519 signing for registry metadata, moving federation from "open but risky" to "explicit and secure."
-4.  **Resolution Logic:** Defined a clear precedence (Local > Lock > Remote) to prevent dependency confusion attacks.
-5.  **Hub De-escalation:** Explicitly defined the Hub as an *indexer* and *trust anchor* rather than the sole database, mitigating recentralization risk.
-6.  **Governance Section:** Added specific policies for namespace ownership and moderation.
-
-# Open Questions
-1.  **Key Rotation:** How do we handle registry key compromise? Is there a need for a global Revocation List or a transparency log?
-2.  **Circular Inheritance:** What is the specific cost-limit for resolving deep inheritance graphs (e.g., max depth of 10)?
-3.  **Discovery Protocol:** Should registries support a standardized search API (e.g., OAI-PMH or a modern JSON API) to facilitate indexing by the Hub?
-
-# MVP Recommendation: Phase 1 (The Trust-First Foundation)
-
-### Goal
-Establish the core `citum-core` resolution logic and the Hub as a signed registry.
-
-### Scope
-1.  **Citum-Core Resolver:** 
-    *   Support `extends: "citum:hub/..."`.
-    *   Implementation of the local CID cache.
-    *   Basic lockfile generation (`citum.lock`).
-2.  **Hub MVP:**
-    *   The Hub generates a signed `metadata.json` for all hosted styles.
-    *   A simple UI for users to "Claim a Namespace" (e.g., `citum:github-user/...`).
-3.  **Migration Path:**
-    *   A CLI tool to "Citum-ify" existing CSL styles by extracting them into a base parent and a metadata-only child.
-
-### Why this first?
-By starting with the Hub as a **signed registry**, we build the security infrastructure before we open the floodgates to federation. It allows us to battle-test the CID and lockfile logic in a controlled environment before managing the complexity of multi-registry trust policies.
+## 7. Operational Model
+- **Consistency**: High-availability registry mirrors for tools that need 
+  offline/local caches.
+- **Reproducibility**: Marquee feature for scholars; pinning a style 
+  guarantees the same bibliography output in five years as it does today.
+- **Governance**: The Hub registry is governed via a community-led PR process,
+  ensuring that integrators can trust the quality of what enters the catalog.
