@@ -105,7 +105,7 @@ describe("wizard-flow helpers", () => {
 	});
 
 	test("normalizes processing for every family", () => {
-		const input = `version: ''\noptions:\n  processing: author-date\ncitation:\n  use-preset: apa\nbibliography:\n  use-preset: apa\n`;
+		const input = `version: ''\noptions:\n  processing: author-date\ncitation:\n  template-ref: apa\nbibliography:\n  template-ref: apa\n`;
 
 		expect(normalizeGeneratedStyleForFamily(input, "author-date")).toContain(
 			"processing: author-date"
@@ -119,14 +119,14 @@ describe("wizard-flow helpers", () => {
 	});
 
 	test("normalizes generated note styles away from author-date-like citations", () => {
-		const input = `version: ''\noptions:\n  processing: note\ncitation:\n  template:\n    - contributor: author\n      form: short\n    - date: issued\n      form: year\n      prefix: ' '\n    - variable: locator\n      prefix: ', '\nbibliography:\n  use-preset: apa\n`;
+		const input = `version: ''\noptions:\n  processing: note\ncitation:\n  template:\n    - contributor: author\n      form: short\n    - date: issued\n      form: year\n      prefix: ' '\n    - variable: locator\n      prefix: ', '\nbibliography:\n  template-ref: apa\n`;
 		const output = normalizeGeneratedStyleForFamily(input, "note");
 
 		expect(output).toContain("quote: true");
 		expect(output).toContain("title: parent-serial");
 		expect(output).toContain("variable: locator");
 		expect(output).toContain("integral:");
-		expect(output).toContain("use-preset: chicago-author-date");
+		expect(output).toContain("template-ref: chicago-author-date");
 		expect(output).not.toContain("no. ");
 		expect(output).not.toContain("form: short");
 	});

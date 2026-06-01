@@ -1,12 +1,15 @@
 import { browser } from "$app/environment";
 import type { PreviewResult, StyleFamily } from "$lib/types/wizard";
 import { PREVIEW_REFERENCE_SETS } from "$lib/data/preview-fixtures";
-import { normalizeCitationPreviewHtml } from "$lib/utils/preview-output";
-import yaml from "js-yaml";
+import {
+	emptyPreview,
+	type FormatDocumentResult,
+	mapDocumentPreview,
+} from "$lib/utils/document-preview";
 
-type WasmBridge = typeof import("./pkg/wasm_bridge");
+type CitumEngine = typeof import("@citum/engine");
 
-let bridgePromise: Promise<WasmBridge> | null = null;
+let enginePromise: Promise<CitumEngine> | null = null;
 
 interface PreviewRenderOptions {
 	testLocator?: string;
@@ -15,27 +18,17 @@ interface PreviewRenderOptions {
 	injectAstIndices?: boolean;
 }
 
-function styleHasBibliography(styleYaml: string): boolean {
-	try {
-		const parsed = yaml.load(styleYaml);
-		if (!parsed || typeof parsed !== "object") return true;
-		return (parsed as Record<string, unknown>).bibliography !== null;
-	} catch {
-		return true;
-	}
-}
-
-async function loadBridge(): Promise<WasmBridge> {
+async function loadEngine(): Promise<CitumEngine> {
 	if (!browser) {
 		throw new Error("Browser WASM renderer is only available in the browser.");
 	}
 
-	bridgePromise ??= import("./pkg/wasm_bridge").then(async (mod) => {
+	enginePromise ??= import("@citum/engine").then(async (mod) => {
 		await mod.default();
 		return mod;
 	});
 
-	return bridgePromise;
+	return enginePromise;
 }
 
 async function renderViaServer(
@@ -72,34 +65,30 @@ async function renderViaServer(
 		parenthetical: data.in_text_parenthetical ?? null,
 		narrative: data.in_text_narrative ?? null,
 		note: data.note ?? null,
+		disambiguation: data.disambiguation ?? null,
 		bibliography: data.bibliography ?? null,
 	};
 }
 
 export async function generateStyleFromIntent(intent: Record<string, unknown>): Promise<string> {
-	if (!browser) {
-		const res = await fetch("/api/v1/generate", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(intent),
-		});
-		if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
-		return res.text();
-	}
-
-	const bridge = await loadBridge();
-	return bridge.generate_style(JSON.stringify(intent));
+	const res = await fetch("/api/v1/generate", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(intent),
+	});
+	if (!res.ok) throw new Error(`Generate failed: ${res.status}`);
+	return res.text();
 }
 
 export async function materializeStyle(styleYaml: string): Promise<string> {
-	const bridge = await loadBridge();
-	return bridge.materializeStyle(styleYaml);
+	const engine = await loadEngine();
+	return engine.materializeStyle(styleYaml);
 }
 
 export async function validateStyle(styleYaml: string): Promise<string | null> {
 	try {
-		const bridge = await loadBridge();
-		bridge.validateStyle(styleYaml);
+		const engine = await loadEngine();
+		engine.validateStyle(styleYaml);
 		return null;
 	} catch (error) {
 		return error instanceof Error ? error.message : String(error);
@@ -112,7 +101,7 @@ export async function renderStylePreview(
 	options: PreviewRenderOptions = {}
 ): Promise<PreviewResult> {
 	if (!styleYaml.trim()) {
-		return { parenthetical: null, narrative: null, note: null, bibliography: null };
+		return emptyPreview();
 	}
 
 	if (
@@ -127,39 +116,20 @@ export async function renderStylePreview(
 	}
 
 	try {
-		const bridge = await loadBridge();
+		const engine = await loadEngine();
 		const fixture = PREVIEW_REFERENCE_SETS[family];
-		const refs = JSON.stringify(fixture.references);
-		const parentheticalCitation = JSON.stringify(fixture.citations.parenthetical);
-		const narrativeCitation = JSON.stringify(fixture.citations.narrative);
+		const result = JSON.parse(
+			engine.formatDocument(
+				JSON.stringify({
+					style: { kind: "yaml", value: styleYaml },
+					refs: { kind: "json", value: fixture.references },
+					output_format: "html",
+					citations: fixture.citations,
+				})
+			)
+		) as FormatDocumentResult;
 
-		const parenthetical = normalizeCitationPreviewHtml(
-			bridge.renderCitation(styleYaml, refs, parentheticalCitation, "non-integral")
-		);
-		const narrative = normalizeCitationPreviewHtml(
-			bridge.renderCitation(styleYaml, refs, narrativeCitation, "integral")
-		);
-		const bibliography = bridge.renderBibliography(styleYaml, refs);
-
-		if (family === "note") {
-			const note =
-				narrative && narrative !== parenthetical
-					? `${parenthetical}<br>${narrative}`
-					: parenthetical;
-			return {
-				parenthetical: null,
-				narrative: null,
-				note,
-				bibliography: styleHasBibliography(styleYaml) ? bibliography : null,
-			};
-		}
-
-		return {
-			parenthetical,
-			narrative,
-			note: null,
-			bibliography: styleHasBibliography(styleYaml) ? bibliography : null,
-		};
+		return mapDocumentPreview(result, family, styleYaml);
 	} catch {
 		return renderViaServer(styleYaml, family, options);
 	}

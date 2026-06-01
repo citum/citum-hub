@@ -15,6 +15,7 @@ use citum_schema::reference::{
         Collection, CollectionComponent, CollectionType, Monograph, MonographComponentType,
         MonographType, NumOrStr, Serial, SerialComponent, SerialComponentType, SerialType, Title,
     },
+    ClassExtension,
     Contributor, ContributorList, EdtfString, InputReference, MultilingualString, Publisher,
     SimpleName, StructuredName, WorkRelation,
 };
@@ -98,6 +99,7 @@ fn org(org_name: &str) -> Contributor {
     Contributor::SimpleName(SimpleName {
         name: MultilingualString::Simple(org_name.to_string()),
         location: None,
+        short_name: None,
     })
 }
 
@@ -274,7 +276,7 @@ pub fn humanities_refs() -> Bibliography {
         Some(org("Pantheon Books")),
     );
     // Set translator and original-date on the inner Monograph
-    if let Reference::Monograph(ref mut m) = r {
+    if let ClassExtension::Monograph(m) = r.extension_mut() {
         m.translator = Some(name("Sheridan", "Alan"));
         // original_date dropped in citum-schema 0.20+; original-publication-year
         // is now expressed via container WorkRelation, deferred until needed.

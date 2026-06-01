@@ -715,7 +715,7 @@ impl StyleIntent {
 
         if let Some(p) = template_preset {
             let mut citation_spec = citum_schema::CitationSpec {
-                use_preset: Some(p.clone()),
+                template_ref: Some(p.clone().into()),
                 ..Default::default()
             };
 
@@ -748,7 +748,7 @@ impl StyleIntent {
                 };
 
                 style.bibliography = Some(citum_schema::BibliographySpec {
-                    use_preset: Some(bib_preset),
+                    template_ref: Some(bib_preset.into()),
                     sort: self.sort_preset.as_ref()
                         .and_then(|s| serde_yaml::from_str::<SortPreset>(s).ok())
                         .map(|s| citum_schema::grouping::GroupSortEntry::Preset(s.clone())),

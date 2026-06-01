@@ -107,6 +107,7 @@
 			(wizardStore.previewHtml.parenthetical ||
 				wizardStore.previewHtml.narrative ||
 				wizardStore.previewHtml.note ||
+				wizardStore.previewHtml.disambiguation ||
 				wizardStore.previewHtml.bibliography)
 		) {
 			const elements = containerRef.querySelectorAll('[class^="citum-"]');
@@ -174,6 +175,18 @@
 					</div>
 				{/if}
 
+				{#if showNarrative && wizardStore.previewHtml.disambiguation}
+					<div class="space-y-2">
+						<h4 class="font-semibold text-text-main text-sm">Disambiguation</h4>
+						<div
+							class="interactive-preview rounded bg-background-light p-3 font-serif text-text-main"
+						>
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							{@html wizardStore.previewHtml.disambiguation}
+						</div>
+					</div>
+				{/if}
+
 				{#if showNote && wizardStore.previewHtml.note}
 					<div class="space-y-2">
 						<h4 class="font-semibold text-text-main text-sm">{noteHeading}</h4>
@@ -196,7 +209,7 @@
 							{@html wizardStore.previewHtml.bibliography}
 						</div>
 					</div>
-				{:else if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.bibliography}
+				{:else if !wizardStore.previewHtml.parenthetical && !wizardStore.previewHtml.narrative && !wizardStore.previewHtml.note && !wizardStore.previewHtml.disambiguation && !wizardStore.previewHtml.bibliography}
 					<div class="text-center py-8">
 						<p class="text-text-secondary">No preview available yet</p>
 					</div>

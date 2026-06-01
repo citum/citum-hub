@@ -71,6 +71,7 @@ let previewHtml = $state<PreviewResult>({
 	parenthetical: null,
 	narrative: null,
 	note: null,
+	disambiguation: null,
 	bibliography: null,
 });
 
@@ -304,6 +305,7 @@ function materializeCurrentStyle() {
 	if (!hasLiteral) {
 		console.log("[Wizard] Materializing shorthand preset into literal template...");
 		bib.template = JSON.parse(JSON.stringify(APA_BASELINE));
+		delete bib["template-ref"];
 		delete bib["use-preset"];
 		delete bib["from-preset"];
 		styleYaml = serializeStyle(obj);
@@ -412,7 +414,13 @@ async function fetchPreview() {
 
 async function previewStyleWithUpdates(updates: WizardStyleUpdate[]): Promise<PreviewResult> {
 	if (!styleYaml || !family) {
-		return { parenthetical: null, narrative: null, note: null, bibliography: null };
+		return {
+			parenthetical: null,
+			narrative: null,
+			note: null,
+			disambiguation: null,
+			bibliography: null,
+		};
 	}
 	const nextYaml = applyStyleUpdatesToYaml(styleYaml, updates);
 	return renderStylePreview(nextYaml, family);
@@ -543,6 +551,7 @@ function reset() {
 		parenthetical: null,
 		narrative: null,
 		note: null,
+		disambiguation: null,
 		bibliography: null,
 	};
 	history = [];

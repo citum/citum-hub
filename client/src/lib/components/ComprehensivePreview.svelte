@@ -5,6 +5,7 @@
 		in_text_parenthetical: string | null;
 		in_text_narrative: string | null;
 		note: string | null;
+		disambiguation?: string | null;
 		bibliography: string | null;
 	}
 
@@ -63,6 +64,19 @@
 						</div>
 					</div>
 				{/if}
+
+				{#if previewSet.disambiguation}
+					<div class="flex flex-col gap-2">
+						<span class="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-2"
+							>Disambiguation</span
+						>
+						<div
+							class="p-6 bg-slate-50 border border-slate-100 rounded-2xl font-serif text-lg leading-relaxed text-slate-800"
+						>
+							<LivePreview html={previewSet.disambiguation} />
+						</div>
+					</div>
+				{/if}
 			</section>
 		{/if}
 
@@ -92,7 +106,7 @@
 			</section>
 		{/if}
 
-		{#if !previewSet.in_text_parenthetical && !previewSet.in_text_narrative && !previewSet.note && !previewSet.bibliography}
+		{#if !previewSet.in_text_parenthetical && !previewSet.in_text_narrative && !previewSet.note && !previewSet.disambiguation && !previewSet.bibliography}
 			<div class="py-20 text-center flex flex-col items-center gap-4">
 				<div
 					class="size-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-300"

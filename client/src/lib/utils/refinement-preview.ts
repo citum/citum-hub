@@ -4,11 +4,12 @@ export interface WizardPreviewHtml {
 	parenthetical: string | null;
 	narrative: string | null;
 	note: string | null;
+	disambiguation?: string | null;
 	bibliography: string | null;
 }
 
 export interface RefinementPreviewPanel {
-	key: "parenthetical" | "narrative" | "note" | "bibliography";
+	key: "parenthetical" | "narrative" | "note" | "disambiguation" | "bibliography";
 	label: string;
 	html: string;
 }
@@ -66,6 +67,13 @@ export function getRefinementPreviewPanels(
 	}
 	if (previewHtml.narrative) {
 		panels.push({ key: "narrative", label: "Narrative Citation", html: previewHtml.narrative });
+	}
+	if (previewHtml.disambiguation) {
+		panels.push({
+			key: "disambiguation",
+			label: "Disambiguation",
+			html: previewHtml.disambiguation,
+		});
 	}
 	if (previewHtml.bibliography) {
 		panels.push({ key: "bibliography", label: "Bibliography", html: previewHtml.bibliography });

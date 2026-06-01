@@ -4,6 +4,7 @@ export interface PreviewSet {
 	in_text_parenthetical: string | null;
 	in_text_narrative: string | null;
 	note: string | null;
+	disambiguation?: string | null;
 	bibliography: string | null;
 }
 
@@ -27,6 +28,7 @@ export function createEmptyPreviewSet(): PreviewSet {
 		in_text_parenthetical: null,
 		in_text_narrative: null,
 		note: null,
+		disambiguation: null,
 		bibliography: null,
 	};
 }
@@ -37,6 +39,7 @@ export function hasRenderablePreview(previewSet: PreviewSet | null | undefined):
 		previewSet.in_text_parenthetical ||
 		previewSet.in_text_narrative ||
 		previewSet.note ||
+		previewSet.disambiguation ||
 		previewSet.bibliography
 	);
 }
