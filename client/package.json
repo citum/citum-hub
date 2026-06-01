@@ -7,7 +7,7 @@
 	"scripts": {
 		"dev": "vite",
 		"dev:api": "bun run --hot src/api/index.ts",
-		"build": "vite build",
+		"build": "vite build && bun run scripts/precompress-wasm.ts",
 		"build:wasm": "cd ../server/crates/wasm-bridge && wasm-pack build --target nodejs",
 		"preview": "vite preview",
 		"postinstall": "bun run scripts/patch-svelte-check-ts6.js",
@@ -41,6 +41,7 @@
 		"vite": "^8.0.0"
 	},
 	"dependencies": {
+		"@citum/engine": "npm:@jsr/citum__engine@0.61.0",
 		"dotenv": "^17.3.1",
 		"hono": "^4.12.5",
 		"jose": "^6.1.3",

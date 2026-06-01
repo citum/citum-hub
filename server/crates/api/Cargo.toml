@@ -17,7 +17,7 @@ tracing-subscriber = "0.3"
 indexmap = "2"
 
 # Core Citum logic
-citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", branch = "main" }
-citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", branch = "main" }
+citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", tag = "v0.61.0" }
+citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", tag = "v0.61.0" }
 intent-engine = { path = "../intent-engine" }
 serde_yaml = "0.9.34"

@@ -28,6 +28,44 @@ function decide(intent_json) {
 exports.decide = decide;
 
 /**
+ * Format a complete document's citations and bibliography in one call.
+ *
+ * Takes a JSON-encoded `FormatDocumentRequest` and returns a JSON-encoded
+ * `FormatDocumentResult`. In WASM, the resolver chain is unavailable —
+ * `StyleInput::Id` and `StyleInput::Uri` variants return an error; use
+ * `StyleInput::Yaml` (preferred) or `StyleInput::Path` (if filesystem
+ * access is available in the host).
+ *
+ * # Errors
+ *
+ * Returns a string error on request JSON parse failure, style resolution failure,
+ * or engine rendering error.
+ * @param {string} request_json
+ * @returns {string}
+ */
+function formatDocument(request_json) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(request_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.formatDocument(ptr0, len0);
+        var ptr2 = ret[0];
+        var len2 = ret[1];
+        if (ret[3]) {
+            ptr2 = 0; len2 = 0;
+            throw takeFromExternrefTable0(ret[2]);
+        }
+        deferred3_0 = ptr2;
+        deferred3_1 = len2;
+        return getStringFromWasm0(ptr2, len2);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+exports.formatDocument = formatDocument;
+
+/**
  * Convert a style intent into a complete YAML style string.
  * @param {string} intent_json
  * @returns {string}
@@ -254,7 +292,6 @@ function validateStyle(style_yaml) {
     }
 }
 exports.validateStyle = validateStyle;
-
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
@@ -280,8 +317,7 @@ function __wbg_get_imports() {
 }
 
 function getStringFromWasm0(ptr, len) {
-    ptr = ptr >>> 0;
-    return decodeText(ptr, len);
+    return decodeText(ptr >>> 0, len);
 }
 
 let cachedUint8ArrayMemory0 = null;
@@ -363,5 +399,6 @@ let WASM_VECTOR_LEN = 0;
 const wasmPath = `${__dirname}/wasm_bridge_bg.wasm`;
 const wasmBytes = require('fs').readFileSync(wasmPath);
 const wasmModule = new WebAssembly.Module(wasmBytes);
-let wasm = new WebAssembly.Instance(wasmModule, __wbg_get_imports()).exports;
+let wasmInstance = new WebAssembly.Instance(wasmModule, __wbg_get_imports());
+let wasm = wasmInstance.exports;
 wasm.__wbindgen_start();

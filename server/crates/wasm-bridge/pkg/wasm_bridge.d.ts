@@ -7,6 +7,22 @@
 export function decide(intent_json: string): string;
 
 /**
+ * Format a complete document's citations and bibliography in one call.
+ *
+ * Takes a JSON-encoded `FormatDocumentRequest` and returns a JSON-encoded
+ * `FormatDocumentResult`. In WASM, the resolver chain is unavailable —
+ * `StyleInput::Id` and `StyleInput::Uri` variants return an error; use
+ * `StyleInput::Yaml` (preferred) or `StyleInput::Path` (if filesystem
+ * access is available in the host).
+ *
+ * # Errors
+ *
+ * Returns a string error on request JSON parse failure, style resolution failure,
+ * or engine rendering error.
+ */
+export function formatDocument(request_json: string): string;
+
+/**
  * Convert a style intent into a complete YAML style string.
  */
 export function generate_style(intent_json: string): string;

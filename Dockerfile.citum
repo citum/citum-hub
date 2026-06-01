@@ -14,10 +14,10 @@ RUN apt-get update && apt-get install -y \
 
 # Use a specific directory for the build to avoid non-empty dir errors
 WORKDIR /usr/src
+ARG CITUM_CORE_REF=v0.61.0
 
-# Force a fresh clone every time we build to get latest engine updates
-ADD "https://www.random.org/cgi-bin/randbyte?nbytes=10&format=h" skipcache
-RUN git clone https://github.com/citum/citum-core.git app
+# Clone the same core release Hub is pinned to.
+RUN git clone --depth 1 --branch "$CITUM_CORE_REF" https://github.com/citum/citum-core.git app
 
 WORKDIR /usr/src/app
 
