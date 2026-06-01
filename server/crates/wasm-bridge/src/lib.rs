@@ -3,9 +3,9 @@
 //! WASM bridge: thin layer over `citum-bindings` plus intent-engine functions.
 //!
 //! Intent-agnostic functions (`render_citation`, `render_bibliography`,
-//! `get_style_metadata`, `materialize_style`, `validate_style`) are provided
-//! by `citum-bindings`. Only the three functions that depend on `intent-engine`
-//! are implemented here.
+//! `format_document`, `get_style_metadata`, `materialize_style`,
+//! `validate_style`) are provided by `citum-bindings`. The functions that
+//! depend on `intent-engine` are implemented here.
 
 use citum_bindings::ensure_style_has_templates;
 use citum_engine::{processor::Processor, render::html::Html as HtmlRenderer, Citation, Reference};

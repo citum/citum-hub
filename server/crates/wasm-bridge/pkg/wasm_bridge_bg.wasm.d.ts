@@ -4,6 +4,7 @@ export const memory: WebAssembly.Memory;
 export const decide: (a: number, b: number) => [number, number, number, number];
 export const generate_style: (a: number, b: number) => [number, number, number, number];
 export const render_intent_citation: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number, number, number];
+export const formatDocument: (a: number, b: number) => [number, number, number, number];
 export const getStyleMetadata: (a: number, b: number) => [number, number, number, number];
 export const materializeStyle: (a: number, b: number) => [number, number, number, number];
 export const renderBibliography: (a: number, b: number, c: number, d: number) => [number, number, number, number];

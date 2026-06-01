@@ -16,6 +16,7 @@ ENV PATH="/root/.cargo/bin:$PATH"
 RUN curl https://rustwasm.github.io/wasm-pack/installer/init.sh -sSf | sh
 
 WORKDIR /app
+ARG CITUM_CORE_REF=v0.61.0
 
 # Copy Cargo workspace files first for layer caching
 COPY Cargo.toml Cargo.lock ./
@@ -25,10 +26,9 @@ COPY server/ ./server/
 RUN cd server/crates/wasm-bridge && wasm-pack build --target nodejs --release
 
 # Fetch citum-core for styles and registry
-# Cache-busting: ADD from a remote URL checks for changes (ETag/Last-Modified)
-# Using the tarball archive avoids GitHub REST API rate limits and is faster than a full clone.
-ADD https://github.com/citum/citum-core/archive/refs/heads/main.tar.gz /tmp/citum-core.tar.gz
-RUN mkdir -p /app/citum-core && \
+# Use the release tarball to keep Hub assets aligned with the Rust dependency pin.
+RUN curl -fsSL "https://github.com/citum/citum-core/archive/${CITUM_CORE_REF}.tar.gz" -o /tmp/citum-core.tar.gz && \
+    mkdir -p /app/citum-core && \
     tar -xzf /tmp/citum-core.tar.gz -C /app/citum-core --strip-components=1 && \
     rm /tmp/citum-core.tar.gz
 

@@ -25,8 +25,8 @@ reqwest = { version = "0.12", features = ["json"] }
 axum-extra = { version = "0.9", features = ["typed-header"] }
 
 # Core Citum logic
-citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", branch = "main" }
-citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", branch = "main" }
+citum_schema = { package = "citum-schema", git = "https://github.com/citum/citum-core", tag = "v0.61.0" }
+citum_engine = { package = "citum-engine", git = "https://github.com/citum/citum-core", tag = "v0.61.0" }
 intent_engine = { package = "intent-engine", path = "crates/intent-engine" }
 serde_yaml = "0.9.34"
 serde_yaml_ng = "0.10"
