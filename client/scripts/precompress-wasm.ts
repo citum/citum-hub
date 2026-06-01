@@ -1,8 +1,13 @@
-import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
 const buildRoot = join(import.meta.dir, "..", "build");
+
+if (!existsSync(buildRoot)) {
+	console.log(`skipping wasm precompression; build output not found at ${buildRoot}`);
+	process.exit(0);
+}
 
 function* walk(dir: string): Generator<string> {
 	for (const entry of readdirSync(dir)) {
