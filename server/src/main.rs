@@ -577,7 +577,7 @@ fn generate_preview_set_internal(
     if effective_style.citation.is_none() {
         use citum_schema::CitationSpec;
         effective_style.citation = Some(CitationSpec {
-            use_preset: Some(TemplatePreset::Apa),
+            template_ref: Some(TemplatePreset::Apa.into()),
             wrap: if is_author_date_like {
                 Some(citum_schema::template::WrapPunctuation::Parentheses.into())
             } else {
@@ -622,14 +622,14 @@ fn generate_preview_set_internal(
             }));
 
             citation.template = Some(template);
-            citation.use_preset = None; // Explicit template overrides preset
+            citation.template_ref = None; // Explicit template overrides shorthand template ref
         }
     }
 
     if effective_style.bibliography.is_none() {
         use citum_schema::BibliographySpec;
         effective_style.bibliography = Some(BibliographySpec {
-            use_preset: Some(TemplatePreset::Apa),
+            template_ref: Some(TemplatePreset::Apa.into()),
             ..Default::default()
         });
     }
@@ -1071,10 +1071,10 @@ mod tests {
                 "processing": "author-date"
             },
             "citation": {
-                "use-preset": "apa"
+                "template-ref": "apa"
             },
             "bibliography": {
-                "use-preset": "apa"
+                "template-ref": "apa"
             }
         }))
         .expect("style should deserialize");
@@ -1207,7 +1207,7 @@ mod tests {
                 "processing": "author-date"
             },
             "bibliography": {
-                "use-preset": "apa"
+                "template-ref": "apa"
             }
         }))
         .expect("style should deserialize");

@@ -193,23 +193,26 @@ export interface PresetAxisSignature {
 }
 
 export interface PreviewCitation {
+	id: string;
 	items: Array<{ id: string; locator?: { label: string; value: string } }>;
 	mode: "integral" | "non-integral";
+	note_number?: number;
 }
+
+export type PreviewCitationSlot = "parenthetical" | "narrative" | "note" | "disambiguation";
 
 export interface PreviewReferenceSet {
 	id: string;
 	references: Record<string, unknown>;
-	citations: {
-		parenthetical: PreviewCitation;
-		narrative: PreviewCitation;
-	};
+	citations: PreviewCitation[];
+	slots: Partial<Record<PreviewCitationSlot, string>>;
 }
 
 export interface PreviewResult {
 	parenthetical: string | null;
 	narrative: string | null;
 	note: string | null;
+	disambiguation: string | null;
 	bibliography: string | null;
 }
 

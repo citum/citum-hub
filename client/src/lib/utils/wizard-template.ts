@@ -68,9 +68,9 @@ export function getResolvedTemplateRoot(
 		return { path: BASE_TEMPLATE_PATH, scope: "all", template: baseTemplate };
 	}
 
-	// NEW: If we have a preset but no template, use the hardcoded baseline
+	// If we have a shorthand template ref but no template, use the hardcoded baseline.
 	const bib = root.bibliography as Record<string, any>;
-	if (bib && (bib["use-preset"] || bib["from-preset"])) {
+	if (bib && (bib["template-ref"] || bib["use-preset"] || bib["from-preset"])) {
 		return { path: BASE_TEMPLATE_PATH, scope: "all", template: APA_BASELINE };
 	}
 

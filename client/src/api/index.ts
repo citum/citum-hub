@@ -7,10 +7,8 @@ import { Hono, type Context } from "hono";
 import yaml from "js-yaml";
 import { jwtVerify, SignJWT } from "jose";
 import {
+	formatDocument,
 	generate_style,
-	renderBibliography as render_bibliography,
-	renderCitation as render_citation,
-	render_intent_citation,
 	decide as wasm_decide,
 } from "../../../server/crates/wasm-bridge/pkg/wasm_bridge.js";
 import {
@@ -76,12 +74,15 @@ interface PreviewSet {
 	in_text_parenthetical: string | null;
 	in_text_narrative: string | null;
 	note: string | null;
+	disambiguation: string | null;
 	bibliography: string | null;
 }
 
 interface FixtureCitation {
+	id?: string;
 	items: Array<Record<string, unknown>>;
 	mode: "non-integral" | "integral";
+	note_number?: number;
 }
 
 interface FixtureData {
@@ -89,6 +90,43 @@ interface FixtureData {
 	citations: {
 		nonIntegral: FixtureCitation;
 		integral: FixtureCitation;
+	};
+}
+
+function datePartsToEdtf(value: unknown): unknown {
+	if (!value || typeof value !== "object" || Array.isArray(value)) return value;
+	const parts = (value as Record<string, unknown>)["date-parts"];
+	if (!Array.isArray(parts) || !Array.isArray(parts[0])) return value;
+	const [year, month, day] = parts[0] as Array<string | number>;
+	if (!year) return value;
+	return [year, month, day]
+		.filter((part) => part !== undefined && part !== null)
+		.map((part, index) => String(part).padStart(index === 0 ? 4 : 2, "0"))
+		.join("-");
+}
+
+function normalizeContributor(value: unknown): unknown {
+	if (Array.isArray(value)) return value.map(normalizeContributor);
+	if (!value || typeof value !== "object") return value;
+	const contributor = value as Record<string, unknown>;
+	if (typeof contributor.literal === "string") {
+		const { literal, ...rest } = contributor;
+		return { ...rest, name: literal };
+	}
+	return contributor;
+}
+
+function normalizeReferenceForFormatDocument(
+	ref: Record<string, unknown>
+): Record<string, unknown> {
+	return {
+		...ref,
+		author: normalizeContributor(ref.author),
+		editor: normalizeContributor(ref.editor),
+		translator: normalizeContributor(ref.translator),
+		issued: datePartsToEdtf(ref.issued),
+		accessed: datePartsToEdtf(ref.accessed),
+		"original-date": datePartsToEdtf(ref["original-date"]),
 	};
 }
 
@@ -201,7 +239,7 @@ async function getFixtureData(
 		const references = Object.fromEntries(
 			(previewContext === "contributors" ? selectedItems : entries)
 				.filter((item): item is Record<string, unknown> => Boolean(item))
-				.map((item) => [String(item.id), item])
+				.map((item) => [String(item.id), normalizeReferenceForFormatDocument(item)])
 		);
 
 		const cite1Items = [];
@@ -288,6 +326,7 @@ function createEmptyPreviewSet(): PreviewSet {
 		in_text_parenthetical: null,
 		in_text_narrative: null,
 		note: null,
+		disambiguation: null,
 		bibliography: null,
 	};
 }
@@ -317,6 +356,91 @@ function injectLocatorIntoCitation(
 	return { ...citation, items };
 }
 
+interface FormattedCitation {
+	id: string;
+	text: string;
+}
+
+interface FormatDocumentResult {
+	formatted_citations: FormattedCitation[] | Record<string, { text: string }>;
+	bibliography?: { content?: string | null } | null;
+	warnings?: unknown[];
+}
+
+function formattedCitationMap(result: FormatDocumentResult): Map<string, string> {
+	if (Array.isArray(result.formatted_citations)) {
+		return new Map(
+			result.formatted_citations.map((citation) => [
+				citation.id,
+				normalizeCitationPreviewHtml(citation.text),
+			])
+		);
+	}
+
+	return new Map(
+		Object.entries(result.formatted_citations).map(([id, citation]) => [
+			id,
+			normalizeCitationPreviewHtml(citation.text),
+		])
+	);
+}
+
+function renderDocumentPreview(
+	styleYaml: string,
+	fixture: FixtureData,
+	testLocator: string,
+	isNotePreview: boolean
+): PreviewSet {
+	const previewSet = createEmptyPreviewSet();
+	const citeNonIntegral = {
+		...injectLocatorIntoCitation(fixture.citations.nonIntegral, testLocator),
+		id: "preview-parenthetical",
+	};
+	const citeIntegral = {
+		...injectLocatorIntoCitation(fixture.citations.integral, testLocator),
+		id: "preview-narrative",
+	};
+
+	const citations = isNotePreview
+		? [
+				{ ...citeNonIntegral, id: "preview-note-first", note_number: 1 },
+				{
+					...(citeNonIntegral.items.length ? citeNonIntegral : citeIntegral),
+					id: "preview-note-subsequent",
+					note_number: 2,
+				},
+			]
+		: [citeNonIntegral, citeIntegral];
+
+	const result = JSON.parse(
+		formatDocument(
+			JSON.stringify({
+				style: { kind: "yaml", value: styleYaml },
+				refs: { kind: "json", value: fixture.references },
+				output_format: "html",
+				citations,
+			})
+		)
+	) as FormatDocumentResult;
+	const formatted = formattedCitationMap(result);
+
+	if (result.warnings?.length) {
+		console.warn("[Preview] Citum document warnings:", result.warnings);
+	}
+
+	if (isNotePreview) {
+		previewSet.note = formatted.get("preview-note-subsequent") ?? null;
+	} else {
+		previewSet.in_text_parenthetical = formatted.get("preview-parenthetical") ?? null;
+		previewSet.in_text_narrative = formatted.get("preview-narrative") ?? null;
+	}
+
+	previewSet.bibliography = styleHasBibliography(styleYaml)
+		? (result.bibliography?.content ?? null)
+		: null;
+	return previewSet;
+}
+
 function getChoicePreviewHtml(previewSet: PreviewSet): string {
 	return (
 		previewSet.note ??
@@ -340,75 +464,15 @@ async function renderPreviewSet(params: {
 
 	const previewSet = createEmptyPreviewSet();
 	const fixture = await getFixtureData(fixtureType, previewContext);
-	const refsStr = JSON.stringify(fixture.references);
-	const citeNonIntegral = injectLocatorIntoCitation(fixture.citations.nonIntegral, testLocator);
-	const citeIntegral = injectLocatorIntoCitation(fixture.citations.integral, testLocator);
-	const citeNonIntegralStr = JSON.stringify(citeNonIntegral);
-	const citeIntegralStr = JSON.stringify(citeIntegral);
 
 	if (previewStyleYaml && previewStyleYaml.trim().length > 0) {
-		const renderedNonIntegral = render_citation(
-			previewStyleYaml,
-			refsStr,
-			citeNonIntegralStr,
-			"non-integral"
-		);
-		const renderedIntegral = render_citation(
-			previewStyleYaml,
-			refsStr,
-			citeIntegralStr,
-			"integral"
-		);
-		const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
-		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
-
-		if (isNotePreview) {
-			previewSet.note =
-				previewIntegral && previewIntegral !== previewNonIntegral
-					? `${previewNonIntegral}<br>${previewIntegral}`
-					: previewNonIntegral;
-		} else {
-			previewSet.in_text_parenthetical = previewNonIntegral;
-			previewSet.in_text_narrative = previewIntegral;
-		}
-
-		previewSet.bibliography = styleHasBibliography(previewStyleYaml)
-			? render_bibliography(previewStyleYaml, refsStr)
-			: null;
-		return previewSet;
+		return renderDocumentPreview(previewStyleYaml, fixture, testLocator, isNotePreview);
 	}
 
 	if (intent) {
 		const intentStr = JSON.stringify(intent);
-		const renderedNonIntegral = render_intent_citation(
-			intentStr,
-			refsStr,
-			citeNonIntegralStr,
-			"non-integral"
-		);
-		const renderedIntegral = render_intent_citation(
-			intentStr,
-			refsStr,
-			citeIntegralStr,
-			"integral"
-		);
-		const previewNonIntegral = normalizeCitationPreviewHtml(renderedNonIntegral);
-		const previewIntegral = normalizeCitationPreviewHtml(renderedIntegral);
-
-		if (isNotePreview) {
-			previewSet.note =
-				previewIntegral && previewIntegral !== previewNonIntegral
-					? `${previewNonIntegral}<br>${previewIntegral}`
-					: previewNonIntegral;
-		} else {
-			previewSet.in_text_parenthetical = previewNonIntegral;
-			previewSet.in_text_narrative = previewIntegral;
-		}
-
 		const generatedStyle = generate_style(intentStr);
-		previewSet.bibliography = styleHasBibliography(generatedStyle)
-			? render_bibliography(generatedStyle, refsStr)
-			: null;
+		return renderDocumentPreview(generatedStyle, fixture, testLocator, isNotePreview);
 	}
 
 	return previewSet;

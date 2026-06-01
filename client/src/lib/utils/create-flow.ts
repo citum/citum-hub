@@ -16,7 +16,7 @@ export interface BuildProgress {
 }
 
 export interface BuildPreviewPanel {
-	key: "parenthetical" | "narrative" | "note" | "bibliography";
+	key: "parenthetical" | "narrative" | "note" | "disambiguation" | "bibliography";
 	label: string;
 	html: string;
 }
@@ -281,6 +281,13 @@ export function getBuildPreviewPanels(
 	if (previewSet.in_text_narrative) {
 		panels.push({ key: "narrative", label: "Narrative", html: previewSet.in_text_narrative });
 	}
+	if (previewSet.disambiguation) {
+		panels.push({
+			key: "disambiguation",
+			label: "Disambiguation",
+			html: previewSet.disambiguation,
+		});
+	}
 	if (previewSet.bibliography) {
 		panels.push({ key: "bibliography", label: "Bibliography", html: previewSet.bibliography });
 	}
@@ -294,6 +301,7 @@ export function getDecisionPreviewSet(decision: DecisionResult | null): PreviewS
 		in_text_parenthetical: decision.in_text_parenthetical,
 		in_text_narrative: decision.in_text_narrative,
 		note: decision.note,
+		disambiguation: decision.disambiguation ?? null,
 		bibliography: decision.bibliography,
 	};
 }

@@ -451,10 +451,14 @@ export function normalizeGeneratedStyleForFamily(styleYaml: string, family: Styl
 		citation["non-integral"] ??= { template: structuredClone(CHICAGO_NOTE_CITATION_TEMPLATE) };
 		citation.integral ??= { template: structuredClone(CHICAGO_NOTE_CITATION_TEMPLATE) };
 		delete citation["use-preset"];
+		delete citation["template-ref"];
 
 		const bibliography = ((style.bibliography as Record<string, unknown> | undefined) ??= {});
 		if (bibliography["use-preset"] === "apa") {
-			bibliography["use-preset"] = "chicago-author-date";
+			delete bibliography["use-preset"];
+			bibliography["template-ref"] = "chicago-author-date";
+		} else if (bibliography["template-ref"] === "apa") {
+			bibliography["template-ref"] = "chicago-author-date";
 		}
 	}
 
