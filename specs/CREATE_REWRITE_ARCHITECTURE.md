@@ -1,5 +1,9 @@
 # Create Flow Rewrite Architecture
 
+> [!NOTE]
+> **Scope revised** by [`HUB_STRATEGY_DECISION.md`](HUB_STRATEGY_DECISION.md) (2026-07-07):
+> the Build sub-flow is deprioritized; Find/Tweak, `createFlowStore`, and the API split remain the target.
+
 ## Summary
 
 This document defines the target rewrite for the `/create` experience after the

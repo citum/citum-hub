@@ -1,5 +1,9 @@
 # Create Wizard UX Specification
 
+> [!WARNING]
+> **Superseded** by [`HUB_STRATEGY_DECISION.md`](HUB_STRATEGY_DECISION.md) (2026-07-07).
+> The wizard is frozen; retained for reference and salvage only.
+
 **Audience:** LLM agents (future implementers), with human reviewers as secondary readers.
 
 **Purpose:** Define interaction patterns, flow architecture, and evaluation rubrics for the citation style creation wizard. This spec enables confident critique and iteration without human re-specification.
