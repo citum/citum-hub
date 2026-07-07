@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Citum Hub — Registry-First Mockup</title>
+<style>
+  /* ── Design tokens: citum-org DESIGN.md "The Scholarly Workshop" ── */
+  :root {
+    --primary: #2a94d6;
+    --primary-dark: #1f76ad;
+    --bg: #fdfbf7;
+    --text: #374151;
+    --text-2: #6b7280;
+    --accent-subtle: rgba(42, 148, 214, 0.08);
+    --card: #ffffff;
+    --line: #e7e2d8;
+    --ok: #2f7d4f;
+    --ok-bg: #eaf4ee;
+    --warn: #8a6d1a;
+    --warn-bg: #faf3dd;
+    --r-sm: 8px;
+    --r-md: 12px;
+    --serif: "Newsreader", "Iowan Old Style", Georgia, "Times New Roman", serif;
+    --sans: "Libre Franklin", "Segoe UI", -apple-system, Helvetica, Arial, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--sans);
+    color: var(--text);
+    font-size: 1.02rem;
+    line-height: 1.6;
+  }
+  a { color: var(--primary-dark); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, .mono { font-family: var(--mono); font-size: 0.86em; }
+
+  /* ── Mockup banner ── */
+  .mockup-note {
+    background: var(--warn-bg);
+    color: var(--warn);
+    font-size: 0.8rem;
+    text-align: center;
+    padding: 6px 16px;
+    border-bottom: 1px solid #ecdfb6;
+  }
+
+  /* ── Site chrome ── */
+  header.site {
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: 0 clamp(16px, 4vw, 48px);
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .wordmark {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: 1.45rem;
+    padding: 14px 0;
+    color: #232a33;
+  }
+  .wordmark span { color: var(--primary); }
+  nav.tabs { display: flex; gap: 4px; flex-wrap: wrap; }
+  nav.tabs a {
+    padding: 18px 14px 15px;
+    color: var(--text-2);
+    border-bottom: 3px solid transparent;
+    font-size: 0.94rem;
+  }
+  nav.tabs a:hover { color: var(--text); text-decoration: none; }
+  nav.tabs a.active {
+    color: var(--primary-dark);
+    border-bottom-color: var(--primary);
+    font-weight: 600;
+  }
+  .chrome-right { margin-left: auto; display: flex; gap: 14px; align-items: center; font-size: 0.9rem; }
+
+  /* ── Screens ── */
+  .screen { display: none; }
+  .screen.visible { display: block; }
+  main { max-width: 1100px; margin: 0 auto; padding: clamp(20px, 4vw, 44px) clamp(16px, 4vw, 48px) 72px; }
+
+  h1.display {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5vw, 3.4rem);
+    line-height: 1.12;
+    color: #232a33;
+    letter-spacing: -0.01em;
+  }
+  h2 { font-family: var(--serif); font-size: 1.5rem; font-weight: 700; color: #232a33; margin-bottom: 10px; }
+  h3 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-2); font-weight: 600; margin-bottom: 10px; }
+  .muted { color: var(--text-2); }
+  .small { font-size: 0.88rem; }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 24px;
+  }
+
+  .btn {
+    display: inline-block;
+    border: 0;
+    border-radius: var(--r-sm);
+    padding: 10px 20px;
+    font: inherit;
+    font-size: 0.94rem;
+    cursor: pointer;
+    background: var(--primary);
+    color: #fff;
+    font-weight: 600;
+  }
+  .btn:hover { background: var(--primary-dark); }
+  .btn.ghost {
+    background: transparent;
+    color: var(--primary-dark);
+    border: 1px solid var(--primary);
+  }
+  .btn.ghost:hover { background: var(--accent-subtle); }
+  .btn.subtle {
+    background: var(--accent-subtle);
+    color: var(--primary-dark);
+  }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 2px 9px;
+    border-radius: 999px;
+    vertical-align: 2px;
+  }
+  .badge.native { background: var(--accent-subtle); color: var(--primary-dark); }
+  .badge.migrated { background: var(--ok-bg); color: var(--ok); }
+  .badge.draft { background: var(--warn-bg); color: var(--warn); }
+
+  .cid-chip {
+    font-family: var(--mono);
+    font-size: 0.76rem;
+    background: #f4f1ea;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 2px 8px;
+    color: var(--text-2);
+    white-space: nowrap;
+  }
+
+  pre.block {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    background: #232a33;
+    color: #e8e6e1;
+    border-radius: var(--r-sm);
+    padding: 16px 18px;
+    overflow-x: auto;
+  }
+  pre.block .c { color: #8fa1b3; }
+  pre.block .k { color: #7fc4ee; }
+  pre.block .s { color: #c5d8a4; }
+
+  /* mockup-only annotation: intended audience of each screen */
+  .audience {
+    display: inline-block;
+    font-size: 0.76rem;
+    color: var(--warn);
+    background: var(--warn-bg);
+    border: 1px dashed #ecdfb6;
+    border-radius: 6px;
+    padding: 3px 10px;
+    margin-top: 12px;
+  }
+
+  details.integrator { margin-top: 6px; }
+  details.integrator > summary {
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--primary-dark);
+    padding: 10px 0 6px;
+  }
+  details.integrator > summary:hover { text-decoration: underline; }
+  details.integrator .row:first-of-type { border-top: 1px solid var(--line); }
+
+  /* ══ HOME ══ */
+  .hero { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 44px; align-items: start; margin-top: 12px; }
+  .hero .lede { font-size: 1.13rem; margin: 18px 0 26px; max-width: 34em; }
+  .searchbar { display: flex; gap: 10px; max-width: 560px; }
+  .searchbar input {
+    flex: 1;
+    font: inherit;
+    padding: 12px 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--card);
+    color: var(--text);
+  }
+  .searchbar input::placeholder { color: #9aa2ad; }
+  .stats { display: flex; gap: 36px; margin-top: 30px; flex-wrap: wrap; }
+  .stat .n { font-family: var(--serif); font-size: 2rem; font-weight: 700; color: #232a33; line-height: 1.2; }
+  .stat .l { font-size: 0.84rem; color: var(--text-2); }
+  .pin-demo { margin-top: 4px; }
+  .pin-demo figcaption { font-size: 0.82rem; color: var(--text-2); margin-top: 10px; }
+  .paths { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 56px; }
+  .paths .card p { font-size: 0.92rem; margin: 8px 0 14px; }
+  .paths .card h2 { font-size: 1.18rem; }
+
+  /* ══ BROWSE ══ */
+  .browse-layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 32px; margin-top: 8px; }
+  .facets h3 { margin-top: 20px; }
+  .facets h3:first-child { margin-top: 0; }
+  .facets label { display: flex; gap: 8px; align-items: baseline; font-size: 0.9rem; padding: 3px 0; color: var(--text); cursor: pointer; }
+  .facets .count { color: #9aa2ad; font-size: 0.78rem; margin-left: auto; }
+  .result { display: flex; gap: 18px; align-items: flex-start; padding: 18px 0; border-bottom: 1px solid var(--line); }
+  .result:last-child { border-bottom: 0; }
+  .result .body { flex: 1; min-width: 0; }
+  .result .name { font-family: var(--serif); font-size: 1.18rem; font-weight: 700; color: #232a33; }
+  .result .meta { font-size: 0.84rem; color: var(--text-2); margin-top: 2px; }
+  .result .sample { font-size: 0.88rem; margin-top: 8px; color: var(--text); background: var(--accent-subtle); border-radius: 6px; padding: 8px 12px; }
+  .result .side { text-align: right; display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+
+  /* ══ DETAIL ══ */
+  .crumbs { font-size: 0.84rem; color: var(--text-2); margin-bottom: 14px; }
+  .detail-head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .detail-grid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 28px; margin-top: 26px; align-items: start; }
+  .preview-card .cite-line { margin: 10px 0; }
+  .bib-entry { padding-left: 2em; text-indent: -2em; margin: 10px 0; font-size: 0.95rem; }
+  .use-panel .row { display: flex; align-items: center; gap: 10px; padding: 12px 0; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  .use-panel .row:last-child { border-bottom: 0; }
+  .use-panel .row .grow { flex: 1; min-width: 0; }
+  .use-panel .lbl { font-weight: 600; font-size: 0.9rem; }
+  .use-panel .sub { font-size: 0.8rem; color: var(--text-2); }
+  .copy { font-size: 0.76rem; padding: 3px 10px; border-radius: 6px; border: 1px solid var(--line); background: var(--card); color: var(--text-2); cursor: pointer; font-family: var(--sans); }
+  .copy:hover { border-color: var(--primary); color: var(--primary-dark); }
+  .prov li { list-style: none; padding: 8px 0 8px 26px; position: relative; font-size: 0.92rem; border-bottom: 1px dashed var(--line); }
+  .prov li:last-child { border-bottom: 0; }
+  .prov li::before { content: "✓"; position: absolute; left: 2px; color: var(--ok); font-weight: 700; }
+  .aliases { display: flex; flex-wrap: wrap; gap: 8px; }
+  .aliases .cid-chip { white-space: normal; }
+  .stack { display: grid; gap: 20px; }
+  .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+
+  /* ══ TWEAK ══ */
+  .tweak-grid { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 6fr); gap: 28px; margin-top: 24px; align-items: start; }
+  .override { padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .override:last-of-type { border-bottom: 0; }
+  .override .what { font-weight: 600; font-size: 0.94rem; }
+  .override .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; font-size: 0.84rem; }
+  .override .was, .override .now { border-radius: 6px; padding: 6px 10px; font-family: var(--mono); font-size: 0.78rem; }
+  .override .was { background: #f6f1ec; color: #8a6a5a; text-decoration: line-through; }
+  .override .now { background: var(--ok-bg); color: var(--ok); }
+  .add-override { margin-top: 14px; }
+  .footer-note { margin-top: 48px; border-top: 1px solid var(--line); padding-top: 18px; font-size: 0.88rem; color: var(--text-2); }
+
+  @media (max-width: 860px) {
+    .hero, .detail-grid, .tweak-grid { grid-template-columns: 1fr; }
+    .browse-layout { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockup-note">
+  Design mockup accompanying <strong>HUB_STRATEGY_DECISION.md</strong> — static HTML, not a functional app. Data is illustrative.
+</div>
+
+<header class="site">
+  <div class="wordmark">citum<span>·</span>hub</div>
+  <nav class="tabs" id="tabs">
+    <a href="#home" data-screen="home">Home</a>
+    <a href="#browse" data-screen="browse">Browse</a>
+    <a href="#detail" data-screen="detail">Style: APA 7th</a>
+    <a href="#tweak" data-screen="tweak">Tweak</a>
+  </nav>
+  <div class="chrome-right muted">
+    <a href="#detail">Docs</a>
+    <a href="#detail">API</a>
+    <span>Sign in with GitHub</span>
+  </div>
+</header>
+
+<main>
+
+<!-- ═══════════════════ HOME ═══════════════════ -->
+<section class="screen" id="screen-home">
+  <div class="hero">
+    <div>
+      <h1 class="display">Every citation style.<br>Findable. Pinnable.<br>Reproducible.</h1>
+      <p class="lede">Citum Hub is the registry for the Citum citation engine.
+      Find your journal's style, pin an exact immutable version, and render
+      identically everywhere — CLI, LaTeX, or API — today and in five years.</p>
+      <div class="searchbar">
+        <input type="text" placeholder="Search styles — “Nature”, “APA”, an ISSN, or a publisher…">
+        <button class="btn">Find style</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="n">141</div><div class="l">native styles</div></div>
+        <div class="stat"><div class="n">2,340</div><div class="l">converted from CSL, output-verified</div></div>
+        <div class="stat"><div class="n">10,831</div><div class="l">CSL corpus in migration</div></div>
+      </div>
+      <div class="audience">Mockup note — audience: integrators &amp; style authors (the strategy's first wedges); deliberately technical.</div>
+    </div>
+    <figure class="pin-demo">
+      <pre class="block"><span class="c"># pin once, render forever</span>
+$ citum style pin apa-7th
+<span class="k">extends-pin:</span> <span class="s">cid:bafkreib4d…q7x2</span>
+
+$ citum render refs --style apa-7th \
+    --pin <span class="s">cid:bafkreib4d…q7x2</span>
+<span class="c">→ byte-identical output, verified</span></pre>
+      <figcaption>Styles are content-addressed (CIDv1). A pinned bibliography
+      renders the same in 2031 as it does today.</figcaption>
+    </figure>
+  </div>
+
+  <div class="paths">
+    <div class="card">
+      <h2>For everyone</h2>
+      <p>Browse the registry, preview output against real references, and
+      download the style for Zotero-class tools or the Citum CLI.</p>
+      <a class="btn subtle" href="#browse">Browse styles →</a>
+    </div>
+    <div class="card">
+      <h2>For integrators</h2>
+      <p>Resolve stable IDs to exact CIDs over a boring REST API, or embed
+      the engine (Rust / WASM) for identical local rendering.</p>
+      <a class="btn subtle" href="#detail">Pinning API docs →</a>
+    </div>
+    <div class="card">
+      <h2>For style authors</h2>
+      <p>Author and validate styles with your AI assistant — schema-checked,
+      CLI-verified, ready to submit to the registry.</p>
+      <p><code>npx skills add citum/skills</code></p>
+      <a class="btn subtle" href="#tweak">Or start from an existing style →</a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ BROWSE ═══════════════════ -->
+<section class="screen" id="screen-browse">
+  <h1 class="display" style="font-size:2rem;">Browse styles</h1>
+  <p class="muted small" style="margin:6px 0 0;">2,481 styles · every style is checked automatically, so what you see is what your tool renders.</p>
+  <div class="audience" style="margin-bottom:22px;">Mockup note — audience: everyone. Plain-language badges; identifiers &amp; CIDs live on the detail page, not here.</div>
+
+  <div class="browse-layout">
+    <aside class="facets card" style="padding:20px;">
+      <h3>Citation family</h3>
+      <label><input type="checkbox" checked> Author–date <span class="count">1,204</span></label>
+      <label><input type="checkbox"> Numeric <span class="count">986</span></label>
+      <label><input type="checkbox"> Note <span class="count">291</span></label>
+      <h3>Field</h3>
+      <label><input type="checkbox"> Psychology <span class="count">214</span></label>
+      <label><input type="checkbox"> Biology <span class="count">388</span></label>
+      <label><input type="checkbox"> Law <span class="count">102</span></label>
+      <label><input type="checkbox"> Humanities <span class="count">340</span></label>
+      <h3>Origin</h3>
+      <label><input type="checkbox"> Written for Citum <span class="count">141</span></label>
+      <label><input type="checkbox" checked> Converted from CSL <span class="count">2,340</span></label>
+      <h3>Publisher</h3>
+      <label><input type="checkbox"> APA <span class="count">31</span></label>
+      <label><input type="checkbox"> Elsevier <span class="count">412</span></label>
+      <label><input type="checkbox"> Springer <span class="count">377</span></label>
+    </aside>
+
+    <div class="card" style="padding:6px 24px;">
+      <div class="result">
+        <div class="body">
+          <span class="name">APA 7th edition</span>
+          <span class="badge native">written for Citum</span>
+          <div class="meta">American Psychological Association · author–date · 62 aliases (incl. 14 ISSNs)</div>
+          <div class="sample">(Doe & Roe, 2020) — Doe, J., & Roe, R. (2020). Attention is not enough. <em>Journal of Examples, 12</em>(3), 45–67.</div>
+        </div>
+        <div class="side">
+          <span class="cid-chip">v1.4.0</span>
+          <a class="btn ghost" href="#detail" style="padding:6px 14px; font-size:0.84rem;">View</a>
+        </div>
+      </div>
+      <div class="result">
+        <div class="body">
+          <span class="name">Nature</span>
+          <span class="badge migrated">✓ verified output</span>
+          <div class="meta">Springer Nature · numeric · converted from CSL (<code>nature.csl</code>) · 9 aliases</div>
+          <div class="sample"><sup>1</sup> — 1. Doe, J. & Roe, R. Attention is not enough. <em>J. Examples</em> <strong>12</strong>, 45–67 (2020).</div>
+        </div>
+        <div class="side">
+          <span class="cid-chip">v1.0.2</span>
+          <a class="btn ghost" href="#detail" style="padding:6px 14px; font-size:0.84rem;">View</a>
+        </div>
+      </div>
+      <div class="result">
+        <div class="body">
+          <span class="name">Chicago 18th (notes)</span>
+          <span class="badge native">written for Citum</span>
+          <div class="meta">University of Chicago Press · note · base style for 43 children</div>
+          <div class="sample">1. Jane Doe and Richard Roe, “Attention Is Not Enough,” <em>Journal of Examples</em> 12, no. 3 (2020): 45–67.</div>
+        </div>
+        <div class="side">
+          <span class="cid-chip">v2.1.0</span>
+          <a class="btn ghost" href="#detail" style="padding:6px 14px; font-size:0.84rem;">View</a>
+        </div>
+      </div>
+      <div class="result">
+        <div class="body">
+          <span class="name">Chemical Communications (RSC)</span>
+          <span class="badge migrated">✓ verified output</span>
+          <div class="meta">Royal Society of Chemistry · numeric · converted from CSL</div>
+          <div class="sample"><sup>1</sup> — 1 J. Doe and R. Roe, <em>J. Examples</em>, 2020, <strong>12</strong>, 45–67.</div>
+        </div>
+        <div class="side">
+          <span class="cid-chip">v1.0.0</span>
+          <a class="btn ghost" href="#detail" style="padding:6px 14px; font-size:0.84rem;">View</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ STYLE DETAIL ═══════════════════ -->
+<section class="screen" id="screen-detail">
+  <div class="crumbs"><a href="#browse">Browse</a> / Psychology / APA 7th edition</div>
+  <div class="detail-head">
+    <h1 class="display" style="font-size:2.2rem;">APA 7th edition</h1>
+    <span class="badge native">written for Citum</span>
+    <span class="cid-chip">apa-7th · v1.4.0</span>
+  </div>
+  <p class="muted" style="margin-top:6px; max-width:46em;">American Psychological Association, 7th edition. Author–date.
+  Base style for 27 journal profiles. Maintained in the canonical registry.</p>
+  <div class="audience">Mockup note — audience: everyone. Benefit-first; identifiers, CIDs and API detail collapse under “For integrators &amp; CLI users”.</div>
+
+  <div class="detail-grid">
+    <div class="stack">
+      <div class="card preview-card">
+        <h3>Preview — sample references (psychology set)</h3>
+        <div class="cite-line"><strong>In text:</strong> (Doe & Roe, 2020; Smith et al., 2019)</div>
+        <h3 style="margin-top:18px;">Bibliography</h3>
+        <p class="bib-entry">Doe, J., & Roe, R. (2020). Attention is not enough: Revisiting recurrence. <em>Journal of Examples, 12</em>(3), 45–67. https://doi.org/10.1000/jex.2020.045</p>
+        <p class="bib-entry">Smith, A. B., Chen, L., & Okafor, N. (2019). <em>Measurement in the wild</em> (2nd ed.). Example Press.</p>
+        <p class="bib-entry">United Nations. (2021). <em>World data report</em> (Report No. 14). https://un.example.org/wdr14</p>
+        <p class="small muted" style="margin-top:14px;">Rendered by the same engine that runs locally — CLI, LaTeX, and API output are identical.</p>
+      </div>
+
+      <div class="card">
+        <h3>Why you can trust this style</h3>
+        <ul class="prov">
+          <li>Output checked automatically against 312 sample references covering 9 source types</li>
+          <li>Released versions never change — a locked style renders identically in five years</li>
+          <li>Maintained in the canonical registry; 27 journal variants build on it</li>
+          <li class="small muted">Technical: native Citum style, schema v1, validated with <code>citum check --strict</code>; signed release at <code>cid:bafkreib4d…q7x2</code></li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h3>Aliases &amp; identifiers</h3>
+        <div class="aliases">
+          <span class="cid-chip">apa</span>
+          <span class="cid-chip">american-psychological-association-7th-edition</span>
+          <span class="cid-chip">ISSN 0003-066X</span>
+          <span class="cid-chip">ISSN 1935-990X</span>
+          <span class="cid-chip">zotero: apa</span>
+          <span class="cid-chip">+ 57 more</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card use-panel">
+        <h3>Use this style</h3>
+        <div class="row">
+          <div class="grow">
+            <div class="lbl">Stay up to date</div>
+            <div class="sub">Gets fixes automatically; your formatting never breaks</div>
+          </div>
+          <span class="cid-chip">apa-7th</span>
+          <button class="copy">Copy ID</button>
+        </div>
+        <div class="row">
+          <div class="grow">
+            <div class="lbl">Lock this version</div>
+            <div class="sub">Your bibliography renders identically in five years</div>
+          </div>
+          <button class="copy">Copy locked ID</button>
+        </div>
+        <div class="actions-row">
+          <button class="btn">Download style</button>
+          <a class="btn ghost" href="#tweak">Adjust it (Tweak)</a>
+        </div>
+        <details class="integrator">
+          <summary>For integrators &amp; CLI users</summary>
+          <div class="row">
+            <div class="grow">
+              <div class="lbl">Semver range</div>
+              <div class="sub">Latest compatible, non-breaking</div>
+            </div>
+            <span class="cid-chip">apa-7th@^1.4</span>
+            <button class="copy">Copy</button>
+          </div>
+          <div class="row">
+            <div class="grow">
+              <div class="lbl">Exact pin (CIDv1)</div>
+              <div class="sub">Immutable · verified on resolve</div>
+            </div>
+            <span class="cid-chip">cid:bafkreib4dtq3vmz6a…q7x2</span>
+            <button class="copy">Copy</button>
+          </div>
+          <div class="row">
+            <div class="grow">
+              <div class="lbl">CLI</div>
+              <div class="sub"><code>citum render refs --style apa-7th</code></div>
+            </div>
+            <button class="copy">Copy</button>
+          </div>
+          <pre class="block" style="margin-top:12px;"><span class="c"># REST</span>
+GET /api/hub/apa-7th/pin
+<span class="c"># → { "id": "apa-7th",</span>
+<span class="c">#     "version": "1.4.0",</span>
+<span class="c">#     "cid": "bafkreib4d…q7x2" }</span></pre>
+        </details>
+      </div>
+
+      <div class="card">
+        <h3>Machine-readable changelog</h3>
+        <p class="small"><strong>1.4.0</strong> — added <code>dataset</code> type-variant; DOI rendered as <code>https://doi.org/</code> URL.</p>
+        <p class="small"><strong>1.3.2</strong> — punctuation fix in edited-volume chapters (non-breaking).</p>
+        <p class="small muted" style="margin-top:8px;"><a href="#detail">Full changelog →</a></p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ TWEAK ═══════════════════ -->
+<section class="screen" id="screen-tweak">
+  <div class="crumbs"><a href="#detail">APA 7th edition</a> / Tweak</div>
+  <h1 class="display" style="font-size:2rem;">Tweak: APA 7th, but…</h1>
+  <p class="muted" style="margin-top:6px; max-width:46em;">Small adjustments on top of a locked base style.
+  Your changes stay a short list of intent, not a copy — and inherit upstream fixes.</p>
+  <div class="audience">Mockup note — audience: end users first (plain diffs, live preview); the style file itself collapses under an authors’ disclosure.</div>
+
+  <div class="tweak-grid">
+    <div class="stack">
+      <div class="card">
+        <h3>Overrides (2)</h3>
+        <div class="override">
+          <div class="what">Et-al after 3 authors <span class="muted small">(contributors · shorten)</span></div>
+          <div class="diff">
+            <div class="was">et-al-min: 21</div>
+            <div class="now">et-al-min: 3</div>
+          </div>
+        </div>
+        <div class="override">
+          <div class="what">Square brackets in citations <span class="muted small">(citation · wrap)</span></div>
+          <div class="diff">
+            <div class="was">wrap: parentheses</div>
+            <div class="now">wrap: brackets</div>
+          </div>
+        </div>
+        <div class="add-override">
+          <button class="btn subtle">+ Add override</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Result — your style</h3>
+        <p class="small muted">Saved as “APA 7th (brackets, et-al 3)” — ready to download or keep in your library.</p>
+        <details class="integrator">
+        <summary>View the style file (for authors)</summary>
+        <pre class="block"><span class="k">info:</span>
+  <span class="k">id:</span> <span class="s">my-apa-brackets</span>
+  <span class="k">title:</span> <span class="s">APA 7th (brackets, et-al 3)</span>
+<span class="k">extends:</span> <span class="s">apa-7th</span>
+<span class="k">extends-pin:</span> <span class="s">cid:bafkreib4d…q7x2</span>
+<span class="k">citation:</span>
+  <span class="k">wrap:</span> <span class="s">brackets</span>
+<span class="k">contributors:</span>
+  <span class="k">shorten:</span> { <span class="k">min:</span> 3, <span class="k">use-first:</span> 1 }</pre>
+        </details>
+        <div class="actions-row">
+          <button class="btn">Download style</button>
+          <button class="btn ghost">Save to library</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stack">
+      <div class="card preview-card">
+        <h3>Live preview</h3>
+        <div class="cite-line"><strong>In text:</strong> [Doe &amp; Roe, 2020; Smith et al., 2019]</div>
+        <h3 style="margin-top:18px;">Bibliography</h3>
+        <p class="bib-entry">Doe, J., &amp; Roe, R. (2020). Attention is not enough: Revisiting recurrence. <em>Journal of Examples, 12</em>(3), 45–67. https://doi.org/10.1000/jex.2020.045</p>
+        <p class="bib-entry">Smith, A. B. et al. (2019). <em>Measurement in the wild</em> (2nd ed.). Example Press.</p>
+        <p class="small muted" style="margin-top:14px;">Changed output is highlighted as you edit; unchanged entries inherit from the pinned base.</p>
+      </div>
+
+      <div class="card">
+        <h3>Need more than overrides?</h3>
+        <p class="small">Full authoring — new templates, type-variants, novel
+        requirements — lives with your AI assistant, validated by the Citum
+        CLI at every step:</p>
+        <pre class="block" style="margin-top:10px;">npx skills add citum/skills</pre>
+        <p class="small muted" style="margin-top:10px;">The skill enforces the schema, checks
+        with <code>citum check --strict</code>, and renders against real references before
+        you submit to the registry.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-note">
+    Mockup accompanying <code>specs/HUB_STRATEGY_DECISION.md</code> · screens: Home, Browse, Style detail (pinning), Tweak · design tokens from citum-org <code>DESIGN.md</code>.
+  </div>
+</section>
+
+</main>
+
+<script>
+  (function () {
+    var screens = ["home", "browse", "detail", "tweak"];
+    function show() {
+      var id = (location.hash || "#home").slice(1);
+      if (screens.indexOf(id) === -1) id = "home";
+      screens.forEach(function (s) {
+        document.getElementById("screen-" + s).classList.toggle("visible", s === id);
+      });
+      document.querySelectorAll("#tabs a").forEach(function (a) {
+        a.classList.toggle("active", a.dataset.screen === id);
+      });
+      window.scrollTo(0, 0);
+    }
+    window.addEventListener("hashchange", show);
+    show();
+  })();
+</script>
+</body>
+</html>

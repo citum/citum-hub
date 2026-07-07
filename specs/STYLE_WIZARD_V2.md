@@ -1,5 +1,9 @@
 # Style Wizard v2: Design Specification
 
+> [!WARNING]
+> **Superseded** by [`HUB_STRATEGY_DECISION.md`](HUB_STRATEGY_DECISION.md) (2026-07-07).
+> The wizard is frozen; retained for reference and salvage only.
+
 **Status:** Draft
 **Audience:** Implementing agents and human reviewers
 **Supersedes:** `WIZARD_UX_SPEC.md` (v1 spec retained for reference)

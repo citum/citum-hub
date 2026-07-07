@@ -58,10 +58,12 @@ Env vars live in `client/.env`.
 ## Specs
 
 Product vision and user stories live in `specs/`. Start there for feature context:
+- `specs/HUB_STRATEGY_DECISION.md` — **Current strategy** (registry-first; wizard frozen). Read this first.
+- `specs/DISTRIBUTED_ECOSYSTEM_VISION.md` — Long-term ecosystem vision
+- `specs/CREATE_REWRITE_ARCHITECTURE.md` — Find / Tweak / Build architecture (Build deprioritized)
 - `specs/STYLE_EDITOR_VISION.md` — Style editor and wizard vision
 - `specs/BUN_ADOPTION_PLAN.md` — Roadmap for Bun-native migration
-- `specs/CREATE_REWRITE_ARCHITECTURE.md` — Find / Tweak / Build architecture
-- `specs/STYLE_WIZARD_V2.md` — Wizard design specification (Build sub-flow)
+- `specs/STYLE_WIZARD_V2.md` — Wizard design specification (superseded, frozen)
 - `specs/WIZARD_LEGACY_NOTES.md` — Salvage notes from `codex/wizard-style-branches` (delete once items are ported)
 
 ## Commit Conventions
